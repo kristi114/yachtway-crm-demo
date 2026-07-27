@@ -1,0 +1,389 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * YachtWay CRM - Soft-neutral glass design system.
+ * Palette: warm off-white bg (~#eef1f6), near-black ink (#1a1d24),
+ * deep-purple accent family (#3a1878 brightest, #23094d mid, #17063a darkest).
+ * Sora headings, Manrope body. Surfaces are translucent with subtle backdrop
+ * blur for a calm, layered "glass" feel. Semantic tokens only - never hardcode
+ * colors in components.
+ */
+
+@theme inline {
+  /* Unified radius scale (YachtWay design system):
+     - CTAs / buttons / inputs: 12px  → rounded-md (default on <Button>)
+     - Icon chips:              13px  → rounded-chip
+     - Bento cards / panels:    22px  → rounded-lg
+     - Feature / hero tiles:    26px  → rounded-xl
+     - Pills / tags:            full  → rounded-full
+  */
+  --radius-sm: 12px;
+  --radius-md: 12px;
+  --radius-lg: 22px;
+  --radius-xl: 26px;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* App-specific semantic tokens */
+  --color-topbar: var(--topbar);
+  --color-topbar-foreground: var(--topbar-foreground);
+  --color-surface: var(--surface);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-deep: var(--brand-deep);
+  --color-sensitive: var(--sensitive);
+  --color-sensitive-foreground: var(--sensitive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  /* Printable document tokens (invoice / estimate PDF - always light) */
+  --color-doc: var(--doc);
+  --color-doc-ink: var(--doc-ink);
+  --color-doc-muted: var(--doc-muted);
+  --color-doc-line: var(--doc-line);
+  --color-doc-accent: var(--doc-accent);
+  --color-doc-accent-soft: var(--doc-accent-soft);
+
+
+  --font-sans: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Sora", "Manrope", sans-serif;
+}
+
+:root {
+  --radius: 1rem;
+
+  /* Base canvas - warm off-white with a faint cool tint (neomorphic base) */
+  --background: oklch(0.955 0.005 250);              /* ~#eef1f6 */
+  --foreground: oklch(0.2 0.012 260);                /* near #1a1d24 */
+
+  /* Translucent surfaces - glass over the tinted canvas */
+  --surface: oklch(1 0 0 / 0.82);
+  --card: oklch(1 0 0 / 0.88);
+  --card-foreground: oklch(0.2 0.012 260);
+  --popover: oklch(0.995 0.003 250);
+  --popover-foreground: oklch(0.2 0.012 260);
+
+  /* Brand accent - deep purple gradient family (used for links, actions, focus) */
+  --brand: #3a1878;                                  /* brightest, top-left */
+  --brand-foreground: oklch(1 0 0);
+  --brand-deep: #23094d;                              /* mid purple for headings/labels */
+
+  /* Primary is neutral near-black; brand is separate accent */
+  --primary: oklch(0.2 0.012 260);
+  --primary-foreground: oklch(0.99 0.002 250);
+
+  /* Top bar - soft glass over the canvas, near-white with dark ink */
+  --topbar: oklch(0.99 0.003 250 / 0.78);
+  --topbar-foreground: oklch(0.2 0.012 260);
+
+  --secondary: oklch(0.915 0.006 250);               /* subtle chip fill */
+  --secondary-foreground: oklch(0.22 0.012 260);
+  --muted: oklch(0.915 0.006 250);
+  --muted-foreground: oklch(0.38 0.012 255);
+  --accent: color-mix(in oklab, #3a1878 10%, var(--background)); /* soft purple accent */
+  --accent-foreground: oklch(0.28 0.05 250);
+
+  --destructive: oklch(0.58 0.2 25);
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.58 0.13 160);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.75 0.13 70);
+  --warning-foreground: oklch(0.28 0.05 60);
+
+  /* Printable document palette - fixed light values so PDFs stay print-safe */
+  --doc: #ffffff;
+  --doc-ink: #14101f;
+  --doc-muted: #6b6880;
+  --doc-line: #e7e4ef;
+  --doc-accent: #3a1878;
+  --doc-accent-soft: #f4f1fb;
+
+  /* Sensitive data highlight - soft purple tint */
+  --sensitive: color-mix(in oklab, #3a1878 12%, var(--background));
+  --sensitive-foreground: #23094d;
+
+  --border: oklch(0.28 0.02 260 / 0.16);             /* visible hairline over glass */
+  --input: oklch(0.28 0.02 260 / 0.2);
+  --ring: color-mix(in oklab, #3a1878 50%, transparent);
+
+  --chart-1: oklch(0.2 0.012 260);
+  --chart-2: #3a1878;
+  --chart-3: oklch(0.75 0.13 70);
+  --chart-4: oklch(0.58 0.13 160);
+  --chart-5: oklch(0.58 0.2 25);
+
+  /* Sidebar - glass over the tinted canvas */
+  --sidebar: oklch(1 0 0 / 0.6);
+  --sidebar-foreground: oklch(0.24 0.012 260);
+  --sidebar-primary: #3a1878;
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: color-mix(in oklab, #3a1878 10%, var(--background));
+  --sidebar-accent-foreground: oklch(0.28 0.05 250);
+  --sidebar-border: oklch(0.28 0.02 260 / 0.08);
+  --sidebar-ring: color-mix(in oklab, #3a1878 50%, transparent);
+
+  /* Depth tokens - soft neomorphic shadows for cards/surfaces */
+  --shadow-soft: 0 1px 2px oklch(0.2 0.02 260 / 0.04),
+                 0 8px 24px oklch(0.2 0.02 260 / 0.06);
+  --shadow-lift: 0 2px 4px oklch(0.2 0.02 260 / 0.06),
+                 0 16px 40px oklch(0.2 0.02 260 / 0.1);
+  --shadow-inset: inset 0 1px 0 oklch(1 0 0 / 0.6),
+                  inset 0 -1px 0 oklch(0.2 0.02 260 / 0.04);
+}
+
+.dark {
+  --background: oklch(0.17 0.01 260);
+  --foreground: oklch(0.97 0.005 250);
+  --surface: oklch(0.24 0.012 260 / 0.72);
+  --card: oklch(0.24 0.012 260 / 0.78);
+  --card-foreground: oklch(0.97 0.005 250);
+  --popover: oklch(0.22 0.012 260);
+  --popover-foreground: oklch(0.97 0.005 250);
+  --brand: #3a1878;
+  --brand-foreground: oklch(0.97 0.005 250);
+  --brand-deep: color-mix(in oklab, #3a1878 70%, white);
+  --primary: oklch(0.97 0.005 250);
+  --primary-foreground: oklch(0.17 0.01 260);
+  --topbar: oklch(0.14 0.01 260 / 0.72);
+  --topbar-foreground: oklch(0.97 0.005 250);
+  --secondary: oklch(0.28 0.012 260);
+  --secondary-foreground: oklch(0.97 0.005 250);
+  --muted: oklch(0.28 0.012 260);
+  --muted-foreground: oklch(0.72 0.01 255);
+  --accent: color-mix(in oklab, #3a1878 25%, var(--background));
+  --accent-foreground: oklch(0.97 0.005 250);
+  --destructive: oklch(0.68 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.72 0.14 160);
+  --success-foreground: oklch(0.15 0.03 258);
+  --warning: oklch(0.82 0.14 75);
+  --warning-foreground: oklch(0.2 0.05 60);
+  --sensitive: color-mix(in oklab, #3a1878 20%, var(--background));
+  --sensitive-foreground: oklch(0.97 0.005 250);
+  --border: oklch(1 0 0 / 0.1);
+  --input: oklch(1 0 0 / 0.14);
+  --ring: color-mix(in oklab, #3a1878 60%, transparent);
+  --chart-1: oklch(0.97 0.005 250);
+  --chart-2: #3a1878;
+  --chart-3: oklch(0.82 0.14 75);
+  --chart-4: oklch(0.72 0.14 160);
+  --chart-5: oklch(0.68 0.22 25);
+  --sidebar: oklch(0.2 0.01 260 / 0.65);
+  --sidebar-foreground: oklch(0.97 0.005 250);
+  --sidebar-primary: #3a1878;
+  --sidebar-primary-foreground: oklch(0.97 0.005 250);
+  --sidebar-accent: color-mix(in oklab, #3a1878 20%, var(--background));
+  --sidebar-accent-foreground: oklch(0.97 0.005 250);
+  --sidebar-border: oklch(1 0 0 / 0.08);
+  --sidebar-ring: color-mix(in oklab, #3a1878 60%, transparent);
+  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.4),
+                 0 8px 24px oklch(0 0 0 / 0.35);
+  --shadow-lift: 0 2px 4px oklch(0 0 0 / 0.45),
+                 0 16px 40px oklch(0 0 0 / 0.5);
+  --shadow-inset: inset 0 1px 0 oklch(1 0 0 / 0.05),
+                  inset 0 -1px 0 oklch(0 0 0 / 0.2);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html, body {
+    color: var(--color-foreground);
+    font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Ambient canvas: warm off-white with purple-tinted highlights.
+     #3a1878 (brightest, top-left) → #23094d (mid) → #17063a (darkest).
+     Gives the whole app a calm, layered depth for glass surfaces to sit on. */
+  body {
+    background-color: var(--color-background);
+    background-image:
+      radial-gradient(1200px 800px at 12% -10%, color-mix(in oklab, #3a1878 18%, transparent), transparent 60%),
+      radial-gradient(1000px 700px at 100% 110%, color-mix(in oklab, #23094d 16%, transparent), transparent 60%),
+      radial-gradient(600px 500px at 85% 10%, oklch(0.98 0.02 80 / 0.35), transparent 65%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  .dark body {
+    background-image:
+      radial-gradient(1200px 800px at 12% -10%, color-mix(in oklab, #3a1878 35%, transparent), transparent 60%),
+      radial-gradient(1000px 700px at 100% 110%, color-mix(in oklab, #23094d 40%, transparent), transparent 60%),
+      radial-gradient(900px 600px at 50% 120%, color-mix(in oklab, #17063a 45%, transparent), transparent 60%);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Sora", "Manrope", sans-serif;
+    letter-spacing: -0.015em;
+  }
+
+  /* Font-size floor - never render text smaller than 14px anywhere in the app. */
+  .text-xs,
+  [class*="text-[10px]"],
+  [class*="text-[11px]"],
+  [class*="text-[12px]"],
+  [class*="text-[13px]"] {
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Glass depth applied automatically to any element using semantic surface
+     tokens. This is what gives the whole CRM its layered, calm feel without
+     having to touch every component. */
+  .bg-surface,
+  .bg-card,
+  .bg-popover,
+  .bg-sidebar,
+  .bg-topbar {
+    backdrop-filter: blur(20px) saturate(140%);
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* Slightly stronger lift for popovers/dialogs. */
+  .bg-popover {
+    box-shadow: var(--shadow-lift);
+  }
+
+  /* Sidebar and topbar don't need the lift shadow - they're structural. */
+  .bg-sidebar,
+  .bg-topbar {
+    box-shadow: none;
+    border-color: var(--color-sidebar-border);
+  }
+
+
+
+  /* Subtly tinted secondary chips read as glass tokens too. */
+  [class*="bg-secondary/"],
+  .bg-secondary {
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* Material Symbols icon utility (used sparingly for EasyFund-style glyphs) */
+@utility material-symbol {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Utility for the "hero" glass card treatment - stronger blur + inner
+   highlight. Use for page headers or featured cards when you want extra
+   presence beyond the default surface. */
+@utility glass-hero {
+  background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+  backdrop-filter: blur(28px) saturate(150%);
+  box-shadow: var(--shadow-lift), var(--shadow-inset);
+  border: 1px solid var(--color-border);
+}
+
+/* Icon chip radius (13px) - use on square icon tiles inside bento cards. */
+@utility rounded-chip {
+  border-radius: 13px;
+}
+
+/* Canonical purple gradient (YachtWay brand: #3a1878 → #23094d → #17063a)
+   with a warm gold highlight - use for hero surfaces and feature tiles. */
+@utility bg-brand-gradient {
+  background-image:
+    radial-gradient(120% 90% at 0% 0%, #3a1878 0%, #23094d 46%, #17063a 100%),
+    radial-gradient(50% 40% at 100% 0%, rgba(242, 193, 78, 0.16), transparent 70%);
+  background-blend-mode: screen, normal;
+  color: var(--color-brand-foreground);
+}
+
+/* ---------------------------------------------------------------------------
+   Printable document (invoice / estimate PDF export)
+   The /billing/invoices/$id/pdf route renders an A4 sheet that browsers can
+   save straight to PDF. Screen chrome is tagged .no-print and removed.
+--------------------------------------------------------------------------- */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-canvas {
+    background: #fff !important;
+    padding: 0 !important;
+  }
+
+  .print-sheet {
+    box-shadow: none !important;
+    border: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+    border-radius: 0 !important;
+    page-break-after: avoid;
+  }
+
+  .print-sheet tr,
+  .print-sheet .avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

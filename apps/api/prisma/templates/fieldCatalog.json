@@ -1,0 +1,5667 @@
+{
+ "generatedFrom": "Heigo Mock Dataset-updated.xlsx :: Field Catalog",
+ "fieldCount": 629,
+ "fields": [
+  {
+   "object": "User",
+   "field": "id",
+   "label": "User Id",
+   "type": "Id",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "User",
+   "field": "name",
+   "label": "Full Name",
+   "type": "Text",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "User",
+   "field": "email",
+   "label": "Email",
+   "type": "Email",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "User",
+   "field": "title",
+   "label": "Title",
+   "type": "Text",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "User",
+   "field": "department",
+   "label": "Department",
+   "type": "Text",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "User",
+   "field": "user_role",
+   "label": "Role (permission set)",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "User",
+   "field": "is_active",
+   "label": "Active",
+   "type": "Checkbox",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "id",
+   "label": "Account Id",
+   "type": "Id",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "record_type",
+   "label": "Record Type",
+   "type": "Text",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "owner_id",
+   "label": "Owner Id",
+   "type": "Lookup(User)",
+   "source": "Lookup",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "owner",
+   "label": "Owner",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "parent_account_id",
+   "label": "Parent Account Id",
+   "type": "Lookup(Account)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "parent_account",
+   "label": "Parent Account",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "primary_contact_id",
+   "label": "Primary Contact Id",
+   "type": "Lookup(Contact)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "primary_contact",
+   "label": "Primary Contact",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "name",
+   "label": "Account Name",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "type",
+   "label": "Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Brokerage Firm; Dealer; Shipyard; Lender; Loan Broker; Insurance Firm; Marina; Other; Naval Designer/Architect; Documentation Company"
+  },
+  {
+   "object": "Account",
+   "field": "account_type",
+   "label": "Account Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Broker; Brokerage Firm; Dealer; Shipyard; Lender; Loan Broker; Buyer; Insurance Company; Marina; Other; Naval Designer / Architect; Documentation Company"
+  },
+  {
+   "object": "Account",
+   "field": "phone",
+   "label": "Phone",
+   "type": "Phone",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "website",
+   "label": "Website",
+   "type": "URL",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "main_office_street",
+   "label": "Main Office Street Address",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "main_office_city",
+   "label": "Main Office City",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "main_office_state",
+   "label": "Main Office State / Province",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "main_office_country",
+   "label": "Main Office Country",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "main_office_postal_code",
+   "label": "Main Office Postal Code",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "billing_street",
+   "label": "Billing Street Address (if different)",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "billing_city",
+   "label": "Billing City",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "billing_state",
+   "label": "Billing State / Province",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "billing_country",
+   "label": "Billing Country",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "billing_postal_code",
+   "label": "Billing Postal Code",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "account_source",
+   "label": "Account Source",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Boat Show; Organic Google Search; Paid Google Search; Paid List; Partner; Phone; PPC; Referral; Social; Web; Offline Sources; YachtWay Invite; Stripe; EasyFund; Booking Page"
+  },
+  {
+   "object": "Account",
+   "field": "yachtway_db_account_id",
+   "label": "YachtWay DB Account ID",
+   "type": "Text(External Id)",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "first_signup_date",
+   "label": "First Signup Date",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "first_listing_date",
+   "label": "First Listing Date",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "active_listings",
+   "label": "# Active Listings",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "listings_all_time",
+   "label": "# Listings (all-time)",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "listing_views_to_date",
+   "label": "Listing Views To Date",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "median_response_minutes_30d",
+   "label": "Median Response Min 30d",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "total_number_of_brokers",
+   "label": "# Brokers",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "total_number_of_offices",
+   "label": "# Offices",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "social_reach_to_date",
+   "label": "Social Reach To Date",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "account_status",
+   "label": "Account Status",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Lead; MQL; SQL; Active Customer; Past Customer"
+  },
+  {
+   "object": "Account",
+   "field": "company_score",
+   "label": "Company Score",
+   "type": "Number",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "dealer_referral_code",
+   "label": "Dealer Referral Code",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "last_login",
+   "label": "Last YachtWay Login",
+   "type": "Date",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "yachtway_signins",
+   "label": "YachtWay Sign-ins",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "total_spotlight_views_30d",
+   "label": "Spotlight Views 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easyfund_referrals_total",
+   "label": "EasyFund Referrals (Total)",
+   "type": "Number",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easyfund_referrals_closed",
+   "label": "EasyFund Referrals (Closed)",
+   "type": "Number",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easyfund_closed_referrals_amount",
+   "label": "EasyFund Closed Referrals $",
+   "type": "Currency",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "studio_spend_lifetime",
+   "label": "Studio Spend (Lifetime)",
+   "type": "Currency",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "studio_spend_ytd",
+   "label": "Studio Spend (YTD)",
+   "type": "Currency",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "studio_spend_qtr",
+   "label": "Studio Spend (Current Qtr)",
+   "type": "Currency",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "billing_name",
+   "label": "Billing Name",
+   "type": "Text",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "xero_contact_id",
+   "label": "Xero Contact ID",
+   "type": "Text",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "next_bill_date",
+   "label": "Next Bill Date",
+   "type": "Date",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "stripe_customer_id",
+   "label": "Stripe Customer Id",
+   "type": "Text",
+   "source": "Stripe",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "payment_method_added",
+   "label": "Payment Method Added",
+   "type": "Checkbox",
+   "source": "Stripe",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "created_date",
+   "label": "Created Date",
+   "type": "DateTime",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "last_modified_date",
+   "label": "Last Modified",
+   "type": "DateTime",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "active_customer_date",
+   "label": "Active Customer Date",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "avg_listing_photo_count",
+   "label": "Avg Listing Photo Count",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "avg_response_minutes_30d",
+   "label": "Avg Response Minutes 30d",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "authorized_brands",
+   "label": "Authorized Brands",
+   "type": "Multi-Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "A. Mostes; Abeking & Rasmussen; Absolute Liguria; AB Yachts; Admiral; Aicon; Airon Marine; AKA Marine (Z Nautic Group); Alfastreet Yachts; Allroundmarin; Alonsea Boats; Altena; Alukin; Amel; AMT; Apreamare; Aquador; Aqualine; Aquanaut; Aquaspirit; Arcona; Askeladden; Astondoa; Auster; Austin Parker; Axis; Axopar; Azimut; B2 Marine; Baja Boats; Bali Catamarans; Baltic Yachts; Balt Yacht; Barkmet Boats; Bass Cat; Bavaria Yachts; Bayliner; Bella; B\u00e9n\u00e9teau; Benetti; Bente; Bertram; BLUEGAME; BMA; Boesch; Bombard; Boston Whaler; Brabus; Brandsma; Brig; Broom; Buster Power Boats; BWA Inflatable Boats; Campion; Canados; Cantieri di Pisa; Cantieri Estensi; Capelli; Capoforte Boats; Carnevali; Catana Catamarans; Cayman; Celi; Centurion Boats; Century; Chaparral; Chris Craft Power Boats; Cigarette; CNB; Coaster; Cobalt; Cobra Yachts Power Boats; Cobrey; Colombo; Comar Sailing Boats; Comitti; Compass Boats; Contest Sailing Boats; Cormate; Cormorant; Corsiva; Couach; Cranchi; Cremo Power Boats; Crescent; Crestliner; CRN; Crownline; CR Yachts; Cypress Cay; DarekCo; De Antonio Yachts; De Boarnstream; Dehler; Dellapasqua; Delphia; Delta Powerboats; Doggersbank Power Boats; Dominator; Donzi Marine; Draco; Drago Boats; Dragonfly; Dufour; Dutch American; Elan Sailing Boats; Elegance; Elling; Eolo; Etap; Excess; Explorer; Faeton; Fairline; Falcon; Fareast; Ferretti Yachts; Fiart Mare; Fiberline; FIM; Finnmaster; Finval; Fjord; Flipper; Focus Motor Yacht; Formula; Fountain Boats; Fountaine Pajot; Four Winns; Frauscher Power Boats; Freeman Boatworks; Frib; Futuro; Gala; Galaxy Professional RIBs; Galeon; Galia; Ganz Boats; Gelex; Gianetti; Glastron; GRAND; Grand Banks; Grandezza; Grand Soleil Yachts; Greenline; Gruno; Gulf Craft; Gumotex; Hallberg-Rassy; Hanse; Harris; Hatteras; Hellwig; Heyday; Highfield; HollandiaHolland Jachtbouw; Horizon; Ibiza Boats; Idea Marine; Ingenity; Innovation Yachts; Interboat; Intermare; Invictus Yacht; IRON; Italboats Inflatable Boats; Italia Yachts; Itama; Janmor; J Boats; Jeanneau; Jetten; Johnson Power Boats; Joker Boat; Jongert; Karel; Karnic; Key Largo; Kiel Classic; Kolibri Inflatable Boats; Lagoon; La Mare; Laser Perfomance; Lema; Leopard Catamarans; Linder; Linssen; Lomac; Lowe Boats; Lund; Maiora; Malibu; Mal\u00f6 Yachts; Marex; Marian; Marinello; Mariner Sailing Boats; Marine Time; MasterCraft; Maxi Dolphin; Maxima; Merritt Precision; Mingolla; Mochi Craft; Monachus; Monterey; Moody; Moomba; Moonday; Mulder Power Boats; Najad; Nauticat; NauticStar Boats; Nautique; Nautitech Catamarans; Nautors Swan Sailing Boats; Navan; NCA Refit; Neptunus; Neptun Yachten; Nicols Yacht; Nimbus; Nordhval; Nordic Ocean Craft; Nordkapp; Nord Star; NorisBoat; NorthMaster; NorthStar; Nuova Jolly; Ocqueteau; Olympic; Orizzonti Boats; Osprey; Overmarine Mangusta; Oyster Sailing Boats; Paragon Yachts; Pardo Yachts; Parker; Parker Power Boats; Pedrazzini; Pedro; Pegasus; Perini Navi; Pershing; Phantom Yachts; Picchiotti; Pioner Power Boats; Pirelli Boats; Portofino Marine; Posillipo; Prestige; Primatist Yachts; PrinceCraft; Princess; Protector; Pursuit; Quarken; Quicksilver; RaJo; Rancraft; Rand; Ranieri International; Rapsody; Rau Yachts; RayGlass; Regal; Regina Yachts; Rh\u00e9a; Rinker; Rio; Riva; Riverday; Riviera; Rizzardi; Rodman; Roughneck Marine; Ryck; Ryds; SACS; Saffier; Saga; Salona; Salpa; Samba Powerboats; Sandstr\u00f6m Batar; Sanlorenzo; Sargo; Sarnico Classic Boats; Sasga Yachts; Saver Power Boats; Saxdor Yachts; Scar; Scarab; Sciallino; SeaArk Boats; Sea Doo; Sealine; Sea Ray; Selene; Selva Power Boats; Sessa Marine; Sirena; Sirius; Skils\u00f8; Smartliner; Smelne; Solaris; Solaris Power; Spartan; SPX Rib; Staempfli; Starfisher; Steeler Yachts; Stickl; Sting; Stingray; Storebro; Sunbeam; Sunchaser; Sunseeker; Sunwind; Supreme Boats; Sur Marine; Sven Akermann Werft; Sweden Yachts; Swiss Cat; Talamex; Targa Power Boats; Technohull; Tecnomar; Terhi Power Boats; Terranova; Thomasz Yachts; Thunder; Tiara; Tig\u00e9; Tofinou; Trimarchi; Truszczy\u0144scy Boats; Uniesse; Utter; Van der Heijden; VanDutch Yachts; VBoats; Veer; Viking; Viknes; Viko; Vri-Jon; Waarschip; Walker Bay; Wally; Watershed; Wauquiez; Wellcraft; Whaly Boats; Williams Jet Tenders; Wim van der Valk; Windy; Winner; XO Boats; X-Shore; X-Yachts; Yamaha Inflatable Boats; Yamarin; Yar-Craft; Yerliyurt Marin; ZAR Formenti; Zijlmans; Zodiac Inflatable Boats; Damen; Oceanwalker; Ohlson Yachts; X-Power; MiraRia; Forte Yachts; CABO; Seaward; Targa; Robalo; OTAM; RCKSTR Yachts; Regulator; Sunny Briggs; AquaSport; Monarch Yachts; Morgan; Extreme Boats; AB Inflatables; Maori; Trintella; Hunter; LUMEN Yachts; Viaggio; SEC Boats; StanCraft; Beneteau; Taiga; Bekkers Yachts; Silent Yachts; Canadian Vickers; AdmiralsTender; Austal; Bennington; Renegade; L\u00fcrssen Yachts; Midnight Express Boats; EdgeWater; Elan; Wildcat; Maritimo; Cigarette Racing; Caymas Boats; YachtCat; Aqvaboats; Qnautic; Wilmington Boat Works; Austin Parker Yachts; Freestyle Marine; Solaris Yachts; Evo Yachts; Renal; Richmond Yachts; Nerea Yacht; C&C Yachts; Independence Yachts; Nimbus Boats; C Tender; Arcadia; Krogen Express; Real; B-Yachts; Baia; NHD Boats; Mako; DNA; Ocean Yachts; Intrepid Powerboats; Johnson Yachts; Parker Poland; Hinckley Yachts; Beachcat; MTI; Tanton; Benetti Sail Division; DutchCraft; Mangusta; Mystic Powerboats; Destiny; Orca Pro Marine; ISA Yachts; Proton Yachts; Lilybaeum Yacht; Krogen Yachts; Oceanfast; Sillinger; Southern Ocean; Mazarin; Jim Smith; Hunt Yachts; Princess Yachts; Kraken Yachts; Tankoa; Two Oceans; Selene Yachts; Nordhavn; Release; Ocean Alexander; Nautor Swan; Matthews Boat Company; Viking Yacht; Custom Carolina; Amels; Baglietto; Golden Yachts; Vanquish Yachts; Okean; Tiara Yachts; Cantieri di Sarnico; Candela; Cantieri Navali Picchioti; Asterie; Cobia; Blackwater Boats; Toy; Walkabout; Santa Cruz; Dream Ship Victory; Frauscher; MJM Yachts; Sabre Yachts; Navier; Rossinavi; Blohm + Voss; DL Yachts; Euphoria; Northman; Factoria Naval de Marin; International Shipyard Ancona; Transpacific Marine; Hakvoort; Lloyd Werft; Mariotti Yachts; Mengi Yay Yachts; Mitsubishi Heavy Industries; Mondomarine; Moonen Yachts; Nobiskrug; Oceanco; Philip Zepter Yachts; Proteksan Turquoise; Parker Boats; Westport; Wider; Yachtley; Palmer Johnson; Neel; Rio Yachts; Serenity Yachts; Radez; Car Off-Shore; T+D Industries; Aquila; Dynamic Boats; Explorer Yacht; Pearson Yachts; Canados Yachts; Pacific Mariner; Allied Boat; AvA Yachts; Celtic Yachts; Atlantic Craft; Rustler; Aicon Yachts; Endeavour; Berkshire; Maxim Yachts; Marquis; Ribco Marine; Sharpe Houseboats; True North; Mestra Boats; Roughwater; Westship World Yachts; SeaWell Boats; Sarp Yachts; Warren Yachts; Hanover Yachts; YOT; Opus Boats; Santasevera; Rampage; Bugari; Tidewater Boats; Stingray Boats; Hydra-Sports; Topaz; Cantiere Delle Marche; Jarvis Newman; Mystique Boatworks; AMP American Marine Performance; Yamaha; Halvorsen; Cruisers Yachts; Custom Line; Balance; Hylas Yachts; Wajer; Inace Yachts; Nor-Tech; Omikron Yachts; Skipper Powerboats; Paragon Motor Yachts; Elvene; Jade Yachts; Vision Yachts; Chaos Boats; Pro Boat Yachts; Valhalla Boatworks; Sedna Sportfishing; Intermarine SpA; Italcraft; Pride Mega Yachts; Sensation Yachts; Mulder; Pirelli Speedboats; Amer Yachts; Dockside; Blackwell Boatworks; Invictus Yachts; Abati Yachts; Cobalt Boats; Fountain Powerboats; Ranger Tugs; President Yachts; HCB; Canard; MB Sports; Hargrave; Crest; Carolina Classic; Seaton; Nordic Tugs; Christensen; Oyster; Pacific Seacraft; Dragonfly Trimarans; Columbus Yachts; Tollycraft; Diamond Yachts; Rock Marine; Brooke Marine; Hyfoil Marine; Buddy Davis; Albemarle; SeaTek; Onslow Bay Boatworks; Infinity; Del Golfo; Codecasa; Vicem Yachts; Back Cove Yachts; Jersey Cape Yachts; West Bay Sonship; PY Yacht; TESORO YACHTS; Cantieri Navali Cilentani; Meridian; Astraea; Crowther; Wilbur; BlackJack; Flux Marine; Royal Denship; Torres; Huckins; Poole; Queenship; Pedigree Cat; Gulet; Magnum; Broward; Deep Impact Boats; Sea Prop; Capoforte; Mainship; SunCatcher; Legacy Yachts; Jespersen Boat Builders; Stellar; Kufner Yachts USA; Dunya Yachts; SES Yachts; Seacap; Majesty Yachts; Alva Yachts; Brandaris; Little Harbor; Daytona; esseboats; Onda; Invincible; Powerplay Catamarans; Whisstock; Fastback Catamarans; Statement; Monte Carlo Yachts; BALI; Royal Cape Catamarans; Alia Yachts; Dencho Marine; Cantieri Capelli; Gamefisherman; Sumerset; VSY; Offshore Yachts; Y\u0131ld\u0131zlar; Island Spirit; McConaghy Boats; 2 Bar; NX Boats; Bristol Yachts; Cal Yachts; Bruno Abbate; Yellowfin; Sailfish; Navigator; Everglades Boats; Makma; SeaVee; Bahama; Sea Fox Boats; Silverton; Scout Boats; Michael Rybovich & Sons; Leen Trimarans; Rigiflex; Holterman; Jersey Yachts; Tornado; Spirit Yachts; St Francis; Chris White; YYachts; ElectraCraft; Latitude 46; Seaswirl; CNM; Pegasus Yachts; Alpha Custom Yachts; Albury Brothers Boats; Tribute Boats; PRJ Boats; Myabca; South Bay; World Cat; Steeler; Streamline R; Latitude Yachts; Zodiac; Island Packet Yachts; Bruce Roberts; Monachus Yachts; Sparkman & Stephens; Patrone Moreno; Bristol Harbor Boats; Ares Marine; Trinity Yachts; WiLder; Gramac; IAG Yachts; Herreshoff Yacht; Ellis Boat Company; ZYARA; Fiart; King Benji Yacht; Monte Fino; SilverYachts; Crevalle; Sun Concept; LeVen Yachts; Focus Motor Yachts; Grand Banks Yachts; Anka Yachts; Out Island; MYLIUS YACHTS; Zeelander; Finish Line Boats; Twin Vee; Weaver; Trifecta; Merritt; Akyacht; Blackfin Boats; Bluewater; Burger Boats; Cheoy Lee Shipyards; CMB Yachts; Contender; Catalina Yachts; Crescent Custom Yachts; Feadship; Novurania; Alden; Alerion Yachts; Apex; Novamarine; Spencer Yachts; Carver; Tideline; Sovereign Yachts; Antares Catamarans; Lowell Brothers; HALEVAI; Transworld Motoryacht; Sea Hunt; St-Barth Yachts; Avila Marin; Daedalus Yachts; Aviara; Man\u00f2 Marine; Pro-Line; Brabus Marine; Anvera; Absolute; Tahe; Mirimare; S\u014cLACE Boats; Kit Boats; Franchini; Symbol Yachts; Nassima Yacht; Alen Yacht; Granfort Boats USA; Action Marine; Numarine; Monk; Prairie Boat Works; De Cesari; Infanta; Neptunus Yachts; B2; Y Yachts; Sialia Yachts; Summit Motoryachts; Fibrafort Boats; Pearl; Akana; Hi-Star; DMB; Arven Yachts; Limitless Seas; Schaefer Yachts; Outbound; Hurley; Nonsuch; De Vries Lentsch; Ventura Experience; TES Yachts; RYCK Yachts; Xquisite Yachts; Aloha; Aquascan; LANIAKEA; ICE Yachts; SeaHunter; Lekker; Smoky Mountain Jetboats; Ocean Explorer; Outer Reef Yachts; Taswell; American Tug; Nautitech; Medasia; Greenline Yachts; Pronautica; Cutwater; Al Shaali Marine; Avalon; Black Sea Yachts; ZETA ELLE; Front Runner; Lazzara; Bryant; VOYAGE; Nebula; SALT YACHTS; Stratos; Regency Boats; Regency; MC TEC; Bueltjer; RMK Marine; Pathfinder Boats; Seadna; O'Day; Eurocraft; Tureddi Yachts; De Beer; Grand Harbour; Frederikssund Skibsvaerft; Albin; De Birs Yachts; Workboats Northwest; Aguti; Premier; Oceanline; Aquamarine; Cobra Yachts; Tecnomarine; Vivante; Moon Yacht; MANARI; Intermarine; Herreshoff; Peer Gynt Yachts; Iguana Yachts; Dusky; Concept; Varatti Boats; Extra Yachts; Garnet Offshore; Fishing Raptor; Starcraft; Italboats; Mandayachts; Mazu Yachts; BD Yachts; Marine Trader; Belzona Boats; Ranger; Barletta; Luhrs; McKinna; Rybovich; Nordlund; Seven Seas Yachts; AmeraCat; Opalinski Design House; Whaly; Avid Boats; Marlow Yachts; Makai; Bennasar; Duffy; Nomad Yachts; Wiszniewski Yachts; Sea Pro; Flexboat; Oromarine; RM Yachts; Allures; Scanner; YBM; Adventure Yachts; ZEN Yachts; Cantiere Mim\u00ec; Nordic; Airship Ribs; Southerly Yachts; De Alm; Magonis; Outback Yachts; Vitters; Archipelago Yachts; ICON Yachts; Aegean Yacht; Lancia Aprea; Agilis Jettenders; Heaven; Outremer; Aventura; Novatec; Palm Beach; Evolve; Garcia Yachts; Oryx; Skeeter; Jaktar; SilverCat; Solemar; Privil\u00e8ge; J.P. Smit; Rupelmonde; NorthCoast; Supra; JPK; Pogo; Doug Wright Powerboats; Cape Horn; Squalt Marine; Carrera Powerboats; Stamas; ShearWater; Sea Chaser; American Custom Catamarans; Costa Custom Boats; Venture; Paramount; Bulls Bay; Cammenga; Alfamarine; Camper and Nicholsons; As Marine; Blue Rib; Vtech; Tahoe Pontoon Boats; Girbau; Calcutta; Chaser Yachts; De Koning; Roughneck; Tufan and Brothers; Eyecat; Graafship; Clelands Shipbuilding; Evadne; Sea Water; North Wind; Formosa; Gib Sea; Belliure; MacGregor; Doqueve; Airon; Gallart; Isloep; Gobbi; Jetcraft; Ayros; Goymar; Tiger Marine; Pacific Craft; Goldenship; Menorquin; Astilleros Mah\u00f3n; Dubhe; Navalia Mazzari; Fashion; Cerri; ORC; Custom; HUG\u00d8A YACHTS; ALLURES YACHTING; Aquator; Sancrea; SeaArk; Castoldi; San Juan; Artaban; Zonda; Formula Boats; Lasai; Sichterman; Garlington; Centurion; Revolt; Contest; Noray; Wester-Engh; SAY; MasterCover; Innovazione e Progetti; Cayman Yachts; B-CRAFT; Flynt; XL Marine; Key West; Hodgdon; Colnago Marine; Comar; Twisted; BullDog Yachts; BB YACHTS; Heritage; Godfrey; Aurea Yachts; F.lli Mileo; Morri & Para; Van der Valk; Morris; Spyder Boats; Argonaut; Maurice Thivent; OC Tenders; B\u00f8rresen; Master; MV Marine; Magazz\u00f9; Leonardo; Coastal; Gagliotta; CL Yachts; Marlow-Hunter; Orion; Hurricane; Larson; Nautica Esposito; Sterk; CWS; Bellini; Delta Marine; Level; Saver; Nauticks; Dynamiq; Manta Catamaran; G-Tender; Viko Yachts; Sundeck; Catana; Gunboat; Lowe; Grady-White Boats; Black Pepper; Passport Yachts; Chris-Craft; Glacier; Vento; SanRemo; Lazzuri Atlantic; Domina; Jarrett Bay; Gariplast; Pair Customs; Eclipse; VisionF; ILIAD; Blackwood; Italyure; Diano; Raffaelli; BSC; Cyrus Yachts; Fairlie; Brune Yachtbau; Holland Jachtbouw; Furia; Baja; Galeon Yachts; Sunreef Yachts; Kral; Velocity; Blu Martin; Jones-Goodell; Prua al Vento; Seawind Catamarans; J Composites; BWA; Maxum; Southern Wind; Shannon; Carolina Skiff; Overblue; Pacific Shipyards; Saxdor; Dyna Yachts; Post Yachts; Vision Marine; Orphie; Profile Boats; G3 Boats; Sportsman Boats; Millikan; Volare; Supreme; Fabbro Yachts; Heesen Yachts; Maverick; Victory Yachts; Zuidkaper; Altair; Conrad; CNB Yacht Builders; Kumbra; Nautica CAB; Northshore; Sangermani; Manara; Rimar; Mikelson; AES Yacht; Enavigo; Sport-Craft; Orion Boatworks; 2Emme Marine; Paritetboat; Knysna; Seaforce; Agapi; Mag Bay; Striker; Avangard Yachts; Nautic; Kattum Yachts; Co.me.na; Glasstream; Halma; Altamarea; Zeta Group; Elamd; X-HULL; Solare; Ridas; King Marine; Jupiter; Windelo; Sea Force IX; Triton; Lowlander; Giangrasso; Laurent Giles; Bilgin; Aquamar; Waterdream; Garin; Birchwood; Tarrab; Island Gypsy; Malibu Boats; Gulf Crosser; DeFever; Glacier Boats of Alaska; Filippetti; Stilmar; Itimat; Glovertown Shipyard; Unique Yachts; Whisper; Vennekens; Alibi; HH Catamarans; Astinor; Tartan; Monza; Silcar; Irwin; Nova; Triplast; TAHOE; Reinke; 3D Tender; Piranhascraft; Ronautica; Zephyr; Breaux Brothers; Sea Ranger; Lyman-Morse; Felci; Selva; Trehard; PDQ; Whiticar; Mar.co; Woodler; Ocean King; Bering; Trident; Richards Shipbuilders; Dariel; Norfeu; Bianca Yacht; Mal\u00f6; Afep Marine; Mig; J Craft; Wimmer; Chantier de L'Est\u00e9rel; Arno; Sealver; Psarros; Rhea; Archambault; L'acqua Royale; Hyatt; Tuxedo; Apex Boats; Tansu; Blaundus; Terranova Yachts; Revel; Intermarine USA; Solara; NavalCat; Tuxedo Yachts; Sterling Yachts"
+  },
+  {
+   "object": "Account",
+   "field": "has_in_house",
+   "label": "Have in house?",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "api_feed_info",
+   "label": "API Feed Info",
+   "type": "Long Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "signup_info",
+   "label": "Signup Info",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "dealer_logo_url",
+   "label": "Dealer Logo URL",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "dealer_logo_file",
+   "label": "Dealer Logo File",
+   "type": "File",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easyfund_referral_percentage_closed",
+   "label": "EasyFund Referral Percentage Closed",
+   "type": "Number",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easysign_active_date",
+   "label": "EasySign Active Date",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easysign_subscription_type",
+   "label": "EasySign Subscription Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "PPD; Monthly"
+  },
+  {
+   "object": "Account",
+   "field": "last_yachtway_login",
+   "label": "Last YachtWay Login",
+   "type": "Date",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "sold_listings",
+   "label": "Sold Listings",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "listing_views_all_time",
+   "label": "Listing Views to Date - All Time Listings",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "listings_w_3d_tour",
+   "label": "Listings W/ 3D Tour",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "live_streams_done",
+   "label": "Live Streams Done",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "number_of_listings_on_external_site",
+   "label": "Number of Listings on External Site",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "onboarding_complete_date",
+   "label": "Onboarding Complete Date",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "paid_admin_seats",
+   "label": "Paid Admin Seats",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "paid_broker_seats",
+   "label": "Paid Broker Seats",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "paid_offices",
+   "label": "Paid Offices",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "playbook_upsell_targets",
+   "label": "Playbook - Upsell Targets",
+   "type": "Multi-Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "3D Tour; Photoshoot; Reels; Spotlights; Website Promo Video; Social Media Management; Photo Editing; Website Design; Team Portraits; EasySign; EasyFund; MasterCover; Closing Services; Registrations; Financing - Referrals/White-label; API Feed; Add Brokers; Add Offices"
+  },
+  {
+   "object": "Account",
+   "field": "sql_triggered_date",
+   "label": "SQL Triggered Date",
+   "type": "Date",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "total_number_of_admin",
+   "label": "Total Number of Admin",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "yachtway_dealer_page",
+   "label": "YachtWay Dealer Page",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "tour_3d_views_30d",
+   "label": "3d Tour Views 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "id",
+   "label": "Contact Id",
+   "type": "Id",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "account_id",
+   "label": "Account Id",
+   "type": "Lookup(Account)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "account",
+   "label": "Account",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "owner_id",
+   "label": "Owner Id",
+   "type": "Lookup(User)",
+   "source": "Lookup",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "owner",
+   "label": "Owner",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "record_type",
+   "label": "Record Type",
+   "type": "Text",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "contact_type",
+   "label": "Contact Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "first_name",
+   "label": "First Name",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "last_name",
+   "label": "Last Name",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "title",
+   "label": "Title",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "email",
+   "label": "Email",
+   "type": "Email",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "office_phone",
+   "label": "Office Phone",
+   "type": "Phone",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "mobile_phone",
+   "label": "Mobile",
+   "type": "Phone",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "mailing_street",
+   "label": "Street Address",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "mailing_city",
+   "label": "City",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "mailing_state",
+   "label": "State / Province",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "mailing_country",
+   "label": "Country",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "mailing_postal_code",
+   "label": "Postal Code",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "yachtway_db_id",
+   "label": "YachtWay DB ID",
+   "type": "Text(External Id)",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "broker_page_url",
+   "label": "Broker Page URL",
+   "type": "URL",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "active_on_account",
+   "label": "Active on Account",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "amplitude_id",
+   "label": "Amplitude Id",
+   "type": "Text",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "amplitude_user_id",
+   "label": "Amplitude user_id (=DB ID)",
+   "type": "Text",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "amplitude_device_id",
+   "label": "Amplitude device_id",
+   "type": "Text",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "last_login",
+   "label": "Last Login",
+   "type": "Date",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "days_since_last_login",
+   "label": "Days Since Last Login",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "logins_30d",
+   "label": "Logins 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "sessions_30d",
+   "label": "Sessions 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "avg_session_minutes_30d",
+   "label": "Avg Session Min 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "yachtway_logins",
+   "label": "YachtWay Logins",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "last_amplitude_event",
+   "label": "Last Event",
+   "type": "Text",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "top_events_30d",
+   "label": "Top Events 30d",
+   "type": "Text",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "login_frequency_tier",
+   "label": "Login Frequency Tier",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "email_opt_in",
+   "label": "Email Opt-In",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "sms_opt_in",
+   "label": "SMS Opt-In",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "created_date",
+   "label": "Created Date",
+   "type": "DateTime",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "signup_notes",
+   "label": "Signup Notes",
+   "type": "Long Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "broker_image",
+   "label": "Broker Image",
+   "type": "URL",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "signup_timestamp",
+   "label": "Signup Timestamp",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "nonresponsive",
+   "label": "Non-Responsive",
+   "type": "Checkbox",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "requested_demo",
+   "label": "Requested Demo",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "first_call_date",
+   "label": "First Call Date",
+   "type": "Date",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "account_active",
+   "label": "Account Active",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "invitation_status",
+   "label": "Invitation Status",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "browsing_sessions",
+   "label": "Browsing Sessions",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "first_email_date",
+   "label": "First Email Date",
+   "type": "Date",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "last_site_visit",
+   "label": "Last Site Visit",
+   "type": "Date",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "paid_seat_on_platform",
+   "label": "Paid Seat On Platform",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "broker_page_url",
+   "label": "YachtWay Broker Page",
+   "type": "URL",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "id",
+   "label": "Contact Id",
+   "type": "Id",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "account_id",
+   "label": "Account Id",
+   "type": "Lookup(Account)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "owner_id",
+   "label": "Owner Id",
+   "type": "Lookup(User)",
+   "source": "Lookup",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "owner",
+   "label": "Owner",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "record_type",
+   "label": "Record Type",
+   "type": "Text",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "contact_type",
+   "label": "Contact Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "first_name",
+   "label": "First Name",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "last_name",
+   "label": "Last Name",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "email",
+   "label": "Email",
+   "type": "Email",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "phone",
+   "label": "Phone",
+   "type": "Phone",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "mailing_street",
+   "label": "Street Address",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "mailing_city",
+   "label": "City",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "mailing_state",
+   "label": "State / Province",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "mailing_country",
+   "label": "Country",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "mailing_postal_code",
+   "label": "Postal Code",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "yachtway_db_id",
+   "label": "YachtWay DB ID",
+   "type": "Text(External Id)",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "signup_source",
+   "label": "Signup Source",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "signup_timestamp",
+   "label": "Signup Timestamp",
+   "type": "DateTime",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "vessel_price_min",
+   "label": "Vessel Price Min",
+   "type": "Currency",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "vessel_price_max",
+   "label": "Vessel Price Max",
+   "type": "Currency",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "vessel_length_ft_min",
+   "label": "Length Min (ft)",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "vessel_length_ft_max",
+   "label": "Length Max (ft)",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "brand_interests",
+   "label": "Brand Interests",
+   "type": "Multi-Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Sterling Yachts"
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "vessel_types",
+   "label": "Vessel Types",
+   "type": "Multi-Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "vessel_location_preference",
+   "label": "Location Preference",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "purchase_timeframe",
+   "label": "Purchase Timeframe",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Immediately; Within 1 month; Within 3 months; 6+ months; Just browsing"
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "has_buyer_broker",
+   "label": "Has Buyer Broker",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "vessel_in_mind",
+   "label": "Vessel In Mind",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "amplitude_id",
+   "label": "Amplitude Id",
+   "type": "Text",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "amplitude_user_id",
+   "label": "Amplitude user_id (=DB ID)",
+   "type": "Text",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "amplitude_device_id",
+   "label": "Amplitude device_id",
+   "type": "Text",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "last_site_visit",
+   "label": "Last Site Visit",
+   "type": "Date",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "sessions_30d",
+   "label": "Sessions 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "avg_session_minutes_30d",
+   "label": "Avg Session Min 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "browsing_sessions",
+   "label": "Browsing Sessions",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "listing_views_to_date",
+   "label": "Listing Views To Date",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "number_of_inquiries",
+   "label": "# Inquiries",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "vessel_saves_price_alerts",
+   "label": "Saves / Price Alerts",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "number_of_tours_scheduled",
+   "label": "# Tours Scheduled",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "waylo_questions_7d",
+   "label": "Waylo Questions 7d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "nautix_trips_30d",
+   "label": "NautiX Trips 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "buyer_intent_score",
+   "label": "Buyer Intent Score",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "top_events_30d",
+   "label": "Top Events 30d",
+   "type": "Text",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "intent_tier",
+   "label": "Intent Tier",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Low; Medium; High"
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "easyfund",
+   "label": "EasyFund Flag",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "mastercover",
+   "label": "MasterCover Flag",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "first_touch_source",
+   "label": "First-Touch Source",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "last_touch_source",
+   "label": "Last-Touch Source",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "email_opt_in",
+   "label": "Email Opt-In",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "created_date",
+   "label": "Created Date",
+   "type": "DateTime",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "spotlight_video_views_30d",
+   "label": "Spotlight Video Views 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "dob_year",
+   "label": "DOB Year",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "yachtway_logins",
+   "label": "YachtWay Logins",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "prior_owned_vessels",
+   "label": "Prior Owned Vessels",
+   "type": "Long Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "tour_3d_views_30d",
+   "label": "Tour 3D Views 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "monthly_payment_min",
+   "label": "Monthly Payment Min",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "waylo_max_q_per_session_7d",
+   "label": "Waylo Max Q Per Session 7d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "title",
+   "label": "Title",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "last_yachtway_login",
+   "label": "Last YachtWay Login",
+   "type": "Date",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "monthly_payment_max",
+   "label": "Monthly Payment Max",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "first_email_date",
+   "label": "First Email Date",
+   "type": "Date",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "inquiries_last_30d",
+   "label": "Inquiries Last 30d",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "buyer_broker_name",
+   "label": "Buyer Broker Name",
+   "type": "Lookup(Account)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "yrs_boat_ownership",
+   "label": "Yrs Boat Ownership",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "id",
+   "label": "Listing Id",
+   "type": "Id",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "name",
+   "label": "Listing Name",
+   "type": "Text",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "account_id",
+   "label": "Account Id",
+   "type": "Lookup(Account)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "account",
+   "label": "Account",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "listing_broker_id",
+   "label": "Listing Broker Id",
+   "type": "Lookup(Contact)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "listing_broker",
+   "label": "Listing Broker",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "yachtway_listing_id",
+   "label": "YachtWay Listing ID",
+   "type": "Text(External Id)",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "vessel_listing_name",
+   "label": "Vessel Listing Name",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "vessel_make",
+   "label": "Make",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "vessel_model",
+   "label": "Model",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "vessel_year",
+   "label": "Year",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "boat_type",
+   "label": "Boat Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "length_ft",
+   "label": "Length (ft)",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "beam",
+   "label": "Beam (ft)",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "cabins",
+   "label": "Cabins",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "guests",
+   "label": "Guests",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "fuel_type",
+   "label": "Fuel Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "number_of_engines",
+   "label": "# Engines",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "cruise_speed",
+   "label": "Cruise Speed (kn)",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "top_speed",
+   "label": "Top Speed (kn)",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "vessel_price",
+   "label": "Vessel Price",
+   "type": "Currency",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "sales_status",
+   "label": "Sales Status",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Available; Hidden; Sale Pending; Sold; Withdrawn; Draft"
+  },
+  {
+   "object": "Listing",
+   "field": "active_from_date",
+   "label": "Active From",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "vessel_location_city",
+   "label": "Location City",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "vessel_location_state",
+   "label": "Location State",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "vessel_location_country",
+   "label": "Location Country",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "photo_count",
+   "label": "Photo Count",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "video_count",
+   "label": "Video Count",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "has_3d_tour",
+   "label": "Has 3D Tour",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "listing_link",
+   "label": "Listing Link",
+   "type": "URL",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "views_30d",
+   "label": "Views 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "inquiries_30d",
+   "label": "Inquiries 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "spotlight_to_listing_ctr_30d",
+   "label": "Spotlight\u2192Listing CTR 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "created_date",
+   "label": "Created Date",
+   "type": "DateTime",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "id",
+   "label": "Opportunity Id",
+   "type": "Id",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "record_type",
+   "label": "Record Type",
+   "type": "Text",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "dealer_id",
+   "label": "Dealer Id",
+   "type": "Lookup(Account)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "dealer",
+   "label": "Dealer",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "contact_id",
+   "label": "Primary Contact Id",
+   "type": "Lookup(Contact)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "contact",
+   "label": "Primary Contact",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "coapplicant_id",
+   "label": "Co-applicant Id",
+   "type": "Lookup(Contact)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "coapplicant",
+   "label": "Co-applicant",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "lender_id",
+   "label": "Lender Id",
+   "type": "Lookup(Account)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "lender",
+   "label": "Lender",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "related_listing_id",
+   "label": "Related Listing Id",
+   "type": "Lookup(Listing__c)",
+   "source": "Lookup",
+   "lookupTarget": "Listings",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "related_listing",
+   "label": "Related Listing",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Listings",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "owner_id",
+   "label": "Owner Id",
+   "type": "Lookup(User)",
+   "source": "Lookup",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "owner",
+   "label": "Owner",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "added_to_dealer_closed_referrals",
+   "label": "Added to Dealer Closed Referrals",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "added_to_dealer_total_referrals",
+   "label": "Added to Dealer Total Referrals",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "amount_from_lender",
+   "label": "Amount From Lender",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "approved_conditions",
+   "label": "Approved Conditions",
+   "type": "Multi-Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Address of Storage or Mooring Location; Confirmation of intended use (recreational only, no commercial/charter use); Copy of Identification; CSI (Condition & Serial Number) Inspection (if survey waived); Executed Purchase Agreement or Bill of Sale; Full Marine Survey (Condition & Valuation); Insurance Binder naming lender as loss payee- Must meet lender liability and hull coverage minimums; Manufacturer Certificate of Origin (for new vessels); Mechanical Survey (Engine, generator, propulsion systems); Most Recent Bank Statement (to verify funds to close); Personal Financial Statement; Photo of Hull Identification Number (HIN); Photos of Engine Serial Numbers; Proof of Down Payment (bank statement, wire confirmation, etc.); Proof of U.S. Coast Guard Documentation or State Registration; Two Years of Tax Returns; Other - Add to Approval Notes"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "approved_conditions_notes",
+   "label": "Approved Conditions Notes",
+   "type": "Long Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "close_date",
+   "label": "Close Date",
+   "type": "Date",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "co_applicant_credit_score",
+   "label": "Co-applicant Credit Score",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Under 650; 650-699; 700-739; 740-799; 800+"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "co_applicant_monthly_debt",
+   "label": "Co-applicant Monthly Debt",
+   "type": "Currency",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "co_applicant_monthly_income",
+   "label": "Co-Applicant Monthly Income",
+   "type": "Currency",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "co_applicant_monthly_income_range",
+   "label": "Co-Applicant Monthly Income Range",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Under $10,000; $10,000-$24,999; $25,000-$49,999; $50,00-$99,999; $100,000-$499,999; $500,000+"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "created_date",
+   "label": "Created Date",
+   "type": "DateTime",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "credit_score",
+   "label": "Credit Score Band",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Under 650; 650-699; 700-739; 740-799; 800+"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "currently_financed_through",
+   "label": "Currently Financed Through",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "dealer_referral_bonus",
+   "label": "Dealer Referral Bonus",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "decline_notes",
+   "label": "Decline Notes",
+   "type": "Long Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "decline_reason",
+   "label": "Decline Reason",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Borrower Communication- Application Withdrawn by Borrower; Borrower Communication- Borrower Decided Not to Move Forward; Borrower Communication- Borrower Unreachable; Borrower Communication- Borrower Unresponsive to Follow-Up; Borrower Communication- Incomplete Application; Collateral/Vessel- Ineligible Vessel Type (Houseboat, Liveaboard, etc.); Collateral/Vessel- Required Vessel Documentation Not Provided; Collateral/Vessel- Survey Failed (Structural/Mechanical Issues); Collateral/Vessel- Vessel Too Old for Financing; Collateral/Vessel- Vessel Valuation Too Low for Requested Loan; Credit & Financial- Credit Score Below Minimum; Credit & Financial- Debt-to-Income Ratio Too High; Credit & Financial- Derogatory Credit; Credit & Financial- Incomplete Financial Documentation; Credit & Financial- Insufficient Income to Qualify; Credit & Financial- Recent Bankruptcy or Foreclosure; Credit & Financial- Unverifiable Income or Assets; External Factors- Cash Purchase Instead; External Factors- Decided to Delay Purchase; External Factors- Financed Elsewhere; External Factors- Switched to Different Product/Loan Type; Loan Structure- Loan Amount Below Minimum Threshold; Loan Structure- Loan Terms Not Accepted by Borrower; Loan Structure- Loan-to-Value (LTV) Exceeds Policy Limits"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "down_payment",
+   "label": "Down Payment",
+   "type": "Currency",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "opportunity_status",
+   "label": "Opportunity Status",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Abandoned; Open; Won; Lost"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "engine_make",
+   "label": "Engine Make",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "engine_type",
+   "label": "Engine Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Outboard; IPS Pod Drive; Sterndrive; V-Drive; Jet Drive; Surface Drive; Shaft Drive; Sail Drive; Electric; Foil Drive; Zeus Pod; Axius; Direct Drive"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "has_co_applicant",
+   "label": "Has Co-Applicant?",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "horsepower",
+   "label": "Horsepower",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "interest_rate",
+   "label": "Interest Rate %",
+   "type": "Percent",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "last_stage_change_date",
+   "label": "Last Stage Change",
+   "type": "DateTime",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "lead_source",
+   "label": "Lead Source",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "loan_amount",
+   "label": "Loan Amount",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "loan_term",
+   "label": "Loan Term (mo)",
+   "type": "Number",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "loan_type",
+   "label": "Loan Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Fixed rate; ARM; Interest Only"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "monthly_debt",
+   "label": "Monthly Debt",
+   "type": "Currency",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "monthly_income",
+   "label": "Monthly Income",
+   "type": "Currency",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "monthly_income_range",
+   "label": "Monthly Income",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Under $10,000; $10,000-$24,999; $25,000-$49,999; $50,00-$99,999; $100,000-$499,999; $500,000+"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "monthly_payment",
+   "label": "Monthly Payment",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "number_of_engines",
+   "label": "Number of Engines",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "opportunity_amount",
+   "label": "Opportunity Amount",
+   "type": "Currency",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "opportunity_closed",
+   "label": "Opportunity Closed",
+   "type": "Date",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "opportunity_created",
+   "label": "Opportunity Created",
+   "type": "Date",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "name",
+   "label": "Opportunity Name",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "paid_to_referring_dealer",
+   "label": "Paid to Referring Dealer",
+   "type": "Currency",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "prequalification_id",
+   "label": "Prequal ID",
+   "type": "Text(External Id)",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "purchase_price",
+   "label": "Purchase Price",
+   "type": "Currency",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "purchase_refinance",
+   "label": "Purchase/Refinance",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Purchase; Refinance"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "referral_to_dealer",
+   "label": "Referral % to Dealer",
+   "type": "Number",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "referral_fee_added_to_dealer_account",
+   "label": "Referral Fee Added to Dealer Account",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "reserve",
+   "label": "Reserve",
+   "type": "Number",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "stage",
+   "label": "Stage",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Pre-Qual Complete; Unresponsive; Still Shopping; Partial Application; Application Complete; In Review; Approved; Loan Closed; Closed"
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "utm_campaign",
+   "label": "utm campaign",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "utm_content",
+   "label": "utm content",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "utm_medium",
+   "label": "utm medium",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "utm_source",
+   "label": "utm source",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "vessel_listing_url",
+   "label": "Vessel Listing URL",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "vessel_make",
+   "label": "Vessel Make",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "vessel_model",
+   "label": "Vessel Model",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "vessel_year",
+   "label": "Vessel Year",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "easyfund_external_id",
+   "label": "YachtWay EasyFund External ID",
+   "type": "Text(External Id)",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "id",
+   "label": "Opportunity Id",
+   "type": "Id",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "record_type",
+   "label": "Record Type",
+   "type": "Text",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "insurer_id",
+   "label": "Insurance Company ID",
+   "type": "Lookup(Account)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "insurance_company",
+   "label": "Insurance Company",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "contact_id",
+   "label": "Contact Id",
+   "type": "Lookup(Contact)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "contact",
+   "label": "Contact",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "related_listing_id",
+   "label": "Related Listing Id",
+   "type": "Lookup(Listing__c)",
+   "source": "Lookup",
+   "lookupTarget": "Listings",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "related_listing",
+   "label": "Related Listing",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Listings",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "owner_id",
+   "label": "Owner Id",
+   "type": "Lookup(User)",
+   "source": "Lookup",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "owner",
+   "label": "Owner",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "actual_premium",
+   "label": "Actual Premium",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "added_to_dealer_closed_referrals",
+   "label": "Added to Dealer Closed Referrals",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "added_to_dealer_total_referrals",
+   "label": "Added to Dealer Total Referrals",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "opportunity_amount",
+   "label": "Opportunity Amount",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "anyone_live_aboard",
+   "label": "Anyone Live Aboard?",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "build_type",
+   "label": "Build Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Series Production; Full Custom"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "captain",
+   "label": "Captain?",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "center_console",
+   "label": "Center Console?",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "close_date",
+   "label": "Close Date",
+   "type": "Date",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "coverages",
+   "label": "Coverages",
+   "type": "Multi-Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Personal Accident Coverage; Third Party Liability; Protection & Indemnity; Additional Assureds"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "created_date",
+   "label": "Created Date",
+   "type": "DateTime",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "cruising_area",
+   "label": "Cruising Area",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Mediterranean Trading; North Sea / European Atlantic Coast; Caribbean, Florida; USA East Coast & Canada (Excluding Florida); USA West Coast, Canada, Mexico; Coastal Waters Europe; Coastal Waters International"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "engine_type",
+   "label": "Engine Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Outboard; IPS Pod Drive; Sterndrive; V-Drive; Jet Drive; Surface Drive; Shaft Drive; Sail Drive; Electric; Foil Drive; Zeus Pod; Axius; Direct Drive"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "vessel_flag_location",
+   "label": "Flag Location",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Andorra; United Arab Emirates; Afghanistan; Antigua and Barbuda; Anguilla; Albania; Armenia; Angola; Antarctica; Argentina; Austria; Australia; Aruba; Aland Islands; Azerbaijan; Bosnia and Herzegovina; Barbados; Bangladesh; Belgium; Burkina Faso; Bulgaria; Bahrain; Burundi; Benin; Saint Barth\u00e9lemy; Bermuda; Brunei Darussalam; Bolivia, Plurinational State of; Bonaire, Sint Eustatius and Saba; Brazil; Bahamas; Bhutan; Bouvet Island; Botswana; Belarus; Belize; Canada; Cocos (Keeling) Islands; Congo, the Democratic Republic of the; Central African Republic; Congo; Switzerland; Cote d'Ivoire; Cook Islands; Chile; Cameroon; China; Colombia; Costa Rica; Cape Verde; Cura\u00e7ao; Christmas Island; Cyprus; Czechia; Germany; Djibouti; Denmark; Dominica; Dominican Republic; Algeria; Ecuador; Estonia; Egypt; Western Sahara; Eritrea; Spain; Ethiopia; Finland; Fiji; Falkland Islands (Malvinas); Faroe Islands; France; Gabon; United Kingdom; Grenada; Georgia; French Guiana; Guernsey; Ghana; Gibraltar; Greenland; Gambia; Guinea; Guadeloupe; Equatorial Guinea; Greece; South Georgia and the South Sandwich Islands; Guatemala; Guinea-Bissau; Guyana; Heard Island and McDonald Islands; Honduras; Croatia; Haiti; Hungary; Indonesia; Ireland; Israel; Isle of Man; India; British Indian Ocean Territory; Iraq; Iceland; Italy; Jersey; Jamaica; Jordan; Japan; Kenya; Kyrgyzstan; Cambodia; Kiribati; Comoros; Saint Kitts and Nevis; Korea, Republic of; Kuwait; Cayman Islands; Kazakhstan; Lao People's Democratic Republic; Lebanon; Saint Lucia; Liechtenstein; Sri Lanka; Liberia; Lesotho; Lithuania; Luxembourg; Latvia; Libya; Morocco; Monaco; Moldova, Republic of; Montenegro; Saint Martin (French part); Madagascar; North Macedonia; Mali; Myanmar; Mongolia; Macao; Martinique; Mauritania; Montserrat; Malta; Mauritius; Maldives; Malawi; Mexico; Malaysia; Mozambique; Namibia; New Caledonia; Niger; Norfolk Island; Nigeria; Nicaragua; Netherlands; Norway; Nepal; Nauru; Niue; New Zealand; Oman; Panama; Peru; French Polynesia; Papua New Guinea; Philippines; Pakistan; Poland; Saint Pierre and Miquelon; Pitcairn; Palestine; Portugal; Paraguay; Qatar; Reunion; Romania; Serbia; Russian Federation; Rwanda; Saudi Arabia; Solomon Islands; Seychelles; Sweden; Singapore; Saint Helena, Ascension and Tristan da Cunha; Slovenia; Svalbard and Jan Mayen; Slovakia; Sierra Leone; San Marino; Senegal; Somalia; Suriname; South Sudan; Sao Tome and Principe; El Salvador; Sint Maarten (Dutch part); Eswatini; Turks and Caicos Islands; Chad; French Southern Territories; Togo; Thailand; Tajikistan; Tokelau; Timor-Leste; Turkmenistan; Tunisia; Tonga; T\u00fcrkiye; Trinidad and Tobago; Tuvalu; Taiwan; Tanzania, United Republic of; Ukraine; Uganda; United States; Uruguay; Uzbekistan; Holy See (Vatican City State); Saint Vincent and the Grenadines; Venezuela, Bolivarian Republic of; Virgin Islands, British; Vietnam; Vanuatu; Wallis and Futuna; Samoa; Kosovo; Yemen; Mayotte; South Africa; Zambia; Zimbabwe"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "horsepower",
+   "label": "Horsepower",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "hull_material",
+   "label": "Hull Material",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Aluminum; Carbon Fiber; Composite; Fiberglass; Steel; Wood"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "hull_type",
+   "label": "Hull Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Monohull; Multihull"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "last_stage_change_date",
+   "label": "Last Stage Change",
+   "type": "DateTime",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "lead_source",
+   "label": "Lead Source",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "loan",
+   "label": "Loan?",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "loan_amount",
+   "label": "Loan Amount",
+   "type": "Currency",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "mastercover_id",
+   "label": "MasterCover ID",
+   "type": "Text(External Id)",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "notes",
+   "label": "Notes",
+   "type": "Long Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "number_crew_onboard",
+   "label": "Number Crew Onboard",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "opportunity_closed",
+   "label": "Opportunity Closed",
+   "type": "Date",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "opportunity_created",
+   "label": "Opportunity Created",
+   "type": "Date",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "name",
+   "label": "Opportunity Name",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "opportunity_status",
+   "label": "Opportunity Status",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Abandoned; Open; Won; Lost"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "credited_to_referring_dealer",
+   "label": "Credited to Referring Dealer",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "policy_effective_date",
+   "label": "Policy Effective Date",
+   "type": "Date",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "policy_status",
+   "label": "Policy Status",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Renewed; Denied/Rejected; Policy Current; Policy Lapsed"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "estimated_premium",
+   "label": "Estimated Premium",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "referral_to_dealer",
+   "label": "Referral % to Dealer",
+   "type": "Number",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "referral_fee_added_to_dealer_account",
+   "label": "Referral Fee Added to Dealer Account",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "stage",
+   "label": "Stage",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "New Lead; Contacted; Still Shopping; Application Complete; Closed"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "tender_hp_per_engine",
+   "label": "Tender HP per Engine",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "tender_make",
+   "label": "Tender Make",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "tender_model",
+   "label": "Tender Model",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "tender_num_of_engines",
+   "label": "Tender Num of Engines",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "tender_year",
+   "label": "Tender Year",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "tender",
+   "label": "Tender?",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "trailer_make",
+   "label": "Trailer Make",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "trailer_model",
+   "label": "Trailer Model",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "trailer_year",
+   "label": "Trailer Year",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "trailer",
+   "label": "Trailer?",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "used_for_charter",
+   "label": "Used for Charter",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "utm_campaign",
+   "label": "utm campaign",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "utm_content",
+   "label": "utm content",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "utm_medium",
+   "label": "utm medium",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "utm_source",
+   "label": "utm source",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "vessel_length_ft",
+   "label": "Vessel Length (ft)",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "vessel_make",
+   "label": "Vessel Make",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "vessel_model",
+   "label": "Vessel Model",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "vessel_name",
+   "label": "Vessel Name",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "vessel_participate_in_races",
+   "label": "Vessel Participate in Races",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "vessel_top_speed_knots",
+   "label": "Vessel Top Speed (knots)",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "vessel_type",
+   "label": "Vessel Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Motor Yacht; Sailing Yacht"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "vessel_value",
+   "label": "Vessel Value",
+   "type": "Currency",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "vessel_year",
+   "label": "Vessel Year",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "year_of_engine",
+   "label": "Year of Engine",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "id",
+   "label": "Opportunity Id",
+   "type": "Id",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "record_type",
+   "label": "Record Type",
+   "type": "Text",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "account_id",
+   "label": "Account Id",
+   "type": "Lookup(Account)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "account",
+   "label": "Account",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "contact_id",
+   "label": "Primary Contact Id",
+   "type": "Lookup(Contact)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "contact",
+   "label": "Primary Contact",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "bill_to_account_id",
+   "label": "Bill To (Account) Id",
+   "type": "Lookup(Account)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "bill_to_account",
+   "label": "Bill To (Account)",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "related_listing_id",
+   "label": "Related Listing Id",
+   "type": "Lookup(Listing__c)",
+   "source": "Lookup",
+   "lookupTarget": "Listings",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "related_listing",
+   "label": "Related Listing",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Listings",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "owner_id",
+   "label": "Owner Id",
+   "type": "Lookup(User)",
+   "source": "Lookup",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "owner",
+   "label": "Owner",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "name",
+   "label": "Opportunity Name",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "stage",
+   "label": "Stage",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Service Requested; Studio Booked; Shoot Complete; Content Delivered; Closed"
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "opportunity_amount",
+   "label": "Opportunity Amount",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "opportunity_closed",
+   "label": "Opportunity Closed",
+   "type": "Date",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "created_date",
+   "label": "Created Date",
+   "type": "DateTime",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "last_stage_change_date",
+   "label": "Last Stage Change",
+   "type": "DateTime",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "utm_source",
+   "label": "utm source",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "utm_medium",
+   "label": "utm medium",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "utm_campaign",
+   "label": "utm campaign",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "utm_content",
+   "label": "utm content",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "access_information",
+   "label": "Access Information",
+   "type": "Long Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "amount_paid",
+   "label": "Amount Paid (invoiced)",
+   "type": "Currency",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "at_boat_show",
+   "label": "At Boat Show?",
+   "type": "Checkbox",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "boat_show",
+   "label": "Boat Show",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Newport Beach 2026; Palm Beach 2026; Palma 2026; Cannes 2026; Monaco 2026; FLIBS 2026"
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "request_received_email_sent",
+   "label": "Request Received Email Sent",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "dop",
+   "label": "DOP",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "dop_2",
+   "label": "DOP 2",
+   "type": "Text",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "gate_slip",
+   "label": "Gate / Slip",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "ins_required_by_location",
+   "label": "Insurance required by location?",
+   "type": "Checkbox",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "link_to_vessel_external",
+   "label": "Link to Vessel on External Site",
+   "type": "URL",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "location_type",
+   "label": "Location Type",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Marina; Private Dock; Other"
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "mooring_address",
+   "label": "Mooring Address",
+   "type": "Long Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "notes",
+   "label": "Notes",
+   "type": "Long Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "onsite_contact_name",
+   "label": "On-site Contact",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "onsite_contact_phone",
+   "label": "On-site Phone",
+   "type": "Phone",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "requested_date",
+   "label": "Requested Date",
+   "type": "Date",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "requested_services",
+   "label": "Requested Services",
+   "type": "Long Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "requested_time",
+   "label": "Requested Time",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "rescheduling_policy_acknowledgement",
+   "label": "Rescheduling Policy Acknowledgement",
+   "type": "Checkbox",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "scheduled_confirmation_email_sent",
+   "label": "Scheduled Confirmation Email Sent",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "scheduled_date",
+   "label": "Scheduled Date",
+   "type": "Date",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "scheduled_time",
+   "label": "Scheduled Time",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "special_requests",
+   "label": "Special Requests",
+   "type": "Long Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "studio_pass_member",
+   "label": "Studio Pass Member",
+   "type": "Checkbox",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "vessel_listing_url",
+   "label": "Vessel Listing URL",
+   "type": "URL",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "vessel_make",
+   "label": "Vessel Make",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "vessel_model",
+   "label": "Vessel Model",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "vessel_name",
+   "label": "Vessel Name",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "vessel_ready_acknowledgement",
+   "label": "Vessel Ready Acknowledgement",
+   "type": "Checkbox",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Yes; No"
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "vessel_year",
+   "label": "Vessel Year",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "water_toys",
+   "label": "Water Toys",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Tender; Waverunner; SeaBobs; Floating Pool; Slide; Foils; Submarine; Seaplane; Helicopter; Other"
+  },
+  {
+   "object": "User",
+   "field": "created_by_id",
+   "label": "Created By (User) Id",
+   "type": "Lookup(User)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "User",
+   "field": "created_by",
+   "label": "Created By",
+   "type": "Text(lookup)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "created_by_id",
+   "label": "Created By (User) Id",
+   "type": "Lookup(User)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "created_by",
+   "label": "Created By",
+   "type": "Text(lookup)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "created_by_id",
+   "label": "Created By (User) Id",
+   "type": "Lookup(User)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Broker",
+   "field": "created_by",
+   "label": "Created By",
+   "type": "Text(lookup)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "created_by_id",
+   "label": "Created By (User) Id",
+   "type": "Lookup(User)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Contact \u2014 Buyer",
+   "field": "created_by",
+   "label": "Created By",
+   "type": "Text(lookup)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "created_by_id",
+   "label": "Created By (User) Id",
+   "type": "Lookup(User)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "created_by",
+   "label": "Created By",
+   "type": "Text(lookup)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "created_by_id",
+   "label": "Created By (User) Id",
+   "type": "Lookup(User)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "created_by",
+   "label": "Created By",
+   "type": "Text(lookup)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "created_by_id",
+   "label": "Created By (User) Id",
+   "type": "Lookup(User)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "created_by",
+   "label": "Created By",
+   "type": "Text(lookup)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "created_by_id",
+   "label": "Created By (User) Id",
+   "type": "Lookup(User)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "created_by",
+   "label": "Created By",
+   "type": "Text(lookup)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity \u2014 EasyFund",
+   "field": "lost_reason",
+   "label": "Lost Reason",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Credit Score Under 650; Credit Score 650-700; Quote Too High; No Available Loan Product; Vessel Did Not Qualify; Paid Cash; Buyer Did Not Qualify; Financed Elsewhere; Other- EasyFund"
+  },
+  {
+   "object": "Opportunity \u2014 MasterCover",
+   "field": "lost_reason",
+   "label": "Lost Reason",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Premium Too High; No Available Coverage; Vessel Did Not Qualify; Insured Elsewhere; Buyer Did Not Qualify; Vessel Age / Condition; Cruising Area Not Covered; Declined by Underwriter; No Longer Needed; Other- MasterCover"
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "opportunity_status",
+   "label": "Opportunity Status",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Abandoned; Open; Won; Lost"
+  },
+  {
+   "object": "Opportunity \u2014 Studio",
+   "field": "lost_reason",
+   "label": "Lost Reason",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Price Too High; Scheduling Conflict; Used In-House Media; Listing Sold / Withdrawn; Booked Elsewhere; Vessel Unavailable; No Longer Interested; Other- Studio"
+  },
+  {
+   "object": "Account",
+   "field": "account_currency",
+   "label": "Account Currency",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "account_email",
+   "label": "Account Email",
+   "type": "Email",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "api_feed",
+   "label": "API Feed",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "billing_day_of_month",
+   "label": "Billing Day of Month",
+   "type": "Number",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "closings_in_house",
+   "label": "Closings in house?",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "created_from_signup",
+   "label": "Created from Signup",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "do_not_call",
+   "label": "Do Not Call",
+   "type": "Checkbox",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easysign_active",
+   "label": "EasySign Active",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easysign_custom_pricing",
+   "label": "EasySign Custom Pricing",
+   "type": "Currency",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easysign_demo_date",
+   "label": "EasySign Demo Date",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easysign_primary_contact_id",
+   "label": "EasySign Primary Contact Id",
+   "type": "Lookup(Contact)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easysign_primary_contact",
+   "label": "EasySign Primary Contact",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easysign_trial_active",
+   "label": "EasySign Trial Active",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easysign_trial_end_date",
+   "label": "EasySign Trial End Date",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "easysign_trial_start_date",
+   "label": "EasySign Trial Start Date",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "email_opt_out",
+   "label": "Email Opt Out",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "email_opt_in",
+   "label": "Email Opt-In",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "has_clicked_signup_link",
+   "label": "Has Clicked Signup Link",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "has_requested_or_booked",
+   "label": "Has Requested or Booked",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "high_intent_flag",
+   "label": "highIntentFlag",
+   "type": "Checkbox",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "in_house_financing",
+   "label": "In house financing?",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "is_studiopass_member",
+   "label": "Is Studiopass member",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "listings_live",
+   "label": "Listings Live",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "listings_live_date",
+   "label": "Listings Live Date",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "listings_updated_30d",
+   "label": "Listings Updated 30d",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_2_phone",
+   "label": "Office 2 Phone",
+   "type": "Phone",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_3_phone",
+   "label": "Office 3 Phone",
+   "type": "Phone",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_4_phone",
+   "label": "Office 4 Phone",
+   "type": "Phone",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "onboarding_complete",
+   "label": "Onboarding Complete",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "onboarding_started",
+   "label": "Onboarding Started",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "phone_2",
+   "label": "Phone 2",
+   "type": "Phone",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "photography_in_house",
+   "label": "Photography in house?",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "signup_notes",
+   "label": "Signup Notes",
+   "type": "Long Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "signup_source",
+   "label": "Signup Source",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "sms_opt_in",
+   "label": "SMS Opt-In",
+   "type": "Checkbox",
+   "source": "Make",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "spotlight_video_views_30d",
+   "label": "Spotlight Video Views 30d",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "studio_engaged",
+   "label": "Studio Engaged",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "studio_engaged_date",
+   "label": "Studio Engaged Date",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "studio_engagement_lift",
+   "label": "Studio Engagement Lift",
+   "type": "Percent",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "top_brand_affinity",
+   "label": "Top Brand Affinity",
+   "type": "Text",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "total_amount_credited",
+   "label": "Total Amount Credited",
+   "type": "Number",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "total_amount_due",
+   "label": "Total Amount Due",
+   "type": "Number",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "total_amount_invoiced",
+   "label": "Total Amount Invoiced",
+   "type": "Number",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "total_amount_overdue",
+   "label": "Total Amount Overdue",
+   "type": "Number",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "total_amount_paid",
+   "label": "Total Amount Paid",
+   "type": "Number",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "total_draft_amount",
+   "label": "Total Draft Amount",
+   "type": "Number",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "total_unallocated_credit",
+   "label": "Total Unallocated Credit",
+   "type": "Number",
+   "source": "Xero",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "upsell_target_priority_1",
+   "label": "Upsell Target Priority 1",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "3D Tour; Photoshoot; Reels; Spotlights; Website Promo Video; Social Media Management; Photo Editing; Website Design; Team Portraits; EasySign; EasyFund; MasterCover; Closing Services; Registrations; Financing - Referrals/White-label; API Feed; Add Brokers; Add Offices"
+  },
+  {
+   "object": "Account",
+   "field": "upsell_target_priority_2",
+   "label": "Upsell Target Priority 2",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "3D Tour; Photoshoot; Reels; Spotlights; Website Promo Video; Social Media Management; Photo Editing; Website Design; Team Portraits; EasySign; EasyFund; MasterCover; Closing Services; Registrations; Financing - Referrals/White-label; API Feed; Add Brokers; Add Offices"
+  },
+  {
+   "object": "Account",
+   "field": "upsell_target_priority_3",
+   "label": "Upsell Target Priority 3",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "3D Tour; Photoshoot; Reels; Spotlights; Website Promo Video; Social Media Management; Photo Editing; Website Design; Team Portraits; EasySign; EasyFund; MasterCover; Closing Services; Registrations; Financing - Referrals/White-label; API Feed; Add Brokers; Add Offices"
+  },
+  {
+   "object": "Account",
+   "field": "website_visit_count",
+   "label": "Website Visit Count",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_2_street",
+   "label": "Office #2 Street Address",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_2_city",
+   "label": "Office #2 City",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_2_state",
+   "label": "Office #2 State / Province",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_2_country",
+   "label": "Office #2 Country",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_2_postal_code",
+   "label": "Office #2 Postal Code",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_3_street",
+   "label": "Office #3 Street Address",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_3_city",
+   "label": "Office #3 City",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_3_state",
+   "label": "Office #3 State / Province",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_3_country",
+   "label": "Office #3 Country",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_3_postal_code",
+   "label": "Office #3 Postal Code",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_4_street",
+   "label": "Office #4 Street Address",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_4_city",
+   "label": "Office #4 City",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_4_state",
+   "label": "Office #4 State / Province",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_4_country",
+   "label": "Office #4 Country",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Account",
+   "field": "office_4_postal_code",
+   "label": "Office #4 Postal Code",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "black_water_tank_gal",
+   "label": "Black Water Tank (gal)",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "country_of_origin",
+   "label": "Country of Origin",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "cover_image_url",
+   "label": "Cover Image URL",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "crew",
+   "label": "Crew",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "double_beds",
+   "label": "Double Beds",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "draft_ft",
+   "label": "Draft ft",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "drive_type",
+   "label": "Drive Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "dry_heads",
+   "label": "Dry Heads",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "dry_weight",
+   "label": "Dry Weight",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "engine_1_hrs",
+   "label": "Engine 1 Hrs",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "engine_2_hrs",
+   "label": "Engine 2 Hrs",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "engine_3_hrs",
+   "label": "Engine 3 Hrs",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "engine_4_hrs",
+   "label": "Engine 4 Hrs",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "engine_5_hrs",
+   "label": "Engine 5 Hrs",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "engine_6_hrs",
+   "label": "Engine 6 Hrs",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "engines_name",
+   "label": "Engines Name",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "freshwater_tank_gal",
+   "label": "Freshwater Tank (gal)",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "fuel_tank_gal",
+   "label": "Fuel Tank (gal)",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "fuel_tank_material",
+   "label": "Fuel Tank Material",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "generator_1_hrs",
+   "label": "Generator 1 Hrs",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "generator_1_make",
+   "label": "Generator 1 Make",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "generator_2_hrs",
+   "label": "Generator 2 Hrs",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "generator_2_make",
+   "label": "Generator 2 Make",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "horsepower_per_engine",
+   "label": "Horsepower Per Engine",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "hull_material",
+   "label": "Hull Material",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": "Fiberglass; GRP; Steel; Aluminium; Steel / Aluminium; Composite; Carbon Fiber; Wood; Ferro-Cement"
+  },
+  {
+   "object": "Listing",
+   "field": "listing_description",
+   "label": "Listing Description",
+   "type": "Long Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "number_of_fuel_tanks",
+   "label": "Number of Fuel Tanks",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "overall_length_ft",
+   "label": "Overall Length ft",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "photos",
+   "label": "Photos",
+   "type": "File",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "price_changes",
+   "label": "Price Changes",
+   "type": "Long Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "range",
+   "label": "Range",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "sold_price",
+   "label": "Sold Price",
+   "type": "Currency",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "days_listed",
+   "label": "Days Listed",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "single_beds",
+   "label": "Single Beds",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "last_status_change",
+   "label": "Last Status Change",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "tour_url",
+   "label": "Tour URL",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "vessel_designer",
+   "label": "Vessel Designer",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "waterline_length_ft",
+   "label": "Waterline Length ft",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "wet_heads",
+   "label": "Wet Heads",
+   "type": "Number",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "number_of_inquiries",
+   "label": "Number of Inquiries",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "number_of_tours_scheduled",
+   "label": "Number of Tours Scheduled",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "number_of_live_streams",
+   "label": "Number of Live Streams",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "number_of_price_alerts",
+   "label": "Number of Price Alerts",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "social_reach",
+   "label": "Social Reach",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "views_youtube",
+   "label": "Views YouTube",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "views_fb_main",
+   "label": "Views FB Main",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "views_ig_main",
+   "label": "Views IG Main",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "views_fb_hub",
+   "label": "Views FB HUB",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "views_ig_hub",
+   "label": "Views IG HUB",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "views_tiktok",
+   "label": "Views TikTok",
+   "type": "Number",
+   "source": "Amplitude",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "vessel_details",
+   "label": "Vessel Details",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "listing_extras",
+   "label": "Listing Extras",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "vessel_features",
+   "label": "Vessel Features",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "vessel_price_text",
+   "label": "Vessel Price (Text)",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Listing",
+   "field": "sold_price_text",
+   "label": "Sold Price (Text)",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "id",
+   "label": "Dealer Event Id",
+   "type": "Id",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "dealer_id",
+   "label": "Dealer Id",
+   "type": "Lookup(Account)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "dealer",
+   "label": "Dealer",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Accounts",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_name",
+   "label": "Event Name",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "dealer_name",
+   "label": "Dealer Name",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "boat_show_name",
+   "label": "Boat Show Name",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_details",
+   "label": "Event Details",
+   "type": "Long Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_duration",
+   "label": "Event Duration",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_end_time",
+   "label": "Event End Time",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_end_date",
+   "label": "Event End Date",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_location",
+   "label": "Event Location",
+   "type": "Long Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_location_city",
+   "label": "Event Location City",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_location_country",
+   "label": "Event Location Country",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_location_postal_code",
+   "label": "Event Location Postal Code",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_location_state",
+   "label": "Event Location State",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_location_street",
+   "label": "Event Location Street",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_start_date",
+   "label": "Event Start Date",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_start_time",
+   "label": "Event Start Time",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_time_zone",
+   "label": "Event Time Zone",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "event_type",
+   "label": "Event Type",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "public_or_private",
+   "label": "Public or Private",
+   "type": "Picklist",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "yachtway_event_id",
+   "label": "YachtWay Event ID",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "created_by_id",
+   "label": "Created By (User) Id",
+   "type": "Lookup(User)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Dealer Event",
+   "field": "created_by",
+   "label": "Created By",
+   "type": "Text(lookup)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "id",
+   "label": "Link Id",
+   "type": "Id",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "broker_id",
+   "label": "Broker Id",
+   "type": "Lookup(Contact)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "broker_name",
+   "label": "Broker",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "listing_id",
+   "label": "Listing Id",
+   "type": "Lookup(Listing)",
+   "source": "Lookup",
+   "lookupTarget": "Listings",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "listing",
+   "label": "Listing",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Listings",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "buyer_id",
+   "label": "Buyer Id",
+   "type": "Lookup(Contact)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "buyer",
+   "label": "Buyer",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Contacts",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "sellers_role",
+   "label": "Seller's Role",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "sellers_email",
+   "label": "Seller's email",
+   "type": "Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "date_created",
+   "label": "Date Created",
+   "type": "Date",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "channel_shared",
+   "label": "Channel Shared",
+   "type": "Checkbox",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "recipient_emails",
+   "label": "Recipient emails",
+   "type": "Long Text",
+   "source": "Platform",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "created_by_id",
+   "label": "Created By (User) Id",
+   "type": "Lookup(User)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Broker Friendly Link",
+   "field": "created_by",
+   "label": "Created By",
+   "type": "Text(lookup)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Product",
+   "field": "id",
+   "label": "Product Id",
+   "type": "Id",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Product",
+   "field": "name",
+   "label": "Product Name",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Product",
+   "field": "product_code",
+   "label": "Product Code",
+   "type": "Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Product",
+   "field": "product_family",
+   "label": "Product Family",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "EasyFund; MasterCover; Studio; EasySign; Subscription; Other"
+  },
+  {
+   "object": "Product",
+   "field": "description",
+   "label": "Description",
+   "type": "Long Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Product",
+   "field": "list_price",
+   "label": "List Price",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Product",
+   "field": "unit",
+   "label": "Unit",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Each; Referral; Policy; Package; Month; Year"
+  },
+  {
+   "object": "Product",
+   "field": "revenue_type",
+   "label": "Revenue Type",
+   "type": "Picklist",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": "Referral Fee; Service; Subscription; Commission"
+  },
+  {
+   "object": "Product",
+   "field": "active",
+   "label": "Active",
+   "type": "Checkbox",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Product",
+   "field": "created_by_id",
+   "label": "Created By (User) Id",
+   "type": "Lookup(User)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Product",
+   "field": "created_by",
+   "label": "Created By",
+   "type": "Text(lookup)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "id",
+   "label": "Line Item Id",
+   "type": "Id",
+   "source": "System",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "opportunity_id",
+   "label": "Opportunity Id",
+   "type": "Lookup(Opportunity)",
+   "source": "Lookup",
+   "lookupTarget": "Opportunities",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "opportunity_name",
+   "label": "Opportunity",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Opportunities",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "product_id",
+   "label": "Product Id",
+   "type": "Lookup(Product)",
+   "source": "Lookup",
+   "lookupTarget": "Products",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "product_name",
+   "label": "Product",
+   "type": "Text(lookup)",
+   "source": "Lookup",
+   "lookupTarget": "Products",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "quantity",
+   "label": "Quantity",
+   "type": "Number",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "list_price",
+   "label": "List Price",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "unit_price",
+   "label": "Sales Price",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "discount",
+   "label": "Discount %",
+   "type": "Percent",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "total_price",
+   "label": "Total Price",
+   "type": "Currency",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "service_date",
+   "label": "Service Date",
+   "type": "Date",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "description",
+   "label": "Line Description",
+   "type": "Long Text",
+   "source": "Internal",
+   "lookupTarget": "",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "created_by_id",
+   "label": "Created By (User) Id",
+   "type": "Lookup(User)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  },
+  {
+   "object": "Opportunity Line Item",
+   "field": "created_by",
+   "label": "Created By",
+   "type": "Text(lookup)",
+   "source": "System",
+   "lookupTarget": "Users",
+   "options": ""
+  }
+ ]
+}

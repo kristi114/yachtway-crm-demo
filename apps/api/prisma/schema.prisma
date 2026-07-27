@@ -1,0 +1,1700 @@
+// ============================================================================
+// YachtWay CRM — core data model (Prisma / PostgreSQL)
+//
+// GENERATED 2026-07-20 from "YachtWay CRM - Proposed Field Catalog (BE-aligned).xlsx"
+// via prisma/gen-from-catalog.py, then relation/index/isolation rules layered on.
+// Strict alignment: the catalog is the source of truth for every column name and
+// type. Company == the account entity (table "companies"); Contact unions the
+// Broker and Buyer field sets under one record_type discriminator.
+//
+// Sensitive-domain isolation is INTENTIONAL: EasyFundLoan, MasterCoverApplication,
+// and financing-classed Conversations live in their own tables / carry a
+// sensitivity_class so access is enforced by Postgres RLS, never per-column masks.
+//
+// "<lookup>Label" style scalar columns (owner, company, dealer, ...) are kept from
+// the catalog beside each real FK: sync/backfill carries the source's display
+// label even before the related record exists, then reconciles.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Runtime: least-privilege crm_app role (RLS applies).
+  url = env("DATABASE_URL")
+  // Migrations / shadow DB / introspection: the owner (crm) role, which has the
+  // DDL + CREATE DATABASE rights that crm_app deliberately lacks. Prisma Migrate
+  // uses directUrl; the generated client always uses url.
+  directUrl = env("ADMIN_DATABASE_URL")
+}
+
+// Brand lookup — replaces the 1,000+-option Multi-Picklist on
+// Company.authorized_brands and Contact.brand_interests (build-plan design rule).
+model Brand {
+  id        String   @id @default(cuid())
+  /// Display name (preserves the casing an admin typed)
+  name      String   @unique
+  /// Normalized dedupe key (trimmed + lowercased) — "Sea Ray" and "sea ray" collapse
+  nameKey   String   @unique @map("name_key")
+  active    Boolean  @default(true)
+  /// picklist ordering (0 first); ties break by name
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  authorizedByCompanies Company[] @relation("CompanyAuthorizedBrands")
+  interestedContacts    Contact[] @relation("ContactBrandInterests")
+
+  @@index([sortOrder])
+  @@map("brands")
+}
+
+// Tag lookup — reusable, admin-managed labels applied to records (m2m), not a
+// free-text field. Applied to Contact and Company; extendable to other objects
+// by adding the corresponding back-relation + join.
+model Tag {
+  id          String   @id @default(cuid())
+  /// Display name (preserves casing the user typed)
+  name        String
+  /// Normalized dedupe key (trimmed + lowercased) — "VIP" and "vip" collapse here
+  nameKey     String   @unique @map("name_key")
+  color       String?
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt      @map("updated_at")
+
+  contacts  Contact[] @relation("ContactTags")
+  companies Company[] @relation("CompanyTags")
+
+  @@map("tags")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  name        String?  @map("name")
+  email       String?  @map("email")
+  title       String?  @map("title")
+  department  String?  @map("department")
+  userRole    String?  @map("user_role")
+  isActive    Boolean? @map("is_active")
+  createdById String?  @map("created_by_id")
+  createdBy   String?  @map("created_by")
+
+  // --- relations ---
+  ownedCompanies     Company[]      @relation("CompanyOwner")
+  ownedContacts      Contact[]      @relation("ContactOwner")
+  ownedOpportunities Opportunity[]  @relation("OpportunityOwner")
+  messages           Message[]      @relation("MessageOwner")
+  assignedConversations  Conversation[]          @relation("ConversationAssignee")
+  roleRef            Role?          @relation("UserRole", fields: [userRole], references: [key])
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([createdById])
+  @@map("users")
+}
+
+model Company {
+  id                               String    @id @default(cuid())
+  ownerId                          String?   @map("owner_id")
+  owner                            String?   @map("owner")
+  parentCompanyId                  String?   @map("parent_company_id")
+  parentCompany                    String?   @map("parent_company")
+  primaryContactId                 String?   @map("primary_contact_id")
+  primaryContact                   String?   @map("primary_contact")
+  totalActiveListings              Decimal?  @map("total_active_listings")
+  totalNumberOfBrokers             Decimal?  @map("total_number_of_brokers")
+  listingsAllTime                  Decimal?  @map("listings_all_time")
+  totalNumberOfOffices             Decimal?  @map("total_number_of_offices")
+  tour3dViews30d                   Decimal?  @map("tour_3d_views_30d")
+  accountCurrency                  String?   @map("account_currency")
+  companyEmail                     String?   @map("company_email")
+  name                             String?   @map("name")
+  companySource                    String?   @map("company_source")
+  companyStatus                    String?   @map("company_status")
+  companyType                      String?   @map("company_type")
+  activeCustomerDate               DateTime? @map("active_customer_date") @db.Date
+  apiConnected                     Boolean?  @map("api_connected")
+  apiAvailable                     Boolean?  @map("api_available")
+  apiFeedInfo                      String?   @map("api_feed_info")
+  avgListingPhotoCount             Decimal?  @map("avg_listing_photo_count")
+  avgResponseMinutes30d            Decimal?  @map("avg_response_minutes_30d")
+  billingCity                      String?   @map("billing_city")
+  billingCountry                   String?   @map("billing_country")
+  billingName                      String?   @map("billing_name")
+  billingPostalCode                String?   @map("billing_postal_code")
+  billingState                     String?   @map("billing_state")
+  billingStreet                    String?   @map("billing_street")
+  closingsInHouse                  Boolean?  @map("closings_in_house")
+  companyScore                     Decimal?  @map("company_score")
+  createdBy                        String?   @map("created_by")
+  createdById                      String?   @map("created_by_id")
+  createdDate                      DateTime? @map("created_date")
+  dealerLogoFile                   String?   @map("dealer_logo_file")
+  dealerLogoUrl                    String?   @map("dealer_logo_url")
+  dealerReferralCode               String?   @map("dealer_referral_code")
+  doNotCall                        Boolean?  @map("do_not_call")
+  easyfundClosedReferralsAmount    Decimal?  @map("easyfund_closed_referrals_amount") @db.Decimal(14, 2)
+  easyfundReferralPercentageClosed Decimal?  @map("easyfund_referral_percentage_closed")
+  easyfundReferralsClosed          Decimal?  @map("easyfund_referrals_closed")
+  easyfundReferralsTotal           Decimal?  @map("easyfund_referrals_total")
+  /// MasterCover referral rollup (parity with easyfund_closed_referrals_amount);
+  /// materialized by the INTEGRATION webhook on paid mastercover invoices so reps
+  /// see the aggregate without the RLS-hidden financing invoices.
+  mastercoverClosedReferralsAmount Decimal?  @map("mastercover_closed_referrals_amount") @db.Decimal(14, 2)
+  easysignActive                   Boolean?  @map("easysign_active")
+  easysignActiveDate               DateTime? @map("easysign_active_date") @db.Date
+  easysignCustomPricing            Decimal?  @map("easysign_custom_pricing") @db.Decimal(14, 2)
+  easysignDemoDate                 DateTime? @map("easysign_demo_date") @db.Date
+  easysignPrimaryContact           String?   @map("easysign_primary_contact")
+  easysignPrimaryContactId         String?   @map("easysign_primary_contact_id")
+  easysignSubscriptionType         String?   @map("easysign_subscription_type")
+  easysignTrialActive              Boolean?  @map("easysign_trial_active")
+  easysignTrialEndDate             DateTime? @map("easysign_trial_end_date") @db.Date
+  easysignTrialStartDate           DateTime? @map("easysign_trial_start_date") @db.Date
+  emailOptOut                      Boolean?  @map("email_opt_out")
+  firstListingDate                 DateTime? @map("first_listing_date") @db.Date
+  firstSignupDate                  DateTime? @map("first_signup_date") @db.Date
+  hasClickedSignupLink             Boolean?  @map("has_clicked_signup_link")
+  hasRequestedOrBooked             Boolean?  @map("has_requested_or_booked")
+  highIntentFlag                   Boolean?  @map("high_intent_flag")
+  inHouseFinancing                 Boolean?  @map("in_house_financing")
+  isStudiopassMember               Boolean?  @map("is_studiopass_member")
+  lastModifiedDate                 DateTime? @map("last_modified_date")
+  lastLogin                        DateTime? @map("last_login") @db.Date
+  listingViewsToDate               Decimal?  @map("listing_views_to_date")
+  listingViewsAllTime              Decimal?  @map("listing_views_all_time")
+  listingsLive                     Decimal?  @map("listings_live")
+  listingsLiveDate                 DateTime? @map("listings_live_date") @db.Date
+  listingsUpdated30d               Decimal?  @map("listings_updated_30d")
+  listingsW3dTour                  Decimal?  @map("listings_w_3d_tour")
+  liveStreamsDone                  Decimal?  @map("live_streams_done")
+  mainOfficeCity                   String?   @map("main_office_city")
+  mainOfficeCountry                String?   @map("main_office_country")
+  mainOfficePostalCode             String?   @map("main_office_postal_code")
+  mainOfficeState                  String?   @map("main_office_state")
+  mainOfficeStreet                 String?   @map("main_office_street")
+  medianResponseMinutes30d         Decimal?  @map("median_response_minutes_30d")
+  numberOfListingsOnExternalSite   Decimal?  @map("number_of_listings_on_external_site")
+  office2Id                        String?   @map("office_2_id")
+  office2City                      String?   @map("office_2_city")
+  office2Country                   String?   @map("office_2_country")
+  office2PostalCode                String?   @map("office_2_postal_code")
+  office2State                     String?   @map("office_2_state")
+  office2Street                    String?   @map("office_2_street")
+  office3Id                        String?   @map("office_3_id")
+  office3City                      String?   @map("office_3_city")
+  office3Country                   String?   @map("office_3_country")
+  office3PostalCode                String?   @map("office_3_postal_code")
+  office3State                     String?   @map("office_3_state")
+  office3Street                    String?   @map("office_3_street")
+  office4Id                        String?   @map("office_4_id")
+  office4City                      String?   @map("office_4_city")
+  office4Country                   String?   @map("office_4_country")
+  office4PostalCode                String?   @map("office_4_postal_code")
+  office4State                     String?   @map("office_4_state")
+  office4Street                    String?   @map("office_4_street")
+  office2Phone                     String?   @map("office_2_phone")
+  office3Phone                     String?   @map("office_3_phone")
+  office4Phone                     String?   @map("office_4_phone")
+  onboardingComplete               Boolean?  @map("onboarding_complete")
+  onboardingCompleteDate           DateTime? @map("onboarding_complete_date") @db.Date
+  paidAdminSeats                   Decimal?  @map("paid_admin_seats")
+  paidBrokerSeats                  Decimal?  @map("paid_broker_seats")
+  paidOffices                      Decimal?  @map("paid_offices")
+  paymentMethodAdded               Boolean?  @map("payment_method_added")
+  phone                            String?   @map("phone")
+  photographyInHouse               Boolean?  @map("photography_in_house")
+  playbookUpsellTargets            String[]  @map("playbook_upsell_targets")
+  signupSource                     String?   @map("signup_source")
+  socialReachToDate                Decimal?  @map("social_reach_to_date")
+  soldListings                     Decimal?  @map("sold_listings")
+  totalSpotlightViews30d           Decimal?  @map("total_spotlight_views_30d")
+  sqlTriggeredDate                 DateTime? @map("sql_triggered_date") @db.Date
+  stripeCustomerId                 String?   @map("stripe_customer_id")
+  studioEngaged                    Boolean?  @map("studio_engaged")
+  studioEngagedDate                DateTime? @map("studio_engaged_date") @db.Date
+  studioEngagementLift             Decimal?  @map("studio_engagement_lift") @db.Decimal(6, 3)
+  studioSpendQtr                   Decimal?  @map("studio_spend_qtr") @db.Decimal(14, 2)
+  studioSpendLifetime              Decimal?  @map("studio_spend_lifetime") @db.Decimal(14, 2)
+  studioSpendYtd                   Decimal?  @map("studio_spend_ytd") @db.Decimal(14, 2)
+  totalAmountCredited              Decimal?  @map("total_amount_credited")
+  totalAmountDue                   Decimal?  @map("total_amount_due")
+  totalAmountInvoiced              Decimal?  @map("total_amount_invoiced")
+  totalAmountOverdue               Decimal?  @map("total_amount_overdue")
+  totalAmountPaid                  Decimal?  @map("total_amount_paid")
+  totalDraftAmount                 Decimal?  @map("total_draft_amount")
+  totalUnallocatedCredit           Decimal?  @map("total_unallocated_credit")
+  freeListingShootsEarned          Decimal?  @map("free_listing_shoots_earned")
+  freeListingShootsRemaining       Decimal?  @map("free_listing_shoots_remaining")
+  upsellTargetPriority1            String?   @map("upsell_target_priority_1")
+  upsellTargetPriority2            String?   @map("upsell_target_priority_2")
+  upsellTargetPriority3            String?   @map("upsell_target_priority_3")
+  website                          String?   @map("website")
+  websiteVisitCount                Decimal?  @map("website_visit_count")
+  xeroContactId                    String?   @map("xero_contact_id")
+  yachtwayDbAccountId              String?   @unique @map("yachtway_db_account_id")
+  yachtwayDealerPage               String?   @map("yachtway_dealer_page")
+  lastBrokerSignin                 Decimal?  @map("last_broker_signin")
+  lastAdminmgrSignin               Decimal?  @map("last_adminmgr_signin")
+  services                         String?   @map("services")
+  activeCompanyStatus              String?   @map("active_company_status")
+  spotlightCtr                     Decimal?  @map("spotlight_ctr") @db.Decimal(6, 3)
+  totalVideoViews30d               Decimal?  @map("total_video_views_30d")
+  videoViewsByPlatform             String?   @map("video_views_by_platform")
+  topSpotlightUrl                  String?   @map("top_spotlight_url")
+  /// Salesforce Account ID — migration/reconciliation key
+  sfAccountId                      String?   @unique @map("sf_account_id")
+
+  // --- relations ---
+  ownerUser                    User?                    @relation("CompanyOwner", fields: [ownerId], references: [id])
+  parent                       Company?                 @relation("CompanyHierarchy", fields: [parentCompanyId], references: [id])
+  primaryContactRecord         Contact?                 @relation("CompanyPrimaryContact", fields: [primaryContactId], references: [id])
+  easysignPrimaryContactRecord Contact?                 @relation("CompanyEasysignContact", fields: [easysignPrimaryContactId], references: [id])
+  authorizedBrands             Brand[]                  @relation("CompanyAuthorizedBrands")
+  tags                         Tag[]                    @relation("CompanyTags")
+  children                     Company[]                @relation("CompanyHierarchy")
+  contacts                     Contact[]                @relation("ContactCompany")
+  listings                     Listing[]                @relation("ListingCompany")
+  easyFundLoansAsDealer        EasyFundLoan[]           @relation("EasyFundDealer")
+  easyFundLoansAsLender        EasyFundLoan[]           @relation("EasyFundLender")
+  masterCoverAsInsurer         MasterCoverApplication[] @relation("MasterCoverInsurer")
+  masterCoverAsReferringDealer MasterCoverApplication[] @relation("MasterCoverReferringDealer")
+  studioDetails                StudioDetail[]           @relation("StudioCompany")
+  studioDetailsBilled          StudioDetail[]           @relation("StudioBillTo")
+  dealerEvents                 DealerEvent[]            @relation("DealerEventDealer")
+  messages                     Message[]                @relation("MessageCompany")
+  conversations                Conversation[]           @relation("ConversationCompany")
+  analyticsProfiles            AnalyticsProfile[]       @relation("AnalyticsProfileCompany")
+  invoices                     Invoice[]                @relation("InvoiceCompany")
+  bills                        Bill[]                   @relation("BillCompany")
+  creditNotes                  CreditNote[]             @relation("CreditNoteCompany")
+  estimates                    Estimate[]               @relation("EstimateCompany")
+  studioShootCredits           StudioShootCredit[]      @relation("ShootCreditCompany")
+  subscriptions                Subscription[]           @relation("SubscriptionCompany")
+  payments                     Payment[]                @relation("PaymentCompany")
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([ownerId])
+  @@index([parentCompanyId])
+  @@index([primaryContactId])
+  @@index([easysignPrimaryContactId])
+  @@index([createdById])
+  @@index([companyStatus])
+  @@map("companies")
+}
+
+model Contact {
+  id                       String    @id @default(cuid())
+  companyId                String?   @map("company_id")
+  company                  String?   @map("company")
+  ownerId                  String?   @map("owner_id")
+  owner                    String?   @map("owner")
+  recordType               String?   @map("record_type")
+  contactType              String?   @map("contact_type")
+  firstName                String?   @map("first_name")
+  lastName                 String?   @map("last_name")
+  title                    String?   @map("title")
+  email                    String?   @map("email")
+  officePhone              String?   @map("office_phone")
+  mobilePhone              String?   @map("mobile_phone")
+  officeStreet             String?   @map("office_street")
+  officeCity               String?   @map("office_city")
+  officeState              String?   @map("office_state")
+  officeCountry            String?   @map("office_country")
+  officePostalCode         String?   @map("office_postal_code")
+  yachtwayDbId             String?   @unique @map("yachtway_db_id")
+  brokerPageUrl            String?   @map("broker_page_url")
+  amplitudeId              String?   @map("amplitude_id")
+  amplitudeUserId          String?   @map("amplitude_user_id")
+  amplitudeDeviceId        String?   @map("amplitude_device_id")
+  lastLogin                DateTime? @map("last_login") @db.Date
+  daysSinceLastLogin       Decimal?  @map("days_since_last_login")
+  logins30d                Decimal?  @map("logins_30d")
+  sessions30d              Decimal?  @map("sessions_30d")
+  avgSessionMinutes30d     Decimal?  @map("avg_session_minutes_30d")
+  totalLogins              Decimal?  @map("total_logins")
+  lastAmplitudeEvent       String?   @map("last_amplitude_event")
+  loginFrequencyTier       String?   @map("login_frequency_tier")
+  emailOptIn               Boolean?  @map("email_opt_in")
+  smsOptIn                 Boolean?  @map("sms_opt_in")
+  createdDate              DateTime? @map("created_date")
+  brokerImage              String?   @map("broker_image")
+  signupTimestamp          DateTime? @map("signup_timestamp") @db.Date
+  nonresponsive            Boolean?  @map("nonresponsive")
+  requestedDemo            Boolean?  @map("requested_demo")
+  firstCallDate            DateTime? @map("first_call_date") @db.Date
+  companyActive            Boolean?  @map("company_active")
+  invitationStatus         String?   @map("invitation_status")
+  browsingSessions         Decimal?  @map("browsing_sessions")
+  activeListings           Decimal?  @map("active_listings")
+  firstEmailDate           DateTime? @map("first_email_date") @db.Date
+  lastSiteVisit            DateTime? @map("last_site_visit") @db.Date
+  paidSeatOnPlatform       Boolean?  @map("paid_seat_on_platform")
+  createdById              String?   @map("created_by_id")
+  createdBy                String?   @map("created_by")
+  dealershipId             String?   @map("dealership_id")
+  shipyardId               String?   @map("shipyard_id")
+  dealershipOfficeId       String?   @map("dealership_office_id")
+  isEmailVerified          Boolean?  @map("is_email_verified")
+  platformRole             String?   @map("platform_role")
+  tags                     Tag[]     @relation("ContactTags")
+  phone                    String?   @map("phone")
+  mailingStreet            String?   @map("mailing_street")
+  mailingCity              String?   @map("mailing_city")
+  mailingState             String?   @map("mailing_state")
+  mailingCountry           String?   @map("mailing_country")
+  mailingPostalCode        String?   @map("mailing_postal_code")
+  signupSource             String?   @map("signup_source")
+  vesselPriceMin           Decimal?  @map("vessel_price_min") @db.Decimal(14, 2)
+  vesselPriceMax           Decimal?  @map("vessel_price_max") @db.Decimal(14, 2)
+  vesselLengthFtMin        Decimal?  @map("vessel_length_ft_min")
+  vesselLengthFtMax        Decimal?  @map("vessel_length_ft_max")
+  vesselTypes              String[]  @map("vessel_types")
+  vesselLocationPreference String?   @map("vessel_location_preference")
+  purchaseTimeframe        String?   @map("purchase_timeframe")
+  hasBuyerBroker           Boolean?  @map("has_buyer_broker")
+  listingViewsToDate       Decimal?  @map("listing_views_to_date")
+  numberOfInquiries        Decimal?  @map("number_of_inquiries")
+  vesselSavesPriceAlerts   Decimal?  @map("vessel_saves_price_alerts")
+  numberOfToursScheduled   Decimal?  @map("number_of_tours_scheduled")
+  wayloQuestions7d         Decimal?  @map("waylo_questions_7d")
+  nautixTrips30d           Decimal?  @map("nautix_trips_30d")
+  buyerIntentScore         Decimal?  @map("buyer_intent_score")
+  topEvents30d             String?   @map("top_events_30d")
+  intentTier               String?   @map("intent_tier")
+  easyfund                 Boolean?  @map("easyfund")
+  mastercover              Boolean?  @map("mastercover")
+  spotlightVideoViews30d   Decimal?  @map("spotlight_video_views_30d")
+  dobYear                  String?   @map("dob_year")
+  priorOwnedVessels        String?   @map("prior_owned_vessels")
+  tour3dViews30d           Decimal?  @map("tour_3d_views_30d")
+  monthlyPaymentMin        Decimal?  @map("monthly_payment_min")
+  wayloMaxQPerSession7d    Decimal?  @map("waylo_max_q_per_session_7d")
+  lastYachtwayLogin        DateTime? @map("last_yachtway_login") @db.Date
+  monthlyPaymentMax        Decimal?  @map("monthly_payment_max")
+  inquiriesLast30d         Decimal?  @map("inquiries_last_30d")
+  buyerBrokerName          String?   @map("buyer_broker_name")
+  yrsBoatOwnership         Decimal?  @map("yrs_boat_ownership")
+  /// Salesforce Contact ID — migration/reconciliation key
+  sfContactId              String?   @unique @map("sf_contact_id")
+
+  // --- relations ---
+  companyRecord              Company?             @relation("ContactCompany", fields: [companyId], references: [id])
+  ownerUser                  User?                @relation("ContactOwner", fields: [ownerId], references: [id])
+  brandInterests             Brand[]              @relation("ContactBrandInterests")
+  primaryForCompanies        Company[]            @relation("CompanyPrimaryContact")
+  easysignForCompanies       Company[]            @relation("CompanyEasysignContact")
+  brokeredListings           Listing[]            @relation("ListingBroker")
+  opportunities              Opportunity[]        @relation("OpportunityContact")
+  easyFundLoansAsCoapplicant EasyFundLoan[]       @relation("EasyFundCoapplicant")
+  brokerLinksAsBroker        BrokerFriendlyLink[] @relation("BrokerLinkBroker")
+  brokerLinksAsBuyer         BrokerFriendlyLink[] @relation("BrokerLinkBuyer")
+  messages                   Message[]            @relation("MessageContact")
+  conversations              Conversation[]       @relation("ConversationContact")
+  invoicesBilled             Invoice[]            @relation("InvoiceContact")
+  billsBilled                Bill[]               @relation("BillContact")
+  creditNotesReceived        CreditNote[]         @relation("CreditNoteContact")
+  estimatesReceived          Estimate[]           @relation("EstimateRecipient")
+  amplitudeEvents            AmplitudeEvent[]     @relation("AmplitudeEventContact")
+  amplitudeCohorts           AmplitudeCohortMembership[] @relation("AmplitudeCohortMembershipContact")
+
+  /// Latest Amplitude user-properties snapshot (raw), from the User Properties destination.
+  amplitudeUserProperties Json? @map("amplitude_user_properties")
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId])
+  @@index([ownerId])
+  @@index([createdById])
+  @@index([email])
+  @@map("contacts")
+}
+
+model Listing {
+  id                        String    @id @default(cuid())
+  name                      String?   @map("name")
+  companyId                 String?   @map("company_id")
+  company                   String?   @map("company")
+  listingBrokerId           String?   @map("listing_broker_id")
+  listingBroker             String?   @map("listing_broker")
+  yachtwayListingId         String?   @unique @map("yachtway_listing_id")
+  vesselListingName         String?   @map("vessel_listing_name")
+  make                      String?   @map("make")
+  model                     String?   @map("model")
+  year                      Decimal?  @map("year")
+  category                  String?   @map("category")
+  lengthFt                  Decimal?  @map("length_ft")
+  beam                      Decimal?  @map("beam")
+  cabins                    Decimal?  @map("cabins")
+  guests                    Decimal?  @map("guests")
+  fuelType                  String?   @map("fuel_type")
+  numberOfEngines           Decimal?  @map("number_of_engines")
+  cruiseSpeed               Decimal?  @map("cruise_speed")
+  topSpeed                  Decimal?  @map("top_speed")
+  vesselPrice               Decimal?  @map("vessel_price") @db.Decimal(14, 2)
+  salesStatus               String?   @map("sales_status")
+  activeFromDate            DateTime? @map("active_from_date") @db.Date
+  vesselLocationCity        String?   @map("vessel_location_city")
+  vesselLocationState       String?   @map("vessel_location_state")
+  vesselLocationCountry     String?   @map("vessel_location_country")
+  photoCount                Decimal?  @map("photo_count")
+  videoCount                Decimal?  @map("video_count")
+  has3dTour                 Boolean?  @map("has_3d_tour")
+  listingLink               String?   @map("listing_link")
+  viewsTotal                Decimal?  @map("views_total")
+  views30d                  Decimal?  @map("views_30d")
+  inquiries30d              Decimal?  @map("inquiries_30d")
+  inquiriesTotal            Decimal?  @map("inquiries_total")
+  phoneClicks               Decimal?  @map("phone_clicks")
+  spotlightToListingCtr     Decimal?  @map("spotlight_to_listing_ctr")
+  createdDate               DateTime? @map("created_date")
+  createdById               String?   @map("created_by_id")
+  createdBy                 String?   @map("created_by")
+  blackWaterTankGal         Decimal?  @map("black_water_tank_gal")
+  countryOfOrigin           String?   @map("country_of_origin")
+  coverImageUrl             String?   @map("cover_image_url")
+  crew                      Decimal?  @map("crew")
+  doubleBeds                Decimal?  @map("double_beds")
+  draftFt                   Decimal?  @map("draft_ft")
+  driveType                 String?   @map("drive_type")
+  dryHeads                  Decimal?  @map("dry_heads")
+  dryWeight                 Decimal?  @map("dry_weight")
+  engine1Hrs                Decimal?  @map("engine_1_hrs")
+  engine2Hrs                Decimal?  @map("engine_2_hrs")
+  engine3Hrs                Decimal?  @map("engine_3_hrs")
+  engine4Hrs                Decimal?  @map("engine_4_hrs")
+  engine5Hrs                Decimal?  @map("engine_5_hrs")
+  engine6Hrs                Decimal?  @map("engine_6_hrs")
+  enginesName               String?   @map("engines_name")
+  freshwaterTankGal         Decimal?  @map("freshwater_tank_gal")
+  fuelTankGal               Decimal?  @map("fuel_tank_gal")
+  fuelTankMaterial          String?   @map("fuel_tank_material")
+  generator1Hrs             Decimal?  @map("generator_1_hrs")
+  generator1Make            String?   @map("generator_1_make")
+  generator2Hrs             Decimal?  @map("generator_2_hrs")
+  generator2Make            String?   @map("generator_2_make")
+  horsepowerPerEngine       Decimal?  @map("horsepower_per_engine")
+  hullMaterial              String?   @map("hull_material")
+  listingDescription        String?   @map("listing_description")
+  numberOfFuelTanks         Decimal?  @map("number_of_fuel_tanks")
+  overallLengthFt           Decimal?  @map("overall_length_ft")
+  priceChanges              String?   @map("price_changes")
+  range                     Decimal?  @map("range")
+  soldPrice                 Decimal?  @map("sold_price") @db.Decimal(14, 2)
+  daysListed                Decimal?  @map("days_listed")
+  singleBeds                Decimal?  @map("single_beds")
+  lastStatusChange          DateTime? @map("last_status_change") @db.Date
+  tourUrl                   String?   @map("tour_url")
+  vesselDesigner            String?   @map("vessel_designer")
+  waterlineLengthFt         Decimal?  @map("waterline_length_ft")
+  wetHeads                  Decimal?  @map("wet_heads")
+  numberOfToursScheduled    Decimal?  @map("number_of_tours_scheduled")
+  numberOfLiveStreams       Decimal?  @map("number_of_live_streams")
+  numberOfPriceAlerts       Decimal?  @map("number_of_price_alerts")
+  socialReach               Decimal?  @map("social_reach")
+  viewsYoutube              Decimal?  @map("views_youtube")
+  viewsFbMain               Decimal?  @map("views_fb_main")
+  viewsIgMain               Decimal?  @map("views_ig_main")
+  viewsFbHub                Decimal?  @map("views_fb_hub")
+  viewsIgHub                Decimal?  @map("views_ig_hub")
+  viewsTiktok               Decimal?  @map("views_tiktok")
+  vesselDetails             Boolean?  @map("vessel_details")
+  listingExtras             Boolean?  @map("listing_extras")
+  vesselFeatures            Boolean?  @map("vessel_features")
+  vesselPriceText           String?   @map("vessel_price_text")
+  soldPriceText             String?   @map("sold_price_text")
+  hullNumber                String?   @map("hull_number")
+  currency                  String?   @map("currency")
+  isPriceVisible            Boolean?  @map("is_price_visible")
+  isExclusive               Boolean?  @map("is_exclusive")
+  isAvailableForCoBrokerage Boolean?  @map("is_available_for_co_brokerage")
+  hasSpotlight              Boolean?  @map("has_spotlight")
+  heatScore                 String?   @map("heat_score")
+  heatTier                  String?   @map("heat_tier")
+  aiDescription             String?   @map("ai_description")
+  taxStatus                 String?   @map("tax_status")
+  importDutyPaidStatus      String?   @map("import_duty_paid_status")
+  sellerHighlights          String?   @map("seller_highlights")
+  generalWarrantyExpiration String?   @map("general_warranty_expiration")
+  powderRoom                String?   @map("powder_room")
+  crewCabins                String?   @map("crew_cabins")
+  crewBeds                  String?   @map("crew_beds")
+  crewHeads                 String?   @map("crew_heads")
+
+  // --- relations ---
+  companyRecord        Company?             @relation("ListingCompany", fields: [companyId], references: [id])
+  listingBrokerContact Contact?             @relation("ListingBroker", fields: [listingBrokerId], references: [id])
+  opportunities        Opportunity[]        @relation("OpportunityListing")
+  brokerLinks          BrokerFriendlyLink[] @relation("BrokerLinkListing")
+  messages             Message[]            @relation("MessageListing")
+  conversations        Conversation[]       @relation("ConversationListing")
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId])
+  @@index([listingBrokerId])
+  @@index([createdById])
+  @@map("listings")
+}
+
+model DealerEvent {
+  id                      String    @id @default(cuid())
+  dealerId                String?   @map("dealer_id")
+  dealer                  String?   @map("dealer")
+  eventName               String?   @map("event_name")
+  dealerName              String?   @map("dealer_name")
+  boatShowName            String?   @map("boat_show_name")
+  eventDetails            String?   @map("event_details")
+  eventDuration           String?   @map("event_duration")
+  eventEndTime            String?   @map("event_end_time")
+  eventEndDate            DateTime? @map("event_end_date") @db.Date
+  eventLocation           String?   @map("event_location")
+  eventLocationCity       String?   @map("event_location_city")
+  eventLocationCountry    String?   @map("event_location_country")
+  eventLocationPostalCode String?   @map("event_location_postal_code")
+  eventLocationState      String?   @map("event_location_state")
+  eventLocationStreet     String?   @map("event_location_street")
+  eventStartDate          DateTime? @map("event_start_date") @db.Date
+  eventStartTime          String?   @map("event_start_time")
+  eventTimeZone           String?   @map("event_time_zone")
+  eventType               String?   @map("event_type")
+  publicOrPrivate         String?   @map("public_or_private")
+  yachtwayEventId         String?   @map("yachtway_event_id")
+  createdById             String?   @map("created_by_id")
+  createdBy               String?   @map("created_by")
+  isActive                Boolean?  @map("is_active")
+  isCancelled             Boolean?  @map("is_cancelled")
+  repeating               Boolean?  @map("repeating")
+  invitedGuestsEmails     String?   @map("invited_guests_emails")
+
+  // --- relations ---
+  dealerCompany Company? @relation("DealerEventDealer", fields: [dealerId], references: [id])
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([dealerId])
+  @@index([createdById])
+  @@map("dealer_events")
+}
+
+model BrokerFriendlyLink {
+  id              String    @id @default(cuid())
+  brokerId        String?   @map("broker_id")
+  brokerName      String?   @map("broker_name")
+  listingId       String?   @map("listing_id")
+  listing         String?   @map("listing")
+  buyerId         String?   @map("buyer_id")
+  buyer           String?   @map("buyer")
+  sellersRole     String?   @map("sellers_role")
+  sellersEmail    String?   @map("sellers_email")
+  dateCreated     DateTime? @map("date_created") @db.Date
+  channelShared   Boolean?  @map("channel_shared")
+  recipientEmails String?   @map("recipient_emails")
+  createdById     String?   @map("created_by_id")
+  createdBy       String?   @map("created_by")
+  openChannel     Boolean?  @map("open_channel")
+  openedAt        DateTime? @map("opened_at")
+
+  // --- relations ---
+  broker        Contact? @relation("BrokerLinkBroker", fields: [brokerId], references: [id])
+  buyerContact  Contact? @relation("BrokerLinkBuyer", fields: [buyerId], references: [id])
+  listingRecord Listing? @relation("BrokerLinkListing", fields: [listingId], references: [id])
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([brokerId])
+  @@index([buyerId])
+  @@index([listingId])
+  @@index([createdById])
+  @@map("broker_friendly_links")
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String?  @map("name")
+  productCode   String?  @map("product_code")
+  productFamily String?  @map("product_family")
+  description   String?  @map("description")
+  listPrice     Decimal? @map("list_price") @db.Decimal(14, 2)
+  unit          String?  @map("unit")
+  revenueType   String?  @map("revenue_type")
+  active        Boolean? @map("active")
+  createdById   String?  @map("created_by_id")
+  createdBy     String?  @map("created_by")
+  /// Xero item-catalog sync fields (Make "Watch Items" → CRM). The CRM never
+  /// prices from these — Xero resolves price on invoice create — they exist so
+  /// the studio picker offers valid codes and knows each item's quantity basis.
+  orgKey        String?  @map("org_key")
+  xeroItemId    String?  @unique @map("xero_item_id")
+  accountCode   String?  @map("account_code")
+  taxType       String?  @map("tax_type")
+  /// 'foot' | 'unit' — per-vessel-foot pricing vs per-unit (studio/config.js port)
+  quantityBasis String?  @map("quantity_basis")
+
+  // --- relations ---
+  lineItems OpportunityLineItem[]
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([createdById])
+  @@map("products")
+}
+
+model OpportunityLineItem {
+  id              String    @id @default(cuid())
+  opportunityId   String?   @map("opportunity_id")
+  opportunityName String?   @map("opportunity_name")
+  productId       String?   @map("product_id")
+  productName     String?   @map("product_name")
+  quantity        Decimal?  @map("quantity")
+  listPrice       Decimal?  @map("list_price") @db.Decimal(14, 2)
+  unitPrice       Decimal?  @map("unit_price") @db.Decimal(14, 2)
+  discount        Decimal?  @map("discount") @db.Decimal(6, 3)
+  totalPrice      Decimal?  @map("total_price") @db.Decimal(14, 2)
+  serviceDate     DateTime? @map("service_date") @db.Date
+  description     String?   @map("description")
+  createdById     String?   @map("created_by_id")
+  createdBy       String?   @map("created_by")
+  /// Xero item code sent on invoice create (Xero resolves price/account/tax).
+  productCode     String?   @map("product_code")
+  /// Set when this line has been rolled onto a (possibly multi-opp) invoice.
+  invoiceId       String?   @map("invoice_id")
+
+  // --- relations ---
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id])
+  product     Product?     @relation(fields: [productId], references: [id])
+  invoice     Invoice?     @relation("InvoiceLineItems", fields: [invoiceId], references: [id])
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([opportunityId])
+  @@index([productId])
+  @@index([createdById])
+  @@index([invoiceId])
+  @@map("opportunity_line_items")
+}
+
+model Opportunity {
+  id                  String    @id @default(cuid())
+  recordType          String?   @map("record_type")
+  contactId           String?   @map("contact_id")
+  contact             String?   @map("contact")
+  relatedListingId    String?   @map("related_listing_id")
+  relatedListing      String?   @map("related_listing")
+  ownerId             String?   @map("owner_id")
+  owner               String?   @map("owner")
+  /// An opportunity owner is EITHER a User (owner_id) OR a Role (owner_role, a
+  /// @yachtway/shared RoleSchema key). EasyFund/MasterCover opps auto-own to
+  /// FINTECH via owner_role. Not FK-constrained (role keys live in `roles`).
+  ownerRole           String?   @map("owner_role")
+  createdDate         DateTime? @map("created_date")
+  opportunityStatus   String?   @map("opportunity_status")
+  lastStageChangeDate DateTime? @map("last_stage_change_date")
+  opportunityAmount   Decimal?  @map("opportunity_amount") @db.Decimal(14, 2)
+  opportunityClosed   DateTime? @map("opportunity_closed") @db.Date
+  name                String?   @map("name")
+  stage               String?   @map("stage")
+  opportunityPipeline String?   @map("opportunity_pipeline")
+  /// Structured pipeline/stage FKs (CRM-native). The free-string `stage` /
+  /// `opportunityPipeline` above are retained for GHL dual-write back-compat.
+  pipelineId          String?   @map("pipeline_id")
+  stageId             String?   @map("stage_id")
+  utmCampaign         String?   @map("utm_campaign")
+  utmContent          String?   @map("utm_content")
+  utmMedium           String?   @map("utm_medium")
+  utmSource           String?   @map("utm_source")
+  vesselMake          String?   @map("vessel_make")
+  vesselModel         String?   @map("vessel_model")
+  vesselYear          String?   @map("vessel_year")
+  createdById         String?   @map("created_by_id")
+  createdBy           String?   @map("created_by")
+  lostReason          String?   @map("lost_reason")
+  /// Sync dedupe key — mirrors the sync service's OpportunityRef.upsertKey so
+  /// every platform-sourced opportunity (EasyFund/MasterCover/New Dealer Signups)
+  /// dual-writes idempotently even without an external id. NULL for opportunities
+  /// born in the CRM (rep-entered, studio booking) — those are not sync-sourced.
+  syncSourceKey       String?   @unique @map("sync_source_key")
+
+  // --- relations ---
+  contactRecord          Contact?                   @relation("OpportunityContact", fields: [contactId], references: [id])
+  relatedListingRecord   Listing?                   @relation("OpportunityListing", fields: [relatedListingId], references: [id])
+  ownerUser              User?                      @relation("OpportunityOwner", fields: [ownerId], references: [id])
+  pipeline               Pipeline?                  @relation("OpportunityPipeline", fields: [pipelineId], references: [id])
+  stageRecord            PipelineStage?             @relation("OpportunityStage", fields: [stageId], references: [id])
+  stageHistory           OpportunityStageHistory[]  @relation("StageHistoryOpportunity")
+  easyFundLoan           EasyFundLoan?
+  masterCoverApplication MasterCoverApplication?
+  studioDetail           StudioDetail?
+  lineItems              OpportunityLineItem[]
+  invoices               Invoice[]                  @relation("InvoiceOpportunity")
+  studioShootCredits     StudioShootCredit[]        @relation("ShootCreditOpportunity")
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([contactId])
+  @@index([relatedListingId])
+  @@index([ownerId])
+  @@index([createdById])
+  @@index([stage])
+  @@index([pipelineId])
+  @@index([stageId])
+  @@map("opportunities")
+}
+
+/// Opportunity pipeline (reference/config). Seeded from @yachtway/shared
+/// PIPELINE_SEED. `sensitivityClass` marks financing pipelines (easyfund /
+/// mastercover) whose opportunity rows are hidden from callers lacking the grant.
+model Pipeline {
+  id               String   @id @default(cuid())
+  key              String   @unique
+  name             String
+  displayOrder     Int      @map("display_order")
+  sensitivityClass String?  @map("sensitivity_class")
+  lostReasons      String[] @map("lost_reasons")
+  isActive         Boolean  @default(true) @map("is_active")
+
+  stages        PipelineStage[]           @relation("PipelineStages")
+  opportunities Opportunity[]             @relation("OpportunityPipeline")
+  stageHistory  OpportunityStageHistory[] @relation("StageHistoryPipeline")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pipelines")
+}
+
+/// A stage within a pipeline. `position` orders the funnel; outcome flags feed
+/// Phase 5 conversion/velocity reporting.
+model PipelineStage {
+  id         String   @id @default(cuid())
+  pipelineId String   @map("pipeline_id")
+  key        String
+  name       String
+  position   Int
+  isClosed   Boolean  @default(false) @map("is_closed")
+  isWon      Boolean? @map("is_won")
+
+  pipeline         Pipeline                  @relation("PipelineStages", fields: [pipelineId], references: [id], onDelete: Cascade)
+  opportunities    Opportunity[]             @relation("OpportunityStage")
+  historyFromStage OpportunityStageHistory[] @relation("StageHistoryFrom")
+  historyToStage   OpportunityStageHistory[] @relation("StageHistoryTo")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([pipelineId, key])
+  @@unique([pipelineId, position])
+  @@index([pipelineId])
+  @@map("pipeline_stages")
+}
+
+/// Append-only record of every stage move. Written from day one — velocity and
+/// conversion metrics cannot be reconstructed after the fact. Name snapshots
+/// (`fromStage`/`toStage`) preserve history across stage renames/reorders.
+model OpportunityStageHistory {
+  id            String   @id @default(cuid())
+  opportunityId String   @map("opportunity_id")
+  pipelineId    String?  @map("pipeline_id")
+  fromStageId   String?  @map("from_stage_id")
+  toStageId     String?  @map("to_stage_id")
+  fromStage     String?  @map("from_stage")
+  toStage       String?  @map("to_stage")
+  changedById   String?  @map("changed_by_id")
+  changedByRole String?  @map("changed_by_role")
+  note          String?
+  changedAt     DateTime @default(now()) @map("changed_at")
+
+  opportunity Opportunity    @relation("StageHistoryOpportunity", fields: [opportunityId], references: [id], onDelete: Cascade)
+  pipeline    Pipeline?      @relation("StageHistoryPipeline", fields: [pipelineId], references: [id])
+  from        PipelineStage? @relation("StageHistoryFrom", fields: [fromStageId], references: [id])
+  to          PipelineStage? @relation("StageHistoryTo", fields: [toStageId], references: [id])
+
+  @@index([opportunityId])
+  @@index([toStageId])
+  @@index([changedAt])
+  @@map("opportunity_stage_history")
+}
+
+model EasyFundLoan {
+  id                              String    @id @default(cuid())
+  /// 1:1 -> Opportunity
+  opportunityId                   String    @unique @map("opportunity_id")
+  dealerId                        String?   @map("dealer_id")
+  dealer                          String?   @map("dealer")
+  coapplicantId                   String?   @map("coapplicant_id")
+  coapplicant                     String?   @map("coapplicant")
+  lenderId                        String?   @map("lender_id")
+  lender                          String?   @map("lender")
+  addedToDealerClosedReferrals    Boolean?  @map("added_to_dealer_closed_referrals")
+  addedToDealerTotalReferrals     Boolean?  @map("added_to_dealer_total_referrals")
+  amountFromLender                Decimal?  @map("amount_from_lender") @db.Decimal(14, 2)
+  approvedConditions              String[]  @map("approved_conditions")
+  approvedConditionsNotes         String?   @map("approved_conditions_notes")
+  closeDate                       DateTime? @map("close_date") @db.Date
+  coApplicantCreditScore          Decimal?  @map("co_applicant_credit_score")
+  coApplicantMonthlyDebt          Decimal?  @map("co_applicant_monthly_debt") @db.Decimal(14, 2)
+  coApplicantMonthlyIncome        Decimal?  @map("co_applicant_monthly_income") @db.Decimal(14, 2)
+  coApplicantMonthlyIncomeRange   String?   @map("co_applicant_monthly_income_range")
+  creditScore                     Decimal?  @map("credit_score")
+  selfReportedCreditScore         String?   @map("self_reported_credit_score")
+  buyerCashBack                   Decimal?  @map("buyer_cash_back") @db.Decimal(14, 2)
+  currentlyFinancedThrough        String?   @map("currently_financed_through")
+  dealerReferralBonus             Decimal?  @map("dealer_referral_bonus") @db.Decimal(14, 2)
+  declineNotes                    String?   @map("decline_notes")
+  declineReason                   String?   @map("decline_reason")
+  downPayment                     Decimal?  @map("down_payment") @db.Decimal(14, 2)
+  engineMake                      String?   @map("engine_make")
+  engineType                      String?   @map("engine_type")
+  hasCoApplicant                  Boolean?  @map("has_co_applicant")
+  horsepower                      Decimal?  @map("horsepower")
+  interestRate                    Decimal?  @map("interest_rate") @db.Decimal(6, 3)
+  leadSource                      String?   @map("lead_source")
+  loanAmount                      Decimal?  @map("loan_amount") @db.Decimal(14, 2)
+  loanTerm                        Decimal?  @map("loan_term")
+  loanType                        String?   @map("loan_type")
+  monthlyDebt                     Decimal?  @map("monthly_debt") @db.Decimal(14, 2)
+  monthlyIncome                   Decimal?  @map("monthly_income") @db.Decimal(14, 2)
+  monthlyIncomeRange              String?   @map("monthly_income_range")
+  monthlyPayment                  Decimal?  @map("monthly_payment") @db.Decimal(14, 2)
+  numberOfEngines                 Decimal?  @map("number_of_engines")
+  opportunityCreated              DateTime? @map("opportunity_created") @db.Date
+  paidToReferringDealer           Decimal?  @map("paid_to_referring_dealer") @db.Decimal(14, 2)
+  prequalificationId              String?   @unique @map("prequalification_id")
+  purchasePrice                   Decimal?  @map("purchase_price") @db.Decimal(14, 2)
+  purchaseRefinance               String?   @map("purchase_refinance")
+  referralToDealer                Decimal?  @map("referral_to_dealer")
+  referralFeeAddedToDealerAccount Boolean?  @map("referral_fee_added_to_dealer_account")
+  reserve                         Decimal?  @map("reserve")
+  vesselListingUrl                String?   @map("vessel_listing_url")
+  easyfundExternalId              String?   @unique @map("easyfund_external_id")
+  status                          String?   @map("status")
+  isCreditScoreTooLow             Boolean?  @map("is_credit_score_too_low")
+  notifyDealer                    Boolean?  @map("notify_dealer")
+  creditCheckDate                 DateTime? @map("credit_check_date") @db.Date
+  currentStep                     String?   @map("current_step")
+  withCoBorrower                  Boolean?  @map("with_co_borrower")
+  borrowerDocumentsSubmittedAt    DateTime? @map("borrower_documents_submitted_at")
+  permissionGranted               Boolean?  @map("permission_granted")
+
+  // --- relations ---
+  opportunity        Opportunity @relation(fields: [opportunityId], references: [id])
+  dealerCompany      Company?    @relation("EasyFundDealer", fields: [dealerId], references: [id])
+  coapplicantContact Contact?    @relation("EasyFundCoapplicant", fields: [coapplicantId], references: [id])
+  lenderCompany      Company?    @relation("EasyFundLender", fields: [lenderId], references: [id])
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([opportunityId])
+  @@index([dealerId])
+  @@index([coapplicantId])
+  @@index([lenderId])
+  @@map("easyfund_loans")
+}
+
+model MasterCoverApplication {
+  id                              String    @id @default(cuid())
+  /// 1:1 -> Opportunity
+  opportunityId                   String    @unique @map("opportunity_id")
+  insurerId                       String?   @map("insurer_id")
+  insuranceCompany                String?   @map("insurance_company")
+  /// Referring Dealer — the dealer that referred this MasterCover opportunity.
+  /// Links the dealer to the opp (parity with EasyFund's dealer_id) and drives the
+  /// rep-visible paid-referral rollup onto the dealer's Company.
+  referringDealerId               String?   @map("referring_dealer_id")
+  actualPremium                   Decimal?  @map("actual_premium") @db.Decimal(14, 2)
+  addedToDealerClosedReferrals    Boolean?  @map("added_to_dealer_closed_referrals")
+  addedToDealerTotalReferrals     Boolean?  @map("added_to_dealer_total_referrals")
+  anyoneLiveAboard                Boolean?  @map("anyone_live_aboard")
+  buildType                       String?   @map("build_type")
+  captain                         Boolean?  @map("captain")
+  centerConsole                   Boolean?  @map("center_console")
+  closeDate                       DateTime? @map("close_date") @db.Date
+  coverages                       String[]  @map("coverages")
+  cruisingArea                    String?   @map("cruising_area")
+  engineType                      String?   @map("engine_type")
+  vesselFlagLocation              String?   @map("vessel_flag_location")
+  horsepower                      Decimal?  @map("horsepower")
+  hullMaterial                    String?   @map("hull_material")
+  hullType                        String?   @map("hull_type")
+  leadSource                      String?   @map("lead_source")
+  loan                            Boolean?  @map("loan")
+  loanAmount                      Decimal?  @map("loan_amount") @db.Decimal(14, 2)
+  mastercoverId                   String?   @unique @map("mastercover_id")
+  notes                           String?   @map("notes")
+  numberCrewOnboard               Decimal?  @map("number_crew_onboard")
+  opportunityCreated              DateTime? @map("opportunity_created") @db.Date
+  creditedToReferringDealer       Decimal?  @map("credited_to_referring_dealer") @db.Decimal(14, 2)
+  policyEffectiveDate             DateTime? @map("policy_effective_date") @db.Date
+  policyStatus                    String?   @map("policy_status")
+  estimatedPremium                Decimal?  @map("estimated_premium") @db.Decimal(14, 2)
+  referralToDealer                Decimal?  @map("referral_to_dealer")
+  referralFeeAddedToDealerAccount Boolean?  @map("referral_fee_added_to_dealer_account")
+  tenderHpPerEngine               Decimal?  @map("tender_hp_per_engine")
+  tenderMake                      String?   @map("tender_make")
+  tenderModel                     String?   @map("tender_model")
+  tenderNumOfEngines              Decimal?  @map("tender_num_of_engines")
+  tenderYear                      Decimal?  @map("tender_year")
+  tender                          Boolean?  @map("tender")
+  trailerMake                     String?   @map("trailer_make")
+  trailerModel                    String?   @map("trailer_model")
+  trailerYear                     Decimal?  @map("trailer_year")
+  trailer                         Boolean?  @map("trailer")
+  usedForCharter                  Boolean?  @map("used_for_charter")
+  vesselLengthFt                  Decimal?  @map("vessel_length_ft")
+  vesselName                      String?   @map("vessel_name")
+  vesselParticipateInRaces        Boolean?  @map("vessel_participate_in_races")
+  vesselTopSpeedKnots             Decimal?  @map("vessel_top_speed_knots")
+  vesselType                      String?   @map("vessel_type")
+  vesselValue                     Decimal?  @map("vessel_value") @db.Decimal(14, 2)
+  yearOfEngine                    Decimal?  @map("year_of_engine")
+  submittedAt                     DateTime? @map("submitted_at")
+  dueDate                         DateTime? @map("due_date") @db.Date
+  teamId                          String?   @map("team_id")
+  lastCustomerActionAt            DateTime? @map("last_customer_action_at")
+  lastAgentActionAt               DateTime? @map("last_agent_action_at")
+  archiveReason                   String?   @map("archive_reason")
+
+  // --- relations ---
+  opportunity     Opportunity @relation(fields: [opportunityId], references: [id])
+  insurerCompany  Company?    @relation("MasterCoverInsurer", fields: [insurerId], references: [id])
+  referringDealer Company?    @relation("MasterCoverReferringDealer", fields: [referringDealerId], references: [id])
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([opportunityId])
+  @@index([insurerId])
+  @@index([referringDealerId])
+  @@map("mastercover_applications")
+}
+
+model StudioDetail {
+  id                                String    @id @default(cuid())
+  /// 1:1 -> Opportunity
+  opportunityId                     String    @unique @map("opportunity_id")
+  accountId                         String?   @map("account_id")
+  account                           String?   @map("account")
+  billToAccountId                   String?   @map("bill_to_account_id")
+  billToAccount                     String?   @map("bill_to_account")
+  accessInformation                 String?   @map("access_information")
+  amountPaid                        Decimal?  @map("amount_paid") @db.Decimal(14, 2)
+  atBoatShow                        Boolean?  @map("at_boat_show")
+  boatShow                          String?   @map("boat_show")
+  requestReceivedEmailSent          Boolean?  @map("request_received_email_sent")
+  dop                               String?   @map("dop")
+  dop2                              String?   @map("dop_2")
+  gateSlip                          String?   @map("gate_slip")
+  insRequiredByLocation             Boolean?  @map("ins_required_by_location")
+  linkToVesselExternal              String?   @map("link_to_vessel_external")
+  locationType                      String?   @map("location_type")
+  mooringAddress                    String?   @map("mooring_address")
+  notes                             String?   @map("notes")
+  onsiteContactName                 String?   @map("onsite_contact_name")
+  onsiteContactPhone                String?   @map("onsite_contact_phone")
+  requestedDate                     DateTime? @map("requested_date") @db.Date
+  requestedServices                 String?   @map("requested_services")
+  requestedTime                     String?   @map("requested_time")
+  reschedulingPolicyAcknowledgement Boolean?  @map("rescheduling_policy_acknowledgement")
+  scheduledConfirmationEmailSent    Boolean?  @map("scheduled_confirmation_email_sent")
+  scheduledDate                     DateTime? @map("scheduled_date") @db.Date
+  scheduledTime                     String?   @map("scheduled_time")
+  specialRequests                   String?   @map("special_requests")
+  studioPassMember                  Boolean?  @map("studio_pass_member")
+  vesselListingUrl                  String?   @map("vessel_listing_url")
+  vesselName                        String?   @map("vessel_name")
+  vesselReadyAcknowledgement        Boolean?  @map("vessel_ready_acknowledgement")
+  waterToys                         String?   @map("water_toys")
+
+  // --- relations ---
+  opportunity         Opportunity @relation(fields: [opportunityId], references: [id])
+  companyRecord       Company?    @relation("StudioCompany", fields: [accountId], references: [id])
+  billToCompanyRecord Company?    @relation("StudioBillTo", fields: [billToAccountId], references: [id])
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([opportunityId])
+  @@index([accountId])
+  @@index([billToAccountId])
+  @@map("studio_details")
+}
+
+// Messages — individual communication activities on the timeline
+// (Email · iMessage/SMS · Call · Chat · WhatsApp). One row per activity;
+// channel-specific columns are a nullable superset keyed by `channel`. Each
+// message belongs to a Conversation (thread); financing-classed rows carry
+// sensitivity_class so RLS gates them per-row (same class as the parent thread).
+model Message {
+  id                     String    @id @default(cuid())
+  conversationId         String?   @map("conversation_id")
+  contactId              String?   @map("contact_id")
+  companyId              String?   @map("company_id")
+  relatedListingId       String?   @map("related_listing_id")
+  channel                String?   @map("channel")
+  direction              String?   @map("direction")
+  subject                String?   @map("subject")
+  body                   String?   @map("body")
+  status                 String?   @map("status")
+  activityTimestamp      DateTime? @map("activity_timestamp")
+  ownerId                String?   @map("owner_id")
+  attachmentCount        Decimal?  @map("attachment_count")
+  createdById            String?   @map("created_by_id")
+  fromAddress            String?   @map("from_address")
+  toAddresses            String[]  @map("to_addresses")
+  ccAddresses            String[]  @map("cc_addresses")
+  emailSubject           String?   @map("email_subject")
+  threadId               String?   @map("thread_id")
+  openCount              Decimal?  @map("open_count")
+  clickCount             Decimal?  @map("click_count")
+  linkClicked            String?   @map("link_clicked")
+  fromNumber             String?   @map("from_number")
+  toNumber               String?   @map("to_number")
+  messageType            String?   @map("message_type")
+  deliveryStatus         String?   @map("delivery_status")
+  callDirection          String?   @map("call_direction")
+  callDurationSec        Decimal?  @map("call_duration_sec")
+  callOutcome            String?   @map("call_outcome")
+  recordingUrl           String?   @map("recording_url")
+  voicemailTranscript    String?   @map("voicemail_transcript")
+  dialogId               String?   @map("dialog_id")
+  dialogContactType      String?   @map("dialog_contact_type")
+  isSupportChat          Boolean?  @map("is_support_chat")
+  isContactChat          Boolean?  @map("is_contact_chat")
+  isAiChat               Boolean?  @map("is_ai_chat")
+  senderMarkedForLaterAt DateTime? @map("sender_marked_for_later_at")
+  contactFormId          String?   @map("contact_form_id")
+  waMessageType          String?   @map("wa_message_type")
+  templateName           String?   @map("template_name")
+  waConversationId       String?   @map("wa_conversation_id")
+  mediaUrl               String?   @map("media_url")
+  /// transport provider (gmail | mailgun | …) and its id for the sent message,
+  /// used to correlate provider tracking events back to this row
+  provider               String?   @map("provider")
+  providerMessageId      String?   @map("provider_message_id")
+  /// RLS class: general | financing(easyfund) | mastercover — gates rep visibility
+  sensitivityClass       String?   @map("sensitivity_class")
+
+  // --- relations ---
+  conversation         Conversation? @relation("ConversationMessages", fields: [conversationId], references: [id])
+  contactRecord        Contact? @relation("MessageContact", fields: [contactId], references: [id])
+  companyRecord        Company? @relation("MessageCompany", fields: [companyId], references: [id])
+  relatedListingRecord Listing? @relation("MessageListing", fields: [relatedListingId], references: [id])
+  ownerUser            User?    @relation("MessageOwner", fields: [ownerId], references: [id])
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([conversationId])
+  @@index([contactId])
+  @@index([companyId])
+  @@index([relatedListingId])
+  @@index([ownerId])
+  @@index([createdById])
+  @@index([activityTimestamp])
+  @@index([channel])
+  @@index([providerMessageId])
+  @@map("messages")
+}
+
+// Idempotency ledger for inbound provider webhooks (Mailgun events, later Gmail
+// push). A row is claimed once per (provider, externalId) so a redelivered event
+// (Mailgun retries, at-least-once) is processed exactly once — critical for
+// counters like open_count that must not double-increment. System-only (RLS).
+model WebhookEvent {
+  id         String   @id @default(cuid())
+  provider   String   @map("provider")
+  externalId String   @map("external_id")
+  eventType  String?  @map("event_type")
+  receivedAt DateTime @default(now()) @map("received_at")
+
+  @@unique([provider, externalId])
+  @@map("webhook_events")
+}
+
+// Conversations — the thread container that groups Messages. This is the unit
+// the inbox/board renders and that a company page rolls up across its contacts.
+// sensitivity_class drives per-row RLS (general → conversations.general;
+// financing/easyfund/mastercover → conversations.financing) exactly like Message.
+model Conversation {
+  id                 String    @id @default(cuid())
+  contactId          String?   @map("contact_id")
+  companyId          String?   @map("company_id")
+  relatedListingId   String?   @map("related_listing_id")
+  channel            String    @map("channel")
+  status             String    @default("open") @map("status")
+  subject            String?   @map("subject")
+  assignedToId       String?   @map("assigned_to_id")
+  /// RLS class: general | financing(easyfund) | mastercover — gates rep visibility
+  sensitivityClass   String    @default("general") @map("sensitivity_class")
+  /// provider thread id (set by the inbound webhook in the next increment) for upsert
+  externalThreadId   String?   @map("external_thread_id")
+  lastMessageAt      DateTime? @map("last_message_at")
+  lastMessagePreview String?   @map("last_message_preview")
+  messageCount       Int       @default(0) @map("message_count")
+
+  // --- relations ---
+  contactRecord        Contact?  @relation("ConversationContact", fields: [contactId], references: [id])
+  companyRecord        Company?  @relation("ConversationCompany", fields: [companyId], references: [id])
+  relatedListingRecord Listing?  @relation("ConversationListing", fields: [relatedListingId], references: [id])
+  assignedTo           User?     @relation("ConversationAssignee", fields: [assignedToId], references: [id])
+  messages             Message[] @relation("ConversationMessages")
+  readStates           ConversationReadState[] @relation("ConversationReadStates")
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([contactId])
+  @@index([companyId])
+  @@index([relatedListingId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([channel])
+  @@index([lastMessageAt])
+  @@index([externalThreadId])
+  @@map("conversations")
+}
+
+// Per-user read state for a conversation — powers unread badges. sensitivity_class
+// is denormalized from the parent thread so RLS can gate these rows directly
+// (avoids a subquery into conversations, which would fall through to 'general').
+// userId is the auth subject (WorkOS sub / dev shim), NOT necessarily a CRM users
+// row, so it is a plain indexed column with no FK — same rationale as message
+// authorship (created_by_id).
+model ConversationReadState {
+  id               String   @id @default(cuid())
+  conversationId   String   @map("conversation_id")
+  userId           String   @map("user_id")
+  lastReadAt       DateTime @map("last_read_at")
+  sensitivityClass String   @default("general") @map("sensitivity_class")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  conversation Conversation @relation("ConversationReadStates", fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_read_state")
+}
+
+// Analytics — connected external profiles and their periodic INSIGHTS
+// (organic + paid) across YouTube, Google (Analytics/Ads/Business), LinkedIn,
+// TikTok, and multiple Meta business profiles (Pages, IG, Ad Accounts). Insights-
+// first: organic reach/engagement/followers matter as much as ad spend. Rolls up
+// to Company; channel-specific extras land in `metrics` JSON.
+model AnalyticsProfile {
+  id                String    @id @default(cuid())
+  /// Lookup(Company) — owning company (nullable: some profiles are house-level)
+  companyId         String?   @map("company_id")
+  /// Channel: youtube | google_analytics | google_ads | google_business |
+  /// linkedin | tiktok | meta_page | meta_instagram | meta_ad_account | meta_business
+  channel           String    @map("channel")
+  /// External profile/account id on the platform (Page id, IG id, ad account id, ...)
+  externalId        String?   @map("external_id")
+  /// Meta Business account id — lets multiple Meta profiles roll up to one business
+  businessAccountId String?   @map("business_account_id")
+  displayName       String?   @map("display_name")
+  handle            String?   @map("handle")
+  profileUrl        String?   @map("profile_url")
+  isActive          Boolean?  @map("is_active")
+  connectedAt       DateTime? @map("connected_at")
+  tokenExpiresAt    DateTime? @map("token_expires_at")
+  scopes            String[]  @map("scopes")
+
+  companyRecord Company?            @relation("AnalyticsProfileCompany", fields: [companyId], references: [id])
+  snapshots     AnalyticsSnapshot[]
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@unique([channel, externalId])
+  @@index([companyId])
+  @@index([channel])
+  @@map("analytics_profiles")
+}
+
+model AnalyticsSnapshot {
+  id          String   @id @default(cuid())
+  profileId   String   @map("profile_id")
+  /// Period this snapshot covers
+  periodStart DateTime @map("period_start") @db.Date
+  periodEnd   DateTime @map("period_end") @db.Date
+  granularity String?  @map("granularity") // day | week | month | lifetime
+
+  // --- organic / audience insights ---
+  impressions       Decimal? @map("impressions")
+  reach             Decimal? @map("reach")
+  engagements       Decimal? @map("engagements")
+  engagementRate    Decimal? @map("engagement_rate") @db.Decimal(6, 3)
+  followers         Decimal? @map("followers")
+  followersDelta    Decimal? @map("followers_delta")
+  profileViews      Decimal? @map("profile_views")
+  videoViews        Decimal? @map("video_views")
+  watchTimeMinutes  Decimal? @map("watch_time_minutes")
+  likes             Decimal? @map("likes")
+  comments          Decimal? @map("comments")
+  shares            Decimal? @map("shares")
+  saves             Decimal? @map("saves")
+  subscribersGained Decimal? @map("subscribers_gained")
+  subscribersLost   Decimal? @map("subscribers_lost")
+
+  // --- web / session insights (Google Analytics etc.) ---
+  sessions              Decimal? @map("sessions")
+  users                 Decimal? @map("users")
+  newUsers              Decimal? @map("new_users")
+  bounceRate            Decimal? @map("bounce_rate") @db.Decimal(6, 3)
+  avgSessionDurationSec Decimal? @map("avg_session_duration_sec")
+
+  // --- paid / ads insights ---
+  clicks      Decimal? @map("clicks")
+  linkClicks  Decimal? @map("link_clicks")
+  ctr         Decimal? @map("ctr") @db.Decimal(6, 3)
+  spend       Decimal? @map("spend") @db.Decimal(14, 2)
+  cpc         Decimal? @map("cpc") @db.Decimal(14, 2)
+  cpm         Decimal? @map("cpm") @db.Decimal(14, 2)
+  conversions Decimal? @map("conversions")
+  leads       Decimal? @map("leads")
+
+  /// Channel-specific metrics that don't fit the columns above
+  metrics Json? @map("metrics")
+
+  profile AnalyticsProfile @relation(fields: [profileId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([profileId])
+  @@index([periodStart])
+  @@map("analytics_snapshots")
+}
+
+// ============================================================================
+// Amplitude destination (product analytics → CRM)
+//
+// The CRM is registered as an Amplitude "Webhook" destination for Events, User
+// Properties and Cohorts. The join key is Amplitude's `user_id`, which the
+// frontend sets to the YachtWay DB ID (Contact.yachtwayDbId). Rows carry the
+// resolved contactId when a match exists, and always keep the raw Amplitude ids
+// so a later backfill can reconcile events received before the contact existed.
+// ============================================================================
+
+model AmplitudeEvent {
+  id String @id @default(cuid())
+  /// Resolved CRM contact (nullable: event may arrive before the contact syncs).
+  contactId String? @map("contact_id")
+  /// Amplitude user_id === YachtWay DB ID (the identity contract).
+  ampUserId String? @map("amp_user_id")
+  deviceId  String? @map("device_id")
+  /// Amplitude's internal numeric id (as string), when present.
+  amplitudeId String? @map("amplitude_id")
+  /// insert_id / event id — the idempotency key (a redelivery is dropped).
+  externalId String @map("external_id")
+  eventType  String @map("event_type")
+  eventTime  DateTime? @map("event_time")
+  sessionId  String? @map("session_id")
+  eventProperties Json? @map("event_properties")
+  userProperties  Json? @map("user_properties")
+  receivedAt DateTime @default(now()) @map("received_at")
+
+  contact Contact? @relation("AmplitudeEventContact", fields: [contactId], references: [id])
+
+  @@unique([externalId])
+  @@index([contactId])
+  @@index([ampUserId])
+  @@index([eventType])
+  @@index([eventTime])
+  @@map("amplitude_events")
+}
+
+model AmplitudeCohort {
+  id String @id @default(cuid())
+  /// Amplitude's cohort id — the external key we upsert on.
+  amplitudeCohortId String  @unique @map("amplitude_cohort_id")
+  name              String? @map("name")
+  description       String? @map("description")
+  memberCount       Int?    @map("member_count")
+  lastSyncedAt      DateTime? @map("last_synced_at")
+
+  memberships AmplitudeCohortMembership[] @relation("AmplitudeCohortMemberships")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("amplitude_cohorts")
+}
+
+model AmplitudeCohortMembership {
+  id        String  @id @default(cuid())
+  cohortId  String  @map("cohort_id")
+  contactId String? @map("contact_id")
+  /// Amplitude user_id === YachtWay DB ID.
+  ampUserId String  @map("amp_user_id")
+  addedAt   DateTime @default(now()) @map("added_at")
+
+  cohort  AmplitudeCohort @relation("AmplitudeCohortMemberships", fields: [cohortId], references: [id], onDelete: Cascade)
+  contact Contact?        @relation("AmplitudeCohortMembershipContact", fields: [contactId], references: [id])
+
+  @@unique([cohortId, ampUserId])
+  @@index([contactId])
+  @@index([ampUserId])
+  @@map("amplitude_cohort_memberships")
+}
+
+// ============================================================================
+// Permission engine — roles, grants, and audit. The DB is the source of truth:
+// RLS policies (prisma/policies/rls.sql) read permission_grants via the
+// app.current_role session variable, so every query path is gated by Postgres.
+// ============================================================================
+
+model Role {
+  id          String   @id @default(cuid())
+  /// Stable key matching @yachtway/shared RoleSchema: SALES_REP | FINTECH | MARKETING | ADMIN
+  key         String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt      @map("updated_at")
+
+  grants PermissionGrant[]
+  users  User[]            @relation("UserRole")
+
+  @@map("roles")
+}
+
+model PermissionGrant {
+  id String @id @default(cuid())
+  /// FK -> Role
+  roleId String @map("role_id")
+  /// Matches @yachtway/shared ResourceClassSchema (company.general, easyfund, analytics, ...)
+  resourceClass String   @map("resource_class")
+  canRead       Boolean  @default(false) @map("can_read")
+  canWrite      Boolean  @default(false) @map("can_write")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt      @map("updated_at")
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, resourceClass])
+  @@index([roleId])
+  @@map("permission_grants")
+}
+
+model AuditLog {
+  id String @id @default(cuid())
+  /// Actor — nullable so system/sync writes are still recorded
+  actorUserId   String?  @map("actor_user_id")
+  actorRole     String?  @map("actor_role")
+  action        String // create | update | delete | read | export | login
+  resourceClass String?  @map("resource_class")
+  tableName     String?  @map("table_name")
+  recordId      String?  @map("record_id")
+  before        Json?
+  after         Json?
+  ipAddress     String?  @map("ip_address")
+  at            DateTime @default(now())
+
+  // actor_user_id is the auth subject (WorkOS sub / dev shim) — NOT necessarily a
+  // users row, so it's a plain indexed column with NO FK (same convention as
+  // Message.createdById / ConversationReadState.userId). See migration
+  // 20260725190000_audit_actor_no_fk.
+
+  @@index([actorUserId])
+  @@index([tableName, recordId])
+  @@index([at])
+  @@map("audit_logs")
+}
+
+// ============================================================================
+// Xero-via-Make billing (Phase X0). The CRM owns invoicing logic; Make is the
+// Xero transport. Invoice/Payment/Bill/CreditNote carry a sensitivity_class that
+// RLS gates per-row (easyfund/mastercover → invoice.financing / bill.financing,
+// FINTECH/ADMIN only). Estimates are CRM-only (no Xero). createdById/approvedById
+// are auth subjects (WorkOS sub / dev shim) — plain indexed columns, NOT FKs,
+// same convention as Message.createdById.
+// ============================================================================
+
+/// A CRM invoice mirroring a Xero ACCREC invoice. Created as a local draft
+/// (auto on Won or rep-initiated), sent to Xero via Make only after human
+/// approval. A multi-opp studio invoice spans several opportunities via its
+/// OpportunityLineItem children; opportunityId is the primary opp.
+model Invoice {
+  id                String    @id @default(cuid())
+  opportunityId     String?   @map("opportunity_id")
+  companyId         String?   @map("company_id")
+  contactId         String?   @map("contact_id")
+  /// Set (unique) when converted from an accepted estimate — powers Estimate 1:1.
+  fromEstimateId    String?   @unique @map("from_estimate_id")
+  invoiceType       String    @map("invoice_type")
+  /// billing rail: 'xero' (Make→Xero) | 'stripe' (Stripe Checkout). Toggled per invoice.
+  billingProvider   String    @default("xero") @map("billing_provider")
+  orgKey            String?   @map("org_key")
+  currency          String    @default("USD") @map("currency")
+  amount            Decimal?  @map("amount") @db.Decimal(14, 2)
+  reference         String?   @map("reference")
+  itemized          Boolean   @default(false) @map("itemized")
+  status            String    @default("draft") @map("status")
+  amountPaid        Decimal?  @map("amount_paid") @db.Decimal(14, 2)
+  amountDue         Decimal?  @map("amount_due") @db.Decimal(14, 2)
+  dueDate           DateTime? @map("due_date") @db.Date
+  xeroInvoiceId     String?   @unique @map("xero_invoice_id")
+  xeroInvoiceNumber String?   @map("xero_invoice_number")
+  xeroContactId     String?   @map("xero_contact_id")
+  /// Stripe id (Checkout session / invoice) when billingProvider='stripe'
+  stripeInvoiceId   String?   @unique @map("stripe_invoice_id")
+  /// Hosted invoice / Xero online-invoice / Stripe Checkout URL
+  onlineInvoiceUrl  String?   @map("online_invoice_url")
+  /// general | financing | easyfund | mastercover — drives invoice.* RLS
+  sensitivityClass  String    @default("general") @map("sensitivity_class")
+  /// {opportunityId}:{invoiceType} (single) or hash of the opp-id set (multi) — hard dedupe
+  idempotencyKey    String?   @unique @map("idempotency_key")
+  syncError         String?   @map("sync_error")
+  approvedById      String?   @map("approved_by_id")
+  approvedAt        DateTime? @map("approved_at")
+  createdById       String?   @map("created_by_id")
+
+  // --- relations ---
+  opportunity  Opportunity?          @relation("InvoiceOpportunity", fields: [opportunityId], references: [id])
+  company      Company?              @relation("InvoiceCompany", fields: [companyId], references: [id])
+  contact      Contact?              @relation("InvoiceContact", fields: [contactId], references: [id])
+  fromEstimate Estimate?             @relation("EstimateInvoice", fields: [fromEstimateId], references: [id])
+  payments     Payment[]             @relation("PaymentInvoice")
+  lineItems    OpportunityLineItem[] @relation("InvoiceLineItems")
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([opportunityId])
+  @@index([companyId])
+  @@index([contactId])
+  @@index([invoiceType])
+  @@index([status])
+  @@index([sensitivityClass])
+  @@map("invoices")
+}
+
+/// A payment against an invoice (inbound from Xero via Make "Watch Payments").
+/// sensitivity_class is denormalized from the invoice so RLS gates by a direct
+/// column check (same rationale as ConversationReadState).
+model Payment {
+  id               String    @id @default(cuid())
+  /// nullable: a recurring Stripe subscription payment has no CRM invoice
+  invoiceId        String?   @map("invoice_id")
+  companyId        String?   @map("company_id")
+  subscriptionId   String?   @map("subscription_id")
+  xeroPaymentId    String?   @unique @map("xero_payment_id")
+  /// Stripe charge/payment id (when billingProvider='stripe')
+  stripePaymentId  String?   @unique @map("stripe_payment_id")
+  billingProvider  String    @default("xero") @map("billing_provider")
+  amount           Decimal?  @map("amount") @db.Decimal(14, 2)
+  paidAt           DateTime? @map("paid_at") @db.Date
+  reference        String?   @map("reference")
+  sensitivityClass String    @default("general") @map("sensitivity_class")
+
+  invoice      Invoice?      @relation("PaymentInvoice", fields: [invoiceId], references: [id], onDelete: Cascade)
+  company      Company?      @relation("PaymentCompany", fields: [companyId], references: [id])
+  subscription Subscription? @relation("PaymentSubscription", fields: [subscriptionId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([invoiceId])
+  @@index([companyId])
+  @@index([subscriptionId])
+  @@map("payments")
+}
+
+/// A payable (Xero ACCPAY) — studio spend + easyfund/mastercover bills. Inbound
+/// only in v1 (Make "Watch Bills"); the CRM does not create bills in Xero.
+model Bill {
+  id               String    @id @default(cuid())
+  companyId        String?   @map("company_id")
+  contactId        String?   @map("contact_id")
+  billType         String?   @map("bill_type")
+  billingProvider  String    @default("xero") @map("billing_provider")
+  orgKey           String?   @map("org_key")
+  currency         String    @default("USD") @map("currency")
+  amount           Decimal?  @map("amount") @db.Decimal(14, 2)
+  status           String    @default("awaiting_payment") @map("status")
+  amountPaid       Decimal?  @map("amount_paid") @db.Decimal(14, 2)
+  dueDate          DateTime? @map("due_date") @db.Date
+  xeroBillId       String?   @unique @map("xero_bill_id")
+  xeroContactId    String?   @map("xero_contact_id")
+  /// general (studio spend) | financing (easyfund/mastercover) — drives bill.* RLS
+  sensitivityClass String    @default("general") @map("sensitivity_class")
+  syncError        String?   @map("sync_error")
+
+  company Company? @relation("BillCompany", fields: [companyId], references: [id])
+  contact Contact? @relation("BillContact", fields: [contactId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId])
+  @@index([contactId])
+  @@index([sensitivityClass])
+  @@map("bills")
+}
+
+/// A dealer credit note (Xero ACCRECCREDIT). Inbound only (Make "Watch Credit
+/// Notes"). The sum feeds the rep-visible dealerCredits rollup on Company.
+model CreditNote {
+  id               String    @id @default(cuid())
+  companyId        String?   @map("company_id")
+  contactId        String?   @map("contact_id")
+  xeroCreditNoteId String?   @unique @map("xero_credit_note_id")
+  billingProvider  String    @default("xero") @map("billing_provider")
+  amount           Decimal?  @map("amount") @db.Decimal(14, 2)
+  remainingCredit  Decimal?  @map("remaining_credit") @db.Decimal(14, 2)
+  status           String?   @map("status")
+  currency         String    @default("USD") @map("currency")
+  reference        String?   @map("reference")
+  sensitivityClass String    @default("general") @map("sensitivity_class")
+
+  company Company? @relation("CreditNoteCompany", fields: [companyId], references: [id])
+  contact Contact? @relation("CreditNoteContact", fields: [contactId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId])
+  @@index([contactId])
+  @@map("credit_notes")
+}
+
+/// A recurring subscription billed through Stripe (Stripe owns the schedule; the
+/// CRM mirrors status/payments via webhooks). Maps Stripe Customer ↔
+/// Company.stripeCustomerId. General sensitivity.
+model Subscription {
+  id                   String    @id @default(cuid())
+  companyId            String?   @map("company_id")
+  stripeSubscriptionId String?   @unique @map("stripe_subscription_id")
+  stripeCustomerId     String?   @map("stripe_customer_id")
+  stripePriceId        String?   @map("stripe_price_id")
+  productName          String?   @map("product_name")
+  status               String?   @map("status") // active | trialing | past_due | canceled | incomplete
+  seats                Int?      @map("seats")
+  mrr                  Decimal?  @map("mrr") @db.Decimal(14, 2)
+  currency             String    @default("USD") @map("currency")
+  currentPeriodEnd     DateTime? @map("current_period_end")
+  billingProvider      String    @default("stripe") @map("billing_provider")
+  sensitivityClass     String    @default("general") @map("sensitivity_class")
+  createdById          String?   @map("created_by_id")
+
+  company  Company?  @relation("SubscriptionCompany", fields: [companyId], references: [id])
+  payments Payment[] @relation("PaymentSubscription")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+/// Internal, non-monetary ledger of Studio Listing Shoot credits granted/consumed
+/// per dealer (per shoot, flat — independent of vessel length). CRM-only, never
+/// in Xero. Balance is materialized onto Company.freeListingShootsRemaining.
+model StudioShootCredit {
+  id                   String   @id @default(cuid())
+  companyId            String   @map("company_id")
+  /// +n granted, -1 consumed per shoot
+  delta                Int      @map("delta")
+  reason               String?  @map("reason")
+  relatedOpportunityId String?  @map("related_opportunity_id")
+  note                 String?  @map("note")
+  createdById          String?  @map("created_by_id")
+
+  company            Company      @relation("ShootCreditCompany", fields: [companyId], references: [id], onDelete: Cascade)
+  relatedOpportunity Opportunity? @relation("ShootCreditOpportunity", fields: [relatedOpportunityId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([companyId])
+  @@index([relatedOpportunityId])
+  @@map("studio_shoot_credits")
+}
+
+/// A CRM-only client estimate (no Xero object). Drafted, sent to a company
+/// contact who accepts/declines via a public HMAC-signed link; on acceptance it
+/// converts to an Invoice draft (Invoice.fromEstimateId, 1:1).
+model Estimate {
+  id                        String    @id @default(cuid())
+  companyId                 String?   @map("company_id")
+  currency                  String    @default("EUR") @map("currency")
+  notes                     String?   @map("notes")
+  status                    String    @default("draft") @map("status")
+  primaryRecipientContactId String?   @map("primary_recipient_contact_id")
+  ccEmails                  String[]  @map("cc_emails")
+  total                     Decimal?  @map("total") @db.Decimal(14, 2)
+  sensitivityClass          String    @default("general") @map("sensitivity_class")
+  sentAt                    DateTime? @map("sent_at")
+  respondedAt               DateTime? @map("responded_at")
+  /// opaque token backing the public accept/decline link
+  acceptToken               String?   @unique @map("accept_token")
+  createdById               String?   @map("created_by_id")
+
+  company          Company?           @relation("EstimateCompany", fields: [companyId], references: [id])
+  primaryRecipient Contact?           @relation("EstimateRecipient", fields: [primaryRecipientContactId], references: [id])
+  lineItems        EstimateLineItem[] @relation("EstimateLines")
+  convertedInvoice Invoice?           @relation("EstimateInvoice")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId])
+  @@index([primaryRecipientContactId])
+  @@index([status])
+  @@map("estimates")
+}
+
+/// Ad-hoc estimate line (free-text description + qty + price). Optional
+/// productCode links to the Product catalog for studio items.
+model EstimateLineItem {
+  id          String   @id @default(cuid())
+  estimateId  String   @map("estimate_id")
+  description String?  @map("description")
+  quantity    Decimal? @map("quantity")
+  unitPrice   Decimal? @map("unit_price") @db.Decimal(14, 2)
+  productCode String?  @map("product_code")
+  lineTotal   Decimal? @map("line_total") @db.Decimal(14, 2)
+  position    Int?     @map("position")
+
+  estimate Estimate @relation("EstimateLines", fields: [estimateId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([estimateId])
+  @@map("estimate_line_items")
+}
