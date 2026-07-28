@@ -103,9 +103,16 @@ function TasksPage() {
                   </span>
                 </header>
                 <ul className="divide-y divide-border">
-                  {list.length === 0 && (
+                  {list.length === 0 ? (
                     <li className="px-4 py-6 text-center text-sm text-muted-foreground">
                       {overdueSection ? "Nothing overdue." : "Nothing here."}
+                    </li>
+                  ) : (
+                    <li className="grid grid-cols-[minmax(0,1fr)_120px_88px_120px] items-center gap-3 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <span>Task</span>
+                      <span>Due</span>
+                      <span>Priority</span>
+                      <span>Status</span>
                     </li>
                   )}
                   {list.map((t) => {
@@ -115,15 +122,15 @@ function TasksPage() {
                     return (
                       <li
                         key={t.id}
-                        className="group flex cursor-pointer items-center gap-4 px-4 py-2.5 text-[13px] hover:bg-muted/40"
+                        className="group grid cursor-pointer grid-cols-[minmax(0,1fr)_120px_88px_120px] items-center gap-3 px-4 py-2.5 text-[13px] hover:bg-muted/40"
                         onClick={() => openTask(t)}
                       >
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0">
                           <div className="flex items-center gap-1.5 font-medium">
-                            {t.title}
-                            <Pencil className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-60" />
+                            <span className="truncate">{t.title}</span>
+                            <Pencil className="h-3 w-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-60" />
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="truncate text-xs text-muted-foreground">
                             {t.assignee}
                             {(co || ct) && " · "}
                             {co && (
@@ -149,18 +156,17 @@ function TasksPage() {
                           </div>
                         </div>
 
-                        {/* Due — own column */}
-                        <div className="w-28 shrink-0 text-right">
-                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Due</div>
-                          <div className={overdue ? "font-semibold text-destructive" : "text-foreground"}>
-                            {formatDate(t.dueDate)}
-                          </div>
+                        <div className={`text-xs ${overdue ? "font-semibold text-destructive" : "text-foreground"}`}>
+                          {formatDate(t.dueDate)}
                         </div>
 
-                        <div className="flex shrink-0 items-center gap-2">
-                          <span className={`rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${priorityBadge(t.priority)}`}>
+                        <div>
+                          <span className={`inline-block rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${priorityBadge(t.priority)}`}>
                             {t.priority}
                           </span>
+                        </div>
+
+                        <div>
                           <Badge variant="outline" className="text-[10px]">{t.status}</Badge>
                         </div>
                       </li>
