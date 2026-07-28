@@ -341,10 +341,7 @@ function CompaniesList() {
             );
           })}
           <div className="ml-auto flex items-center gap-1 py-2 text-xs">
-            {(vertical === "FinTech"
-              ? (["Customer", "Partner", "Lead", "Prospect"] as CompanyStatus[])
-              : (["Member", "Lead", "Prospect"] as CompanyStatus[])
-            ).map((s) => {
+            {(["Member", "Customer", "Partner", "Lead", "Prospect"] as CompanyStatus[]).map((s) => {
               const active = status === s;
               return (
                 <button
