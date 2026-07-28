@@ -1,4 +1,5 @@
 import { formatDate } from "@/lib/format-date";
+import { FIELD_OPTIONS, dynamicOptions } from "@/lib/field-options";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { ArrowUp, ArrowDown, ArrowUpDown, Filter, X, Plus } from "lucide-react";
@@ -101,15 +102,21 @@ const TABS: { label: string; vertical?: Vertical; type?: CompanyType }[] = [
   { label: "Lenders", vertical: "FinTech", type: "Lender" },
 ];
 
-function statusBadge(s: CompanyStatus) {
-  const map: Record<CompanyStatus, string> = {
+function statusBadge(s: string) {
+  const map: Record<string, string> = {
+    // Canonical company_status (catalog)
+    Lead: "bg-warning text-warning-foreground",
+    MQL: "bg-brand/70 text-brand-foreground",
+    SQL: "bg-brand text-brand-foreground",
+    "Active Customer": "bg-success text-success-foreground",
+    "Past Customer": "bg-muted text-muted-foreground",
+    // Legacy / enriched values still present in data
     Member: "bg-brand text-brand-foreground",
     Customer: "bg-success text-success-foreground",
     Partner: "bg-brand text-brand-foreground",
-    Lead: "bg-warning text-warning-foreground",
     Prospect: "bg-muted text-muted-foreground",
   };
-  return map[s];
+  return map[s] ?? "bg-secondary text-secondary-foreground";
 }
 
 function tierBadge(tier: string) {
@@ -341,7 +348,7 @@ function CompaniesList() {
             );
           })}
           <div className="ml-auto flex items-center gap-1 py-2 text-xs">
-            {(["Member", "Customer", "Partner", "Lead", "Prospect"] as CompanyStatus[]).map((s) => {
+            {dynamicOptions(FIELD_OPTIONS.companyStatus, ...COMPANIES.map((c) => c.status)).map((s) => {
               const active = status === s;
               return (
                 <button

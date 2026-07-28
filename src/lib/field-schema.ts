@@ -59,7 +59,7 @@ export const COMPANY_SECTIONS: readonly FieldSection[] = [
       { key: "listingsAllTime", label: "Total Listings (all-time)", type: "number", sensitivity: "company.general", help: "Derived / computed - read-only" },
       { key: "totalNumberOfOffices", label: "Total Offices", type: "number", sensitivity: "company.general" },
       { key: "activeCompanyStatus", label: "Active Customer Status", type: "single_option", sensitivity: "company.general" },
-      { key: "companyStatus", label: "Company Status", type: "single_option", sensitivity: "company.general", options: ["Member", "Customer", "Partner", "Lead", "Prospect"] },
+      { key: "companyStatus", label: "Company Status", type: "single_option", sensitivity: "company.general" },
       { key: "activeCustomerDate", label: "Active Customer Date", type: "date", sensitivity: "company.general" },
       { key: "apiConnected", label: "API Connected", type: "checkbox", sensitivity: "company.general" },
       { key: "apiAvailable", label: "API Available", type: "checkbox", sensitivity: "company.general" },

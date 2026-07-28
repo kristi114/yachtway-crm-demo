@@ -7,6 +7,7 @@ import {
   LISTING_SECTIONS,
 } from "@/lib/field-schema";
 import type { ResourceClass, Role } from "@/lib/auth";
+import { FIELD_OPTIONS } from "@/lib/field-options";
 
 /**
  * Admin configuration store.
@@ -315,6 +316,8 @@ export function adminFields(
   for (const section of def.sections) {
     for (const f of section.fields) {
       const o = overrides[overrideKey(object, f.key)] ?? {};
+      // Declared options: field-schema first, else the catalog-derived FIELD_OPTIONS.
+      const declared = f.options ?? FIELD_OPTIONS[f.key];
       out.push({
         key: f.key,
         sectionId: section.id,
@@ -327,8 +330,8 @@ export function adminFields(
         hidden: o.hidden ?? false,
         required: o.required ?? false,
         customized: Object.keys(o).length > 0,
-        defaultOptions: f.options ? [...f.options] : undefined,
-        options: o.options ?? (f.options ? [...f.options] : undefined),
+        defaultOptions: declared ? [...declared] : undefined,
+        options: o.options ?? (declared ? [...declared] : undefined),
       });
     }
   }
