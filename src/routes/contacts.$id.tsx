@@ -28,7 +28,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth, useMoney, canSeeFinTech } from "@/lib/auth";
+import { useAuth, useMoney, canSeeFinTech, isPartnerRole } from "@/lib/auth";
+import { allowedContactIdsForPartner } from "@/lib/fintech-dashboards";
 import { LockedRecord } from "@/components/locked-record";
 
 
@@ -60,6 +61,14 @@ function ContactDetail() {
   const [contact, setContact] = useState(loaded);
   if (contact.vertical === "FinTech" && !canSeeFinTech(user.role)) {
     return <LockedRecord kind="contact" backTo="/contacts" backLabel="Back to contacts" />;
+  }
+  // Partner logins may only open contacts attached to one of their deals.
+  if (isPartnerRole(user.role)) {
+    const allowed = allowedContactIdsForPartner(user.partnerId ?? "");
+    if (!allowed.has(contact.id)) {
+      const backTo = user.role === "insurance_partner" ? "/insurance" : "/lender";
+      return <LockedRecord kind="contact" backTo={backTo} backLabel="Back to your deals" />;
+    }
   }
   const [logOpen, setLogOpen] = useState(false);
   const [oppOpen, setOppOpen] = useState(false);

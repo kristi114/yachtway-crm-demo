@@ -11,7 +11,8 @@ import { ContactAvatar } from "@/components/contact-avatar";
 import { CONTACTS, COMPANIES, type Vertical, type ContactType } from "@/lib/mock-data";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useAuth, canSeeFinTech } from "@/lib/auth";
+import { useAuth, canSeeFinTech, isPartnerRole } from "@/lib/auth";
+import { allowedContactIdsForPartner } from "@/lib/fintech-dashboards";
 import { useApiContactOverlay } from "@/lib/api/overlays";
 
 const searchSchema = z.object({
@@ -53,6 +54,11 @@ function ContactsList() {
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
     let list = CONTACTS.filter((c) => c.vertical === baseVertical);
+    // Partner logins only see contacts attached to one of their own deals.
+    if (isPartnerRole(user.role)) {
+      const allowed = allowedContactIdsForPartner(user.partnerId ?? "");
+      list = list.filter((c) => allowed.has(c.id));
+    }
     if (type) list = list.filter((c) => c.contactType === (type as ContactType));
     if (needle) {
       list = list.filter((c) =>
@@ -79,7 +85,7 @@ function ContactsList() {
           : "-",
       };
     });
-  }, [q, type, baseVertical, apiContactsById]);
+  }, [q, type, baseVertical, apiContactsById, user]);
 
 
   const totalVisible = CONTACTS.filter((c) => c.vertical === baseVertical).length;

@@ -7,7 +7,13 @@ import { effectiveGrantsFor, useAdminConfig } from "./admin-config";
  * Mock auth / role model - mirrors the roles from the CRM build plan.
  * Backend will replace this with a Clerk/WorkOS session + Postgres RLS.
  */
-export type Role = "sales_rep" | "fintech" | "marketing" | "admin";
+export type Role =
+  | "sales_rep"
+  | "fintech"
+  | "marketing"
+  | "admin"
+  | "lender_partner"
+  | "insurance_partner";
 
 export type ResourceClass =
   | "contact.general"
@@ -36,6 +42,8 @@ export interface User {
   role: Role;
   region: Region;
   currency: CurrencyCode;
+  /** For partner roles: the partner org whose deals/contacts they may access. */
+  partnerId?: string;
 }
 
 const DEMO_USERS: Record<Role, User> = {
@@ -70,6 +78,24 @@ const DEMO_USERS: Record<Role, User> = {
     role: "admin",
     region: "US",
     currency: "USD",
+  },
+  lender_partner: {
+    id: "u_lp",
+    name: "Oceanline Capital",
+    email: "partner@oceanlinecapital.com",
+    role: "lender_partner",
+    region: "US",
+    currency: "USD",
+    partnerId: "lp_oceanline",
+  },
+  insurance_partner: {
+    id: "u_ip",
+    name: "MasterCover Underwriters",
+    email: "partner@mastercover.com",
+    role: "insurance_partner",
+    region: "US",
+    currency: "USD",
+    partnerId: "ip_mastercover",
   },
 };
 
@@ -221,7 +247,14 @@ export const ROLE_LABELS: Record<Role, string> = {
   fintech: "Fintech",
   marketing: "Marketing",
   admin: "Admin",
+  lender_partner: "Lender Partner",
+  insurance_partner: "Insurance Partner",
 };
+
+/** Partner (external) roles get a limited, scoped portal. */
+export function isPartnerRole(role: Role): boolean {
+  return role === "lender_partner" || role === "insurance_partner";
+}
 
 /**
  * FinTech customers (banks, lenders, loan applicants, loan brokers) are

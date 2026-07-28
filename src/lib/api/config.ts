@@ -20,6 +20,7 @@ export function toApiRole(role: DemoRole): SharedRole {
     case "fintech": return "FINTECH";
     case "marketing": return "MARKETING";
     case "admin": return "ADMIN";
+    default: return "SALES_REP"; // partner roles don't map to a CRM API role
   }
 }
 

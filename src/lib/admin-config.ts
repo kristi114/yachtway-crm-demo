@@ -148,6 +148,10 @@ export const BASE_ROLE_GRANTS: Record<Role, ResourceClass[]> = {
     "emails",
     "admin",
   ],
+  // External partner logins — deliberately minimal. They reach only their own
+  // dashboard; deal + contact scoping to their org is enforced in the routes.
+  lender_partner: ["easyfund", "contact.general"],
+  insurance_partner: ["mastercover", "contact.general"],
 };
 
 function seedUser(

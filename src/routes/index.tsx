@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
 import { Users, Building2, Briefcase, ArrowRight, Wallet, Clock, AlertTriangle, TrendingUp, Sparkles, Sunrise, Target, Flame, LogIn, Camera, PackageOpen, Boxes, Rocket, Snowflake, Flame as FlameHot, Video, Radio, Layout, Info } from "lucide-react";
 import { BoatIcon } from "@/components/icons/boat-icon";
@@ -7,7 +7,7 @@ import { BoatIcon } from "@/components/icons/boat-icon";
 
 import { AppShell } from "@/components/app-shell";
 import { PageBody } from "@/components/page-header";
-import { useAuth, useMoney, ROLE_LABELS, DEMO_USER_LIST } from "@/lib/auth";
+import { useAuth, useMoney, ROLE_LABELS, DEMO_USER_LIST, isPartnerRole, type Role } from "@/lib/auth";
 import { TargetsPanel } from "@/components/targets-panel";
 import { RepActivityPanel } from "@/components/rep-activity-panel";
 import { StudioBookingsPanel } from "@/components/studio-bookings-panel";
@@ -67,10 +67,20 @@ function pickTopState(companies: Company[]): string | undefined {
 
 function Home() {
   const { user } = useAuth();
+  if (isPartnerRole(user.role)) return <PartnerHome role={user.role} />;
   if (user.role === "sales_rep") return <SalesRepHome userId={user.id} name={user.name} />;
   if (user.role === "marketing") return <MarketingHome name={user.name} />;
   if (user.role === "fintech") return <FintechHome name={user.name} />;
   return <GenericHome />;
+}
+
+/** Partner logins have no CRM home — send them to their scoped dashboard. */
+function PartnerHome({ role }: { role: Role }) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate({ to: role === "insurance_partner" ? "/insurance" : "/lender" });
+  }, [role, navigate]);
+  return null;
 }
 
 // ==========================================================

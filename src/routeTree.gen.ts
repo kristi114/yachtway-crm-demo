@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as BuyersRouteImport } from './routes/buyers'
 import { Route as CallbackRouteImport } from './routes/callback'
 import { Route as InsuranceRouteImport } from './routes/insurance'
 import { Route as LenderRouteImport } from './routes/lender'
@@ -57,6 +58,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuyersRoute = BuyersRouteImport.update({
+  id: '/buyers',
+  path: '/buyers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CallbackRoute = CallbackRouteImport.update({
@@ -248,6 +254,7 @@ const ReferralsNewOppIdRoute = ReferralsNewOppIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/buyers': typeof BuyersRoute
   '/callback': typeof CallbackRoute
   '/insurance': typeof InsuranceRoute
   '/lender': typeof LenderRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/buyers': typeof BuyersRoute
   '/callback': typeof CallbackRoute
   '/insurance': typeof InsuranceRoute
   '/lender': typeof LenderRoute
@@ -330,6 +338,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/buyers': typeof BuyersRoute
   '/callback': typeof CallbackRoute
   '/insurance': typeof InsuranceRoute
   '/lender': typeof LenderRoute
@@ -373,6 +382,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/buyers'
     | '/callback'
     | '/insurance'
     | '/lender'
@@ -413,6 +423,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/buyers'
     | '/callback'
     | '/insurance'
     | '/lender'
@@ -454,6 +465,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/buyers'
     | '/callback'
     | '/insurance'
     | '/lender'
@@ -496,6 +508,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  BuyersRoute: typeof BuyersRoute
   CallbackRoute: typeof CallbackRoute
   InsuranceRoute: typeof InsuranceRoute
   LenderRoute: typeof LenderRoute
@@ -540,6 +553,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/buyers': {
+      id: '/buyers'
+      path: '/buyers'
+      fullPath: '/buyers'
+      preLoaderRoute: typeof BuyersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/callback': {
@@ -833,6 +853,7 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  BuyersRoute: BuyersRoute,
   CallbackRoute: CallbackRoute,
   InsuranceRoute: InsuranceRoute,
   LenderRoute: LenderRoute,

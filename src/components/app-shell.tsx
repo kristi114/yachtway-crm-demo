@@ -7,7 +7,7 @@ import { DealerIcon } from "@/components/icons/dealer-icon";
 
 import logoDark from "@/assets/yachtway-black.png.asset.json";
 
-import { useAuth, ROLE_LABELS, canSeeFinTech, type Role } from "@/lib/auth";
+import { useAuth, ROLE_LABELS, canSeeFinTech, isPartnerRole, type Role } from "@/lib/auth";
 import { SessionMenu } from "@/components/session-menu";
 import { EmailSignatureDialog } from "@/components/email-signature-dialog";
 
@@ -64,7 +64,7 @@ const NAV: NavGroup[] = [
     items: [
       { to: "/companies", label: "Banks & Lenders", icon: Landmark, gate: "company.general", search: { vertical: "FinTech" } },
       { to: "/contacts", label: "Loan Brokers", icon: DealerIcon, gate: "contact.general", search: { vertical: "FinTech", type: "Bank Contact" } },
-      { to: "/contacts", label: "Loan Applicants", icon: Wallet, gate: "easyfund", search: { vertical: "FinTech", type: "Loan Applicant" } },
+      { to: "/contacts", label: "Applicants", icon: Wallet, gate: "easyfund", search: { vertical: "FinTech", type: "Loan Applicant" } },
       { to: "/lender", label: "Lender dashboard", icon: Banknote, gate: "easyfund" },
       { to: "/insurance", label: "Insurance dashboard", icon: Umbrella, gate: "mastercover" },
       { to: "/referrals", label: "Referrals dashboard", icon: HandCoins, gate: "referrals" },
@@ -83,6 +83,7 @@ const NAV: NavGroup[] = [
     label: "Marketing",
     items: [
       { to: "/emails", label: "Emails", icon: Mail, gate: "emails" },
+      { to: "/buyers", label: "Buyers", icon: Users, gate: "contact.general", hiddenForRoles: ["lender_partner", "insurance_partner"] },
     ],
   },
   {
@@ -217,6 +218,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <DropdownMenuRadioItem value="fintech">Fintech</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="marketing">Marketing</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">
+                      External partner logins
+                    </DropdownMenuLabel>
+                    <DropdownMenuRadioItem value="lender_partner">Lender Partner</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="insurance_partner">Insurance Partner</DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem disabled className="text-xs">
@@ -294,7 +301,18 @@ function SidebarNav({
   };
 
   const { user } = useAuth();
-  const visibleGroups = NAV
+  // External partner logins get a minimal portal — only their own dashboard.
+  const partnerNav: NavGroup[] = [
+    {
+      label: "Portal",
+      items:
+        user.role === "insurance_partner"
+          ? [{ to: "/insurance", label: "My deals", icon: Umbrella, gate: "mastercover" }]
+          : [{ to: "/lender", label: "My deals", icon: Banknote, gate: "easyfund" }],
+    },
+  ];
+  const baseNav = isPartnerRole(user.role) ? partnerNav : NAV;
+  const visibleGroups = baseNav
     .filter((g) => g.label !== "Fintech" || canSeeFinTech(user.role))
     .filter((g) => g.label !== "Billing department" || can("billing"))
     .map((g) => ({
