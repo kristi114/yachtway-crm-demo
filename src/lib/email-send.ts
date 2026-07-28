@@ -40,6 +40,11 @@ export interface SentEmail {
   clicked?: number;
   /** The exact HTML that was sent — rendered in the per-send report. */
   html?: string;
+  /**
+   * True for bulk marketing campaigns sent through Mailgun. These are excluded
+   * from a company's email roll-up (only 1:1 / transactional email rolls up).
+   */
+  marketing?: boolean;
 }
 
 const STORAGE_KEY = "yw:email-sent-log:v1";
@@ -100,6 +105,7 @@ function seed(): SentEmail[] {
       sentAt: daysAgo(1, 2),
       status: "sent",
       mock: true,
+      marketing: true,
       recipientCount: 3440,
       delivered: 3320,
       opened: 1040,
@@ -119,6 +125,7 @@ function seed(): SentEmail[] {
       sentAt: daysAgo(3, 5),
       status: "sent",
       mock: true,
+      marketing: true,
       recipientCount: 2380,
       delivered: 2290,
       opened: 690,

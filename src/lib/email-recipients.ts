@@ -98,3 +98,36 @@ export function emailsForContact(contactId: string): { send: SentEmail; status: 
   }
   return out; // listSentEmails() is already newest-first
 }
+
+export interface CompanyEmailRow {
+  send: SentEmail;
+  status: RecipientStatus;
+  contactId: string;
+  contactName: string;
+}
+
+/**
+ * Company email roll-up: every email received by any of the company's contacts,
+ * EXCEPT bulk marketing campaigns sent through Mailgun (send.marketing). Each
+ * row keeps the contact it reached so the company view can link back to them.
+ */
+export function emailsForCompany(companyId: string): CompanyEmailRow[] {
+  const contacts = CONTACTS.filter((c) => c.companyId === companyId && c.email);
+  const out: CompanyEmailRow[] = [];
+  for (const send of listSentEmails()) {
+    if (send.marketing) continue; // exclude Mailgun marketing
+    const { rows } = buildRecipientRows(send);
+    for (const c of contacts) {
+      const row = rows.find((r) => r.contactId === c.id);
+      if (row) {
+        out.push({
+          send,
+          status: row.status,
+          contactId: c.id,
+          contactName: `${c.firstName} ${c.lastName}`.trim(),
+        });
+      }
+    }
+  }
+  return out; // listSentEmails() is already newest-first
+}

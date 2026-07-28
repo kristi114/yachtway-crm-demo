@@ -18,6 +18,7 @@ import { PageHeader, PageBody } from "@/components/page-header";
 import { CompanyLogo } from "@/components/company-logo";
 import { DetailSections } from "@/components/field-renderer";
 import { ActivityPanel } from "@/components/activity-panel";
+import { CompanyEmailsPanel } from "@/components/email-builder/company-emails-panel";
 import { EventsTable } from "@/components/events-table";
 import { eventsForCompany, useEventsStore } from "@/lib/events";
 import { CompanySnapshotPanel } from "@/components/company-snapshot-panel";
@@ -770,8 +771,9 @@ function CompanyDetail() {
         )}
 
         {activeTab === "activity" && (
-          <div className="max-w-5xl">
+          <div className="max-w-5xl space-y-4">
             <ActivityPanel type="company" id={company.id} />
+            <CompanyEmailsPanel companyId={company.id} />
           </div>
         )}
 
