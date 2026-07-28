@@ -21,6 +21,24 @@ export const Route = createFileRoute("/opportunities/")({
   component: guarded("opportunity.general", "Opportunities", OpportunitiesPage),
 });
 
+// Closed stages force the win probability: a won stage is a certainty (100%),
+// a lost stage is a zero (0%). Matched case-insensitively so pipeline-specific
+// labels ("Funded", "Bound", "Booked") still resolve. Non-closed stages leave
+// probability untouched so a rep's manual estimate survives a re-order.
+const WON_STAGES = new Set([
+  "closed won", "won", "completed", "contract", "funded", "bound", "booked",
+]);
+const LOST_STAGES = new Set([
+  "closed lost", "lost", "disqualified", "declined",
+]);
+
+function probabilityForStage(stage: string): number | null {
+  const s = stage.trim().toLowerCase();
+  if (WON_STAGES.has(s)) return 100;
+  if (LOST_STAGES.has(s)) return 0;
+  return null;
+}
+
 
 function OpportunitiesPage() {
   const { user } = useAuth();
@@ -54,14 +72,19 @@ function OpportunitiesPage() {
   function handleDrop(pipeline: PipelineName, stage: string) {
     if (!dragId) return;
     const enteredAt = new Date().toISOString().slice(0, 10);
+    const forced = probabilityForStage(stage);
+    const patch: Partial<Opportunity> =
+      forced === null
+        ? { stage, stageEnteredAt: enteredAt }
+        : { stage, stageEnteredAt: enteredAt, probability: forced };
     setOpps((prev) =>
       prev.map((o) =>
-        o.id === dragId && o.pipeline === pipeline ? { ...o, stage, stageEnteredAt: enteredAt } : o,
+        o.id === dragId && o.pipeline === pipeline ? { ...o, ...patch } : o,
       ),
     );
     // Persist to the shared store so the opportunity detail (and everywhere else)
-    // reflects the new stage, not just this board view.
-    updateOpportunity(dragId, { stage, stageEnteredAt: enteredAt });
+    // reflects the new stage — and win probability when moving to a closed stage.
+    updateOpportunity(dragId, patch);
     setDragId(null);
     setDragOver(null);
   }
