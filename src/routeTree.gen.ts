@@ -19,7 +19,9 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAccessRouteImport } from './routes/admin.access'
 import { Route as AdminAmplitudeRouteImport } from './routes/admin.amplitude'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminAutomationsRouteImport } from './routes/admin.automations'
 import { Route as AdminBrandsRouteImport } from './routes/admin.brands'
+import { Route as AdminObjectsRouteImport } from './routes/admin.objects'
 import { Route as AdminSignaturesRouteImport } from './routes/admin.signatures'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as CalendarIndexRouteImport } from './routes/calendar.index'
@@ -97,9 +99,19 @@ const AdminAuditRoute = AdminAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAutomationsRoute = AdminAutomationsRouteImport.update({
+  id: '/automations',
+  path: '/automations',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBrandsRoute = AdminBrandsRouteImport.update({
   id: '/brands',
   path: '/brands',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminObjectsRoute = AdminObjectsRouteImport.update({
+  id: '/objects',
+  path: '/objects',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSignaturesRoute = AdminSignaturesRouteImport.update({
@@ -243,7 +255,9 @@ export interface FileRoutesByFullPath {
   '/admin/access': typeof AdminAccessRoute
   '/admin/amplitude': typeof AdminAmplitudeRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/automations': typeof AdminAutomationsRoute
   '/admin/brands': typeof AdminBrandsRoute
+  '/admin/objects': typeof AdminObjectsRoute
   '/admin/signatures': typeof AdminSignaturesRoute
   '/admin/users': typeof AdminUsersRoute
   '/companies/$id': typeof CompaniesIdRoute
@@ -281,7 +295,9 @@ export interface FileRoutesByTo {
   '/admin/access': typeof AdminAccessRoute
   '/admin/amplitude': typeof AdminAmplitudeRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/automations': typeof AdminAutomationsRoute
   '/admin/brands': typeof AdminBrandsRoute
+  '/admin/objects': typeof AdminObjectsRoute
   '/admin/signatures': typeof AdminSignaturesRoute
   '/admin/users': typeof AdminUsersRoute
   '/companies/$id': typeof CompaniesIdRoute
@@ -321,7 +337,9 @@ export interface FileRoutesById {
   '/admin/access': typeof AdminAccessRoute
   '/admin/amplitude': typeof AdminAmplitudeRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/automations': typeof AdminAutomationsRoute
   '/admin/brands': typeof AdminBrandsRoute
+  '/admin/objects': typeof AdminObjectsRoute
   '/admin/signatures': typeof AdminSignaturesRoute
   '/admin/users': typeof AdminUsersRoute
   '/companies/$id': typeof CompaniesIdRoute
@@ -362,7 +380,9 @@ export interface FileRouteTypes {
     | '/admin/access'
     | '/admin/amplitude'
     | '/admin/audit'
+    | '/admin/automations'
     | '/admin/brands'
+    | '/admin/objects'
     | '/admin/signatures'
     | '/admin/users'
     | '/companies/$id'
@@ -400,7 +420,9 @@ export interface FileRouteTypes {
     | '/admin/access'
     | '/admin/amplitude'
     | '/admin/audit'
+    | '/admin/automations'
     | '/admin/brands'
+    | '/admin/objects'
     | '/admin/signatures'
     | '/admin/users'
     | '/companies/$id'
@@ -439,7 +461,9 @@ export interface FileRouteTypes {
     | '/admin/access'
     | '/admin/amplitude'
     | '/admin/audit'
+    | '/admin/automations'
     | '/admin/brands'
+    | '/admin/objects'
     | '/admin/signatures'
     | '/admin/users'
     | '/companies/$id'
@@ -574,11 +598,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAuditRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/automations': {
+      id: '/admin/automations'
+      path: '/automations'
+      fullPath: '/admin/automations'
+      preLoaderRoute: typeof AdminAutomationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/brands': {
       id: '/admin/brands'
       path: '/brands'
       fullPath: '/admin/brands'
       preLoaderRoute: typeof AdminBrandsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/objects': {
+      id: '/admin/objects'
+      path: '/objects'
+      fullPath: '/admin/objects'
+      preLoaderRoute: typeof AdminObjectsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/signatures': {
@@ -770,7 +808,9 @@ interface AdminRouteChildren {
   AdminAccessRoute: typeof AdminAccessRoute
   AdminAmplitudeRoute: typeof AdminAmplitudeRoute
   AdminAuditRoute: typeof AdminAuditRoute
+  AdminAutomationsRoute: typeof AdminAutomationsRoute
   AdminBrandsRoute: typeof AdminBrandsRoute
+  AdminObjectsRoute: typeof AdminObjectsRoute
   AdminSignaturesRoute: typeof AdminSignaturesRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -780,7 +820,9 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAccessRoute: AdminAccessRoute,
   AdminAmplitudeRoute: AdminAmplitudeRoute,
   AdminAuditRoute: AdminAuditRoute,
+  AdminAutomationsRoute: AdminAutomationsRoute,
   AdminBrandsRoute: AdminBrandsRoute,
+  AdminObjectsRoute: AdminObjectsRoute,
   AdminSignaturesRoute: AdminSignaturesRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,

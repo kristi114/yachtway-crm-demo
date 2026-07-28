@@ -18,7 +18,9 @@ export const Route = createFileRoute("/admin")({
 });
 
 const TABS = [
-  { to: "/admin", label: "Objects & fields", exact: true },
+  { to: "/admin", label: "Field catalog", exact: true },
+  { to: "/admin/objects", label: "Object manager", exact: false },
+  { to: "/admin/automations", label: "Automations", exact: false },
   { to: "/admin/users", label: "Users & roles", exact: false },
   { to: "/admin/access", label: "Access", exact: false },
   { to: "/admin/brands", label: "Brands", exact: false },
