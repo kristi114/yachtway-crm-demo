@@ -1,12 +1,33 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { TASKS, getCompany, getContact, type Task } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
+import { useAuth } from "@/lib/auth";
+
+function todayISO(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function blankTask(assignee: string): Task {
+  return {
+    id: `task_${Math.random().toString(36).slice(2, 9)}`,
+    relatedType: "contact",
+    relatedId: "",
+    title: "",
+    assignee,
+    dueDate: todayISO(),
+    status: "Open",
+    priority: "Med",
+    notes: "",
+  };
+}
 
 export const Route = createFileRoute("/tasks/")({
   component: TasksPage,
@@ -22,6 +43,7 @@ function priorityBadge(p: string) {
 }
 
 function TasksPage() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>(TASKS);
   const [editing, setEditing] = useState<Task | null>(null);
   const [open, setOpen] = useState(false);
@@ -33,8 +55,11 @@ function TasksPage() {
   }, [tasks]);
 
   const openTask = (t: Task) => { setEditing(t); setOpen(true); };
+  const createTask = () => { setEditing(blankTask(user.name)); setOpen(true); };
+  // Upsert: a brand-new task (id not yet in the list) is inserted; canceling the
+  // dialog adds nothing because we only commit on save.
   const saveTask = (patch: Task) =>
-    setTasks((prev) => prev.map((x) => (x.id === patch.id ? patch : x)));
+    setTasks((prev) => (prev.some((x) => x.id === patch.id) ? prev.map((x) => (x.id === patch.id ? patch : x)) : [patch, ...prev]));
   const deleteTask = (id: string) =>
     setTasks((prev) => prev.filter((x) => x.id !== id));
 
@@ -44,6 +69,11 @@ function TasksPage() {
         eyebrow="Tasks"
         title="All tasks"
         subtitle={`${tasks.length} across every record - click any row to edit or reschedule`}
+        actions={
+          <Button onClick={createTask}>
+            <Plus className="h-4 w-4" /> Create task
+          </Button>
+        }
       />
       <PageBody>
         <div className="space-y-4">
