@@ -22,11 +22,17 @@ export interface GrapesEditorHandle {
   getContent: () => GrapesContent;
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Interop: grapesjs / the preset may be exposed as the default export or as the
+// module namespace depending on how the bundler interops the CJS/UMD build.
+function resolveDefault(mod: any): any {
+  return mod && mod.default ? mod.default : mod;
+}
+
 /**
  * Drag-and-drop email designer built on GrapesJS + the MJML-style newsletter
  * preset. Ships with text, image, button, divider and multi-column section
- * blocks; the block manager, layer manager and style editor are all rendered
- * inline. Fully self-hosted — no template content ever leaves your infra.
+ * blocks. Fully self-hosted — no template content ever leaves your infra.
  */
 export const GrapesEditor = forwardRef<
   GrapesEditorHandle,
@@ -38,9 +44,9 @@ export const GrapesEditor = forwardRef<
   }
 >(function GrapesEditor({ design, html }, ref) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const editorRef = useRef<any>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [errorMsg, setErrorMsg] = useState<string>("");
 
   useImperativeHandle(ref, () => ({
     getContent(): GrapesContent {
@@ -59,19 +65,26 @@ export const GrapesEditor = forwardRef<
 
   useEffect(() => {
     let cancelled = false;
-    let editor: unknown;
+    let editor: any;
 
     (async () => {
       try {
-        const [{ default: grapesjs }, { default: presetNewsletter }] = await Promise.all([
-          import("grapesjs"),
-          import("grapesjs-preset-newsletter"),
-        ]);
-        if (cancelled || !containerRef.current) return;
+        const grapesjs = resolveDefault(await import("grapesjs"));
+        if (!grapesjs || typeof grapesjs.init !== "function") {
+          throw new Error("grapesjs module did not expose init()");
+        }
 
-        // Register the preset under a stable name so string-keyed pluginsOpts bind.
-        const PRESET = "grapesjs-preset-newsletter";
-        grapesjs.plugins.add(PRESET, presetNewsletter);
+        // The newsletter preset is optional: if it fails to load we still bring
+        // up the core editor rather than failing the whole designer.
+        const plugins: any[] = [];
+        try {
+          const presetNewsletter = resolveDefault(await import("grapesjs-preset-newsletter"));
+          if (typeof presetNewsletter === "function") plugins.push(presetNewsletter);
+        } catch (presetErr) {
+          console.warn("grapesjs-preset-newsletter failed to load; using base editor", presetErr);
+        }
+
+        if (cancelled || !containerRef.current) return;
 
         editor = grapesjs.init({
           container: containerRef.current,
@@ -79,42 +92,45 @@ export const GrapesEditor = forwardRef<
           width: "100%",
           storageManager: false,
           fromElement: false,
-          plugins: [PRESET],
-          pluginsOpts: {
-            [PRESET]: {
-              modalLabelImport: "Paste your HTML here and click Import",
-              modalLabelExport: "Copy the HTML below",
-              inlineCss: true,
-            },
-          },
+          plugins,
+          pluginsOpts:
+            plugins.length > 0
+              ? {
+                  [plugins[0] as any]: {
+                    modalLabelImport: "Paste your HTML here and click Import",
+                    modalLabelExport: "Copy the HTML below",
+                    inlineCss: true,
+                  },
+                }
+              : {},
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const ed = editor as any;
-        editorRef.current = ed;
+        editorRef.current = editor;
 
         if (design) {
           try {
-            ed.loadProjectData(design);
+            editor.loadProjectData(design);
           } catch {
-            if (html) ed.setComponents(html);
+            if (html) editor.setComponents(html);
           }
         } else if (html) {
-          ed.setComponents(html);
+          editor.setComponents(html);
         }
 
         if (!cancelled) setStatus("ready");
       } catch (err) {
         console.error("Failed to init GrapesJS editor", err);
-        if (!cancelled) setStatus("error");
+        if (!cancelled) {
+          setErrorMsg(err instanceof Error ? err.message : String(err));
+          setStatus("error");
+        }
       }
     })();
 
     return () => {
       cancelled = true;
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (editor as any)?.destroy?.();
+        editor?.destroy?.();
       } catch {
         /* ignore */
       }
@@ -126,15 +142,18 @@ export const GrapesEditor = forwardRef<
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-surface">
+      {status === "loading" ? (
+        <div className="p-3 text-sm text-muted-foreground">Loading the drag-and-drop designer…</div>
+      ) : null}
       {status === "error" ? (
-        <div className="p-8 text-sm text-destructive">
-          The visual designer failed to load. Switch to the HTML tab to keep editing.
+        <div className="p-4 text-sm text-destructive">
+          The visual designer failed to load{errorMsg ? `: ${errorMsg}` : ""}. Switch to the HTML tab
+          to keep editing.
         </div>
       ) : null}
-      {status === "loading" ? (
-        <div className="p-8 text-sm text-muted-foreground">Loading the drag-and-drop designer…</div>
-      ) : null}
-      <div ref={containerRef} className={status === "ready" ? "block" : "hidden"} />
+      {/* Container must stay visible + sized during init — GrapesJS breaks if it
+          initializes into a display:none / zero-size element. */}
+      <div ref={containerRef} style={{ minHeight: 620 }} />
     </div>
   );
 });
