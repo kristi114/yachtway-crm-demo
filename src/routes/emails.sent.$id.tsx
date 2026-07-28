@@ -141,23 +141,46 @@ function RecipientList({ email }: { email: SentEmail }) {
             {filtered.length === 0 ? (
               <div className="p-6 text-center text-sm text-muted-foreground">No matching recipients.</div>
             ) : (
-              filtered.map((r) => (
-                <div
-                  key={r.id}
-                  className="flex items-center justify-between gap-3 border-b border-border px-3 py-2 last:border-b-0"
-                >
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-secondary text-[10px] font-semibold text-muted-foreground">
-                      {initialsOf(r.name)}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium">{r.name}</div>
-                      <div className="truncate text-xs text-muted-foreground">{r.email}</div>
+              filtered.map((r) => {
+                const inner = (
+                  <>
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-secondary text-[10px] font-semibold text-muted-foreground">
+                        {initialsOf(r.name)}
+                      </span>
+                      <div className="min-w-0">
+                        <div
+                          className={`truncate text-sm font-medium ${r.contactId ? "text-brand" : ""}`}
+                        >
+                          {r.name}
+                        </div>
+                        <div className="truncate text-xs text-muted-foreground">{r.email}</div>
+                      </div>
                     </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Badge className={STATUS_STYLES[r.status]}>{r.status}</Badge>
+                      {r.contactId && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                    </div>
+                  </>
+                );
+                const cls =
+                  "flex items-center justify-between gap-3 border-b border-border px-3 py-2 last:border-b-0";
+                return r.contactId ? (
+                  <Link
+                    key={r.id}
+                    to="/contacts/$id"
+                    params={{ id: r.contactId }}
+                    className={`${cls} transition-colors hover:bg-accent`}
+                    title={`Open ${r.name}'s contact record`}
+                  >
+                    {inner}
+                  </Link>
+                ) : (
+                  <div key={r.id} className={cls}>
+                    {inner}
                   </div>
-                  <Badge className={STATUS_STYLES[r.status]}>{r.status}</Badge>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 

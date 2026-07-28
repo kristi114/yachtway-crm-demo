@@ -18,6 +18,8 @@ export interface RecipientRow {
   name: string;
   email: string;
   status: RecipientStatus;
+  /** Present when this recipient resolves to a real CRM contact (links to it). */
+  contactId?: string;
 }
 
 /** Cap how many individual rows we materialize for very large campaigns. */
@@ -32,18 +34,27 @@ export function buildRecipientRows(s: SentEmail): {
 
   // Base identities. Explicit multi-address sends use the real addresses; a
   // campaign to a group address is expanded from CRM contacts.
-  let base: { id: string; name: string; email: string }[];
+  let base: { id: string; name: string; email: string; contactId?: string }[];
   const explicit = s.to.length > 1 && (!s.recipientCount || s.recipientCount === s.to.length);
   if (explicit) {
-    base = s.to.map((e, i) => ({ id: `to_${i}`, name: e.split("@")[0], email: e }));
+    base = s.to.map((e, i) => {
+      // Link the address to a CRM contact when one matches.
+      const c = CONTACTS.find((x) => x.email && x.email.toLowerCase() === e.toLowerCase());
+      return {
+        id: `to_${i}`,
+        name: c ? `${c.firstName} ${c.lastName}`.trim() : e.split("@")[0],
+        email: e,
+        contactId: c?.id,
+      };
+    });
   } else {
     const pool = CONTACTS.filter((c) => c.email);
     const count = Math.min(total, MAX_ROWS);
     base = Array.from({ length: count }, (_, i) => {
       const c = pool[i % pool.length];
       const name = `${c.firstName} ${c.lastName}`.trim();
-      if (i < pool.length) return { id: c.id, name, email: c.email };
-      // Synthesize additional deterministic recipients beyond the contact pool.
+      // First pass = real contacts (linkable); synthesized extras are not.
+      if (i < pool.length) return { id: c.id, name, email: c.email, contactId: c.id };
       const n = Math.floor(i / pool.length);
       const [local, domain] = c.email.split("@");
       return { id: `${c.id}_${n}`, name, email: `${local}+${n}@${domain}` };
