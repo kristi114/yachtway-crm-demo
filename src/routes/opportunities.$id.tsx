@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { StudioToursPanel } from "@/components/studio-tours-panel";
 import { getStudioTour } from "@/lib/studio-tours";
+// Single source of truth for pipeline stages (mirrors the Field Catalog picklist).
+import { PIPELINE_STAGES } from "@/components/create-opportunity-dialog";
 import { EditOpportunityDialog } from "@/components/edit-opportunity-dialog";
 import { MergeRecordDialog } from "@/components/merge-record-dialog";
 
@@ -52,16 +54,6 @@ export const Route = createFileRoute("/opportunities/$id")({
     </AppShell>
   ),
 });
-
-const PIPELINE_STAGES: Record<string, string[]> = {
-  "SaaS Sales": ["Qualification", "Discovery", "Proposal Sent", "Negotiation", "Closed Won"],
-  "Dealer Signups": ["Discovery", "Demo", "Proposal Sent", "Contract", "Onboarded"],
-  "EasyFund": ["Prequalified", "Docs Collected", "Underwriting", "Approved", "Funded"],
-  "MasterCover": ["New Opportunity", "Quote Sent", "Bound", "Active"],
-  "Studio": ["New Opportunity", "Shoot Scheduled", "In Production", "Delivered", "Completed"],
-  "EasyClose": ["New Opportunity", "Docs Prep", "In Escrow", "Closed"],
-  "Referral Partners": ["Intro", "Discovery", "Contract", "Active"],
-};
 
 function daysSince(iso: string) {
   if (!iso) return 0;

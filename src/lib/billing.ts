@@ -257,7 +257,7 @@ function autoOpportunityForDoc(doc: BillingDoc): Opportunity | undefined {
   const categories = doc.line_items.map((li) => getProduct(li.productId)?.category ?? "");
   const isStudio = categories.some((c) => c.startsWith("Studio"));
   const pipeline: Opportunity["pipeline"] = isStudio ? "Studio" : "SaaS Sales";
-  const stage = isStudio ? "New Opportunity" : "Proposal Sent";
+  const stage = isStudio ? "Service Requested" : "Proposal Sent";
   const today = new Date().toISOString().slice(0, 10);
   const company = getCompany(doc.companyId);
 

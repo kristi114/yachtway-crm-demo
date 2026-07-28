@@ -13,13 +13,24 @@ import { useAuth, type Role } from "@/lib/auth";
 
 export type PipelineName = Opportunity["pipeline"];
 
+// Stages for the four product pipelines that match the Field Catalog "Picklist
+// Options" reference (rows 60-73, GHL-live) come verbatim from that sheet, in
+// order. SaaS Sales / Dealer Signups / Referral Partners have no catalog
+// counterpart, so they keep their existing stages.
 export const PIPELINE_STAGES: Record<PipelineName, string[]> = {
   "SaaS Sales": ["Qualification", "Discovery", "Proposal Sent", "Negotiation", "Closed Won"],
   "Dealer Signups": ["Discovery", "Demo", "Proposal Sent", "Contract", "Onboarded"],
-  "EasyFund": ["Prequalified", "Docs Collected", "Underwriting", "Approved", "Funded"],
-  "MasterCover": ["New Opportunity", "Quote Sent", "Bound", "Active"],
-  "Studio": ["New Opportunity", "Shoot Scheduled", "In Production", "Delivered", "Completed"],
-  "EasyClose": ["New Opportunity", "Docs Prep", "In Escrow", "Closed"],
+  // Catalog · EasyFund
+  "EasyFund": [
+    "Pre-Qual Complete", "Unresponsive", "Still Shopping", "Partial Application",
+    "Application Complete", "In Review", "Approved", "Loan Closed", "Closed",
+  ],
+  // Catalog · MasterCover
+  "MasterCover": ["New Lead", "Contacted", "Still Shopping", "Application Complete", "Closed"],
+  // Catalog · Studio
+  "Studio": ["Service Requested", "Studio Booked", "Shoot Complete", "Content Delivered", "Closed"],
+  // Catalog · EasyClose
+  "EasyClose": ["Service Requested", "Deliverables In Progress", "Delivered", "Closed"],
   "Referral Partners": ["Intro", "Discovery", "Contract", "Active"],
 };
 
