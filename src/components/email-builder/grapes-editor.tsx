@@ -30,6 +30,92 @@ function resolveDefault(mod: any): any {
 }
 
 /**
+ * Register email content + layout blocks on the editor's BlockManager. Done
+ * directly (not via a preset) so the Blocks panel is always populated with the
+ * expected set: text, heading, image, button, divider, spacer, and 1/2/3-column
+ * layouts. All blocks carry inline, email-client-safe styles.
+ */
+function registerEmailBlocks(editor: any) {
+  const bm = editor.BlockManager;
+  const CONTENT = "Content";
+  const LAYOUT = "Layout";
+  const cell = (inner: string) =>
+    `<td style="padding:12px;vertical-align:top;font-family:Arial,Helvetica,sans-serif;">${inner}</td>`;
+  const placeholder = '<div style="min-height:24px;"></div>';
+
+  const blocks: Array<{ id: string; label: string; category: string; content: any }> = [
+    {
+      id: "yw-heading",
+      label: "Heading",
+      category: CONTENT,
+      content:
+        '<h1 style="margin:0;padding:8px 16px;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.3;color:#0b1f33;">Your headline</h1>',
+    },
+    {
+      id: "yw-text",
+      label: "Text",
+      category: CONTENT,
+      content:
+        '<p style="margin:0;padding:8px 16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#1a2b3c;">Insert your text here. Double-click to edit.</p>',
+    },
+    {
+      id: "yw-image",
+      label: "Image",
+      category: CONTENT,
+      content: { type: "image", activeOnRender: 1, style: { width: "100%", "max-width": "600px", display: "block" } },
+    },
+    {
+      id: "yw-button",
+      label: "Button",
+      category: CONTENT,
+      content:
+        '<a href="#" style="display:inline-block;margin:12px 16px;padding:12px 22px;background:#0b1f33;color:#ffffff;text-decoration:none;border-radius:8px;font-family:Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;">Call to action</a>',
+    },
+    {
+      id: "yw-divider",
+      label: "Divider",
+      category: CONTENT,
+      content: '<hr style="border:none;border-top:1px solid #e2e6ea;margin:16px;" />',
+    },
+    {
+      id: "yw-spacer",
+      label: "Spacer",
+      category: CONTENT,
+      content: '<div style="height:24px;line-height:24px;font-size:0;">&nbsp;</div>',
+    },
+    {
+      id: "yw-sect-1",
+      label: "1 Column",
+      category: LAYOUT,
+      content: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;"><tr>${cell(placeholder)}</tr></table>`,
+    },
+    {
+      id: "yw-sect-2",
+      label: "2 Columns",
+      category: LAYOUT,
+      content: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;"><tr>${cell(placeholder)}${cell(placeholder)}</tr></table>`,
+    },
+    {
+      id: "yw-sect-3",
+      label: "3 Columns",
+      category: LAYOUT,
+      content: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;"><tr>${cell(placeholder)}${cell(placeholder)}${cell(placeholder)}</tr></table>`,
+    },
+  ];
+
+  for (const b of blocks) {
+    bm.add(b.id, { label: b.label, category: b.category, content: b.content, media: "" });
+  }
+
+  // Make sure the Blocks panel is open so the set is visible on load.
+  try {
+    editor.runCommand("open-blocks");
+  } catch {
+    /* command name differs across versions — non-fatal */
+  }
+}
+
+/**
  * Drag-and-drop email designer built on GrapesJS + the MJML-style newsletter
  * preset. Ships with text, image, button, divider and multi-column section
  * blocks. Fully self-hosted — no template content ever leaves your infra.
@@ -106,6 +192,11 @@ export const GrapesEditor = forwardRef<
         });
 
         editorRef.current = editor;
+
+        // Register a reliable set of email blocks directly on the BlockManager so
+        // the Blocks panel is always populated (independent of any preset). These
+        // use inline, email-safe styles. Drag them onto the canvas.
+        registerEmailBlocks(editor);
 
         if (design) {
           try {
