@@ -1,12 +1,31 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { Mail, Users, Info } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Mail, Users, Info, ChevronDown, ChevronRight, Search } from "lucide-react";
 
 import { guarded } from "@/components/require-access";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { getSentEmail, type SentEmail } from "@/lib/email-send";
+import { buildRecipientRows, type RecipientStatus } from "@/lib/email-recipients";
+
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((n) => n[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+const STATUS_STYLES: Record<RecipientStatus, string> = {
+  Clicked: "bg-purple-500/10 text-purple-600 hover:bg-purple-500/10",
+  Opened: "bg-blue-500/10 text-blue-600 hover:bg-blue-500/10",
+  Delivered: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10",
+  Bounced: "bg-amber-500/10 text-amber-700 hover:bg-amber-500/10",
+};
 
 export const Route = createFileRoute("/emails/sent/$id")({
   component: guarded("emails", "Email Marketing", SentReportPage),
@@ -55,6 +74,102 @@ function Funnel({ s }: { s: SentEmail }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+const STATUS_FILTERS: (RecipientStatus | "All")[] = ["All", "Delivered", "Opened", "Clicked", "Bounced"];
+
+function RecipientList({ email }: { email: SentEmail }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<RecipientStatus | "All">("All");
+
+  const { rows, total, shown } = useMemo(() => buildRecipientRows(email), [email]);
+
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return rows.filter((r) => {
+      if (filter !== "All" && r.status !== filter) return false;
+      if (!needle) return true;
+      return r.name.toLowerCase().includes(needle) || r.email.toLowerCase().includes(needle);
+    });
+  }, [rows, q, filter]);
+
+  return (
+    <div className="mt-4 border-t border-border pt-3">
+      <button
+        type="button"
+        className="flex items-center gap-1.5 text-sm font-medium text-brand hover:underline"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        {open ? "Hide recipients" : `View individual recipients (${total.toLocaleString()})`}
+      </button>
+
+      {open && (
+        <div className="mt-3 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search name or email"
+                className="h-8 pl-8"
+              />
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {STATUS_FILTERS.map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFilter(f)}
+                  className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                    filter === f
+                      ? "border-brand bg-brand/10 text-brand"
+                      : "border-border text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="max-h-[420px] overflow-auto rounded-lg border border-border">
+            {filtered.length === 0 ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">No matching recipients.</div>
+            ) : (
+              filtered.map((r) => (
+                <div
+                  key={r.id}
+                  className="flex items-center justify-between gap-3 border-b border-border px-3 py-2 last:border-b-0"
+                >
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-secondary text-[10px] font-semibold text-muted-foreground">
+                      {initialsOf(r.name)}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium">{r.name}</div>
+                      <div className="truncate text-xs text-muted-foreground">{r.email}</div>
+                    </div>
+                  </div>
+                  <Badge className={STATUS_STYLES[r.status]}>{r.status}</Badge>
+                </div>
+              ))
+            )}
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Showing {filtered.length.toLocaleString()}
+            {filter === "All" && !q ? ` of ${total.toLocaleString()}` : ` matching`} recipient
+            {filtered.length === 1 ? "" : "s"}
+            {shown < total ? ` · sample of the first ${shown.toLocaleString()} for this mock` : ""}.
+            Wire Mailgun events in apps/api for the complete per-recipient list.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -131,6 +246,8 @@ function SentReportPage() {
                   <div className="mt-0.5 text-sm">{email.from}</div>
                 </div>
               </div>
+
+              <RecipientList email={email} />
             </div>
 
             {/* Metrics */}
