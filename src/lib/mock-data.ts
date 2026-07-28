@@ -842,17 +842,17 @@ export const NOTES: Note[] = [
 
 export const TASKS: Task[] = [
   { id: "t_1", relatedType: "company", relatedId: "cmp_001", title: "Send SaaS renewal DocuSign",
-    assignee: "Mavil", dueDate: "2026-07-18", status: "Open", priority: "High" },
+    assignee: "Mavil", dueDate: "2026-07-24", status: "Open", priority: "High" },
   { id: "t_2", relatedType: "contact", relatedId: "cnt_003", title: "Follow up on underwriting docs",
-    assignee: "Debbie", dueDate: "2026-07-16", status: "In Progress", priority: "High" },
+    assignee: "Debbie", dueDate: "2026-07-26", status: "In Progress", priority: "High" },
   { id: "t_3", relatedType: "company", relatedId: "cmp_003", title: "Prep Studio ROI deck for Karen",
-    assignee: "Gianmarco", dueDate: "2026-07-20", status: "Open", priority: "Med" },
+    assignee: "Gianmarco", dueDate: "2026-07-30", status: "Open", priority: "Med" },
   { id: "t_4", relatedType: "company", relatedId: "cmp_006", title: "Discovery call - Coastline Brokerage",
-    assignee: "Mavil", dueDate: "2026-07-17", status: "Open", priority: "Med" },
+    assignee: "Mavil", dueDate: "2026-08-04", status: "Open", priority: "Med" },
   { id: "t_5", relatedType: "contact", relatedId: "cnt_006", title: "Introduce Elena to Marco Delgado",
-    assignee: "Debbie", dueDate: "2026-07-15", status: "Open", priority: "High" },
+    assignee: "Debbie", dueDate: "2026-07-21", status: "Open", priority: "High" },
   { id: "t_6", relatedType: "company", relatedId: "cmp_007", title: "Countersign referral partnership contract",
-    assignee: "Kristi Toom", dueDate: "2026-07-22", status: "In Progress", priority: "High" },
+    assignee: "Kristi Toom", dueDate: "2026-08-01", status: "In Progress", priority: "High" },
 ];
 
 export const EVENTS: CalendarEvent[] = [

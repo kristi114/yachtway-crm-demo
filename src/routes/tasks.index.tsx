@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EditTaskDialog } from "@/components/edit-task-dialog";
 import { useAuth } from "@/lib/auth";
+import { formatDate } from "@/lib/format-date";
 
 function todayISO(): string {
   const d = new Date();
@@ -48,11 +49,22 @@ function TasksPage() {
   const [editing, setEditing] = useState<Task | null>(null);
   const [open, setOpen] = useState(false);
 
-  const grouped = useMemo(() => {
-    const g: Record<Task["status"], Task[]> = { Open: [], "In Progress": [], Done: [] };
-    for (const t of tasks) g[t.status].push(t);
-    return g;
-  }, [tasks]);
+  const today = todayISO();
+  const isOverdue = (t: Task) => t.status !== "Done" && !!t.dueDate && t.dueDate < today;
+
+  // Overdue is its own bucket (past-due & not Done), pulled out of Open/In Progress
+  // so each task shows once.
+  const sections = useMemo(
+    () =>
+      ({
+        Overdue: tasks.filter(isOverdue).sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
+        Open: tasks.filter((t) => t.status === "Open" && !isOverdue(t)),
+        "In Progress": tasks.filter((t) => t.status === "In Progress" && !isOverdue(t)),
+        Done: tasks.filter((t) => t.status === "Done"),
+      }) as Record<"Overdue" | "Open" | "In Progress" | "Done", Task[]>,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tasks, today],
+  );
 
   const openTask = (t: Task) => { setEditing(t); setOpen(true); };
   const createTask = () => { setEditing(blankTask(user.name)); setOpen(true); };
@@ -77,70 +89,87 @@ function TasksPage() {
       />
       <PageBody>
         <div className="space-y-4">
-          {(["Open", "In Progress", "Done"] as const).map((status) => (
-            <section key={status} className="overflow-hidden rounded-sm border border-border bg-surface shadow-sm">
-              <header className="flex items-center justify-between border-b border-border bg-secondary/60 px-4 py-2.5">
-                <h3 className="text-[13px] font-semibold uppercase tracking-wide text-brand-deep">
-                  {status}
-                </h3>
-                <span className="text-xs text-muted-foreground">{grouped[status].length}</span>
-              </header>
-              <ul className="divide-y divide-border">
-                {grouped[status].length === 0 && (
-                  <li className="px-4 py-6 text-center text-sm text-muted-foreground">
-                    Nothing here.
-                  </li>
-                )}
-                {grouped[status].map((t) => {
-                  const co = t.relatedType === "company" ? getCompany(t.relatedId) : null;
-                  const ct = t.relatedType === "contact" ? getContact(t.relatedId) : null;
-                  return (
-                    <li
-                      key={t.id}
-                      className="group flex cursor-pointer items-center justify-between px-4 py-2.5 text-[13px] hover:bg-muted/40"
-                      onClick={() => openTask(t)}
-                    >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 font-medium">
-                          {t.title}
-                          <Pencil className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-60" />
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {t.assignee} · Due {t.dueDate} ·{" "}
-                          {co && (
-                            <Link
-                              to="/companies/$id"
-                              params={{ id: co.id }}
-                              className="text-brand hover:underline"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {co.name}
-                            </Link>
-                          )}
-                          {ct && (
-                            <Link
-                              to="/contacts/$id"
-                              params={{ id: ct.id }}
-                              className="text-brand hover:underline"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {ct.firstName} {ct.lastName}
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <span className={`rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${priorityBadge(t.priority)}`}>
-                          {t.priority}
-                        </span>
-                        <Badge variant="outline" className="text-[10px]">{t.status}</Badge>
-                      </div>
+          {(["Overdue", "Open", "In Progress", "Done"] as const).map((section) => {
+            const list = sections[section];
+            const overdueSection = section === "Overdue";
+            return (
+              <section key={section} className="overflow-hidden rounded-sm border border-border bg-surface shadow-sm">
+                <header className="flex items-center justify-between border-b border-border bg-secondary/60 px-4 py-2.5">
+                  <h3 className={`text-[13px] font-semibold uppercase tracking-wide ${overdueSection ? "text-destructive" : "text-brand-deep"}`}>
+                    {section}
+                  </h3>
+                  <span className={`text-xs ${overdueSection && list.length > 0 ? "font-semibold text-destructive" : "text-muted-foreground"}`}>
+                    {list.length}
+                  </span>
+                </header>
+                <ul className="divide-y divide-border">
+                  {list.length === 0 && (
+                    <li className="px-4 py-6 text-center text-sm text-muted-foreground">
+                      {overdueSection ? "Nothing overdue." : "Nothing here."}
                     </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ))}
+                  )}
+                  {list.map((t) => {
+                    const co = t.relatedType === "company" ? getCompany(t.relatedId) : null;
+                    const ct = t.relatedType === "contact" ? getContact(t.relatedId) : null;
+                    const overdue = isOverdue(t);
+                    return (
+                      <li
+                        key={t.id}
+                        className="group flex cursor-pointer items-center gap-4 px-4 py-2.5 text-[13px] hover:bg-muted/40"
+                        onClick={() => openTask(t)}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 font-medium">
+                            {t.title}
+                            <Pencil className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-60" />
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {t.assignee}
+                            {(co || ct) && " · "}
+                            {co && (
+                              <Link
+                                to="/companies/$id"
+                                params={{ id: co.id }}
+                                className="text-brand hover:underline"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {co.name}
+                              </Link>
+                            )}
+                            {ct && (
+                              <Link
+                                to="/contacts/$id"
+                                params={{ id: ct.id }}
+                                className="text-brand hover:underline"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {ct.firstName} {ct.lastName}
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Due — own column */}
+                        <div className="w-28 shrink-0 text-right">
+                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Due</div>
+                          <div className={overdue ? "font-semibold text-destructive" : "text-foreground"}>
+                            {formatDate(t.dueDate)}
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className={`rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${priorityBadge(t.priority)}`}>
+                            {t.priority}
+                          </span>
+                          <Badge variant="outline" className="text-[10px]">{t.status}</Badge>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            );
+          })}
         </div>
       </PageBody>
 
