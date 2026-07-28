@@ -8,7 +8,7 @@ import { toNoteViewer } from "@/lib/note-access";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { OPPORTUNITIES, getCompany, getContact, type Opportunity } from "@/lib/mock-data";
+import { OPPORTUNITIES, getCompany, getContact, updateOpportunity, type Opportunity } from "@/lib/mock-data";
 import { useAuth, useMoney } from "@/lib/auth";
 import {
   CreateOpportunityDialog,
@@ -53,11 +53,15 @@ function OpportunitiesPage() {
 
   function handleDrop(pipeline: PipelineName, stage: string) {
     if (!dragId) return;
+    const enteredAt = new Date().toISOString().slice(0, 10);
     setOpps((prev) =>
       prev.map((o) =>
-        o.id === dragId && o.pipeline === pipeline ? { ...o, stage } : o,
+        o.id === dragId && o.pipeline === pipeline ? { ...o, stage, stageEnteredAt: enteredAt } : o,
       ),
     );
+    // Persist to the shared store so the opportunity detail (and everywhere else)
+    // reflects the new stage, not just this board view.
+    updateOpportunity(dragId, { stage, stageEnteredAt: enteredAt });
     setDragId(null);
     setDragOver(null);
   }
