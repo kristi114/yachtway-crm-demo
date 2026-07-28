@@ -33,6 +33,7 @@ import {
 } from "@/lib/mock-data";
 import { formatDate } from "@/lib/format-date";
 import { MyTasksPanel } from "@/components/my-tasks-panel";
+import { DashboardBanners } from "@/components/dashboard-banners";
 
 
 export const Route = createFileRoute("/")({
@@ -110,6 +111,8 @@ function MarketingHome({ name }: { name: string }) {
             Your shoot schedule: dates, vessels, locations and on-site contacts.
           </p>
         </section>
+
+        <DashboardBanners />
 
         <div className="mt-6">
           <MyTasksPanel />
@@ -238,6 +241,8 @@ function FintechHome({ name }: { name: string }) {
             </div>
           ))}
         </section>
+
+        <DashboardBanners />
 
         <div className="mt-6">
           <MyTasksPanel />
@@ -543,6 +548,8 @@ function SalesRepHome({ userId, name }: { userId: string; name: string }) {
 
           </div>
         </section>
+
+        <DashboardBanners />
 
         <div className="mt-6">
           <MyTasksPanel />
@@ -1186,6 +1193,8 @@ function GenericHome() {
             );
           })}
         </div>
+
+        <DashboardBanners />
 
         <div className="mt-6">
           <MyTasksPanel />

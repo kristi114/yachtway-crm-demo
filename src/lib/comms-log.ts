@@ -27,6 +27,8 @@ export interface CommsLogEntry {
   follow_up_at?: string;            // optional ISO date
   /** Only meaningful when channel === "Note". Undefined for other channels. */
   visibility?: NoteVisibility;
+  /** Flags this interaction as an EasyFund (financing) opportunity → notifies Fintech. */
+  easyfund?: boolean;
   createdAt: string;
   /** Chat-only metadata (Crisp today, others later). */
   chat_provider?: "Crisp";

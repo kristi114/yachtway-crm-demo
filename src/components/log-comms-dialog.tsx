@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
 import { signatureFor, useSignatures } from "@/lib/signatures";
 import { logComms, type CommsChannel, type CommsDirection } from "@/lib/comms-log";
+import { pushNotification } from "@/lib/notifications";
 import type { NoteVisibility, RelatedType } from "@/lib/mock-data";
 import { VISIBILITY_OPTIONS, canCreateSecureNote, toNoteViewer } from "@/lib/note-access";
 
@@ -62,6 +63,8 @@ export function LogCommsDialog({
   const [followUp, setFollowUp] = useState("");
   const [visibility, setVisibility] = useState<NoteVisibility>("team");
   const [appendSignature, setAppendSignature] = useState(true);
+  // When checked, flags this interaction as an EasyFund lead and notifies Fintech.
+  const [easyfund, setEasyfund] = useState(false);
 
   const showDirection = channel !== "Note" && channel !== "Meeting";
   const showSubject = channel === "Email" || channel === "Meeting";
@@ -81,6 +84,7 @@ export function LogCommsDialog({
     setFollowUp("");
     setVisibility("team");
     setAppendSignature(true);
+    setEasyfund(false);
   }
 
   function handleSubmit(e: FormEvent) {
@@ -101,7 +105,21 @@ export function LogCommsDialog({
       occurred_at: new Date(occurredAt).toISOString(),
       follow_up_at: followUp ? new Date(followUp).toISOString() : undefined,
       visibility: showVisibility ? visibility : undefined,
+      easyfund: easyfund || undefined,
     });
+    // EasyFund flag → notify the Fintech team so they can pick up the financing lead.
+    if (easyfund) {
+      const who = contactName.trim() || defaultContactName || "a contact";
+      pushNotification({
+        title: "EasyFund lead flagged",
+        message: `${user.name} flagged an EasyFund financing opportunity with ${who}.`,
+        audienceRole: "fintech",
+        banner: true,
+        link: relatedType === "company"
+          ? { to: "/companies/$id", params: { id: relatedId }, label: "Open account" }
+          : { to: "/contacts/$id", params: { id: relatedId }, label: "Open contact" },
+      });
+    }
     reset();
     onOpenChange(false);
     onLogged?.();
@@ -249,6 +267,23 @@ export function LogCommsDialog({
           )}
 
 
+
+          <div className="rounded-lg border border-border bg-secondary/30 p-3">
+            <label className="flex items-start gap-2 text-xs font-medium">
+              <input
+                type="checkbox"
+                checked={easyfund}
+                onChange={(e) => setEasyfund(e.target.checked)}
+                className="mt-0.5 h-3.5 w-3.5 accent-[hsl(var(--brand))]"
+              />
+              <span>
+                EasyFund opportunity
+                <span className="mt-0.5 block font-normal text-muted-foreground">
+                  Flags this as a financing lead and notifies the Fintech team.
+                </span>
+              </span>
+            </label>
+          </div>
 
           <div>
             <Label htmlFor="cm-followup" className="mb-1.5 block text-xs uppercase tracking-wide text-muted-foreground">
