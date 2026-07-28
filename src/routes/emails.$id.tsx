@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Save, Code2, LayoutTemplate, Send } from "lucide-react";
+import { Save, Code2, LayoutTemplate, Send, Download } from "lucide-react";
 
 import { guarded } from "@/components/require-access";
 import { AppShell } from "@/components/app-shell";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ClientOnly } from "@/components/client-only";
 import { HtmlCodeEditor } from "@/components/email-builder/html-code-editor";
+import { SendEmailDialog } from "@/components/email-builder/send-email-dialog";
 import {
   GrapesEditor,
   type GrapesEditorHandle,
@@ -58,6 +59,7 @@ function EmailEditorPage() {
   const [design, setDesign] = useState<unknown | null>(existing?.design ?? null);
   // Remount key for the designer so it re-imports the latest HTML on entry.
   const [grapesKey, setGrapesKey] = useState(0);
+  const [sendOpen, setSendOpen] = useState(false);
 
   const grapesRef = useRef<GrapesEditorHandle>(null);
 
@@ -135,7 +137,17 @@ function EmailEditorPage() {
                 URL.revokeObjectURL(url);
               }}
             >
-              <Send className="h-4 w-4" /> Export HTML
+              <Download className="h-4 w-4" /> Export HTML
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Capture the latest HTML from whichever editor is active first.
+                syncFromActiveEditor();
+                setSendOpen(true);
+              }}
+            >
+              <Send className="h-4 w-4" /> Send
             </Button>
             <Button onClick={handleSave}>
               <Save className="h-4 w-4" /> Save
@@ -183,6 +195,15 @@ function EmailEditorPage() {
           </TabsContent>
         </Tabs>
       </PageBody>
+
+      <SendEmailDialog
+        open={sendOpen}
+        onOpenChange={setSendOpen}
+        subject={subject}
+        html={html}
+        templateId={id}
+        templateName={name}
+      />
     </AppShell>
   );
 }
