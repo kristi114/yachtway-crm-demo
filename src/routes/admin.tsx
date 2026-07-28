@@ -25,6 +25,7 @@ const TABS = [
   { to: "/admin/access", label: "Access", exact: false },
   { to: "/admin/brands", label: "Brands", exact: false },
   { to: "/admin/signatures", label: "Email signatures", exact: false },
+  { to: "/admin/integrations", label: "Email providers", exact: false },
   { to: "/admin/amplitude", label: "Amplitude destination", exact: false },
   { to: "/admin/audit", label: "Audit log", exact: false },
 

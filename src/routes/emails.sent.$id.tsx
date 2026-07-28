@@ -237,6 +237,11 @@ function SentReportPage() {
               {email.status === "sent" ? "Sent" : email.status}
             </Badge>
             <span>Sent {sentAt}</span>
+            {email.providerName && (
+              <span className="rounded-sm border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                via {email.providerName}
+              </span>
+            )}
             {email.mock && (
               <span className="text-[10px] uppercase text-muted-foreground">mock send</span>
             )}

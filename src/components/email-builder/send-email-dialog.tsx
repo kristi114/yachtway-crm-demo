@@ -56,6 +56,8 @@ export function SendEmailDialog({
         html,
         templateId,
         templateName,
+        // The email builder is the marketing tool → routes through Mailgun.
+        kind: "marketing",
       });
       toast.success(
         record.mock ? "Email sent (mock)" : "Email sent",

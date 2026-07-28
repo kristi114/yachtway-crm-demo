@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { providerForKind, providerName, isKindSendable, type EmailKind, type ProviderId } from "@/lib/email-providers";
 
 /**
  * Email sending seam for the Emails builder.
@@ -20,6 +21,8 @@ export interface SendEmailInput {
   html: string;
   templateId?: string;
   templateName?: string;
+  /** Which class of email this is → decides the provider. Defaults to transactional. */
+  kind?: EmailKind;
 }
 
 export interface SentEmail {
@@ -45,6 +48,10 @@ export interface SentEmail {
    * from a company's email roll-up (only 1:1 / transactional email rolls up).
    */
   marketing?: boolean;
+  /** Email class and the provider it was routed through. */
+  kind?: EmailKind;
+  provider?: ProviderId;
+  providerName?: string;
 }
 
 const STORAGE_KEY = "yw:email-sent-log:v1";
@@ -106,6 +113,9 @@ function seed(): SentEmail[] {
       status: "sent",
       mock: true,
       marketing: true,
+      kind: "marketing",
+      provider: "mailgun",
+      providerName: "Mailgun",
       recipientCount: 3440,
       delivered: 3320,
       opened: 1040,
@@ -126,6 +136,9 @@ function seed(): SentEmail[] {
       status: "sent",
       mock: true,
       marketing: true,
+      kind: "marketing",
+      provider: "mailgun",
+      providerName: "Mailgun",
       recipientCount: 2380,
       delivered: 2290,
       opened: 690,
@@ -145,6 +158,9 @@ function seed(): SentEmail[] {
       sentAt: daysAgo(4),
       status: "sent",
       mock: true,
+      kind: "system",
+      provider: "ses",
+      providerName: "AWS SES",
       recipientCount: 1,
       delivered: 1,
       opened: 1,
@@ -220,12 +236,19 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
   if (input.to.length === 0) throw new Error("Add at least one recipient.");
   if (bad.length > 0) throw new Error(`Invalid email address: ${bad.join(", ")}`);
   if (!input.subject.trim()) throw new Error("Add a subject line.");
+  const sendKind: EmailKind = input.kind ?? "transactional";
+  if (!isKindSendable(sendKind)) {
+    throw new Error(
+      `${providerName(providerForKind(sendKind))} isn't connected. Connect it in Admin → Email providers to send ${sendKind} email.`,
+    );
+  }
 
   // ---- BEGIN mock transport (replace with POST /emails/send → Mailgun) ----
   await new Promise((r) => setTimeout(r, 600));
   const mock = true;
   // ---- END mock transport ----
 
+  const provider = providerForKind(sendKind);
   const record: SentEmail = {
     id: `snt_${Math.random().toString(36).slice(2, 9)}`,
     to: input.to,
@@ -239,9 +262,40 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
     recipientCount: input.to.length,
     delivered: input.to.length,
     html: input.html,
+    kind: sendKind,
+    provider,
+    providerName: providerName(provider),
+    marketing: sendKind === "marketing" || undefined,
   };
   state = [record, ...state];
   persist();
   listeners.forEach((l) => l());
   return { ok: true, record };
+}
+
+/**
+ * Fire-and-forget system email (automation alerts, notifications). Routed to
+ * AWS SES via the fixed provider map. Records to the sent log like any send.
+ */
+export function sendSystemEmail(to: string[], subject: string, html = ""): SentEmail {
+  const provider = providerForKind("system");
+  const record: SentEmail = {
+    id: `snt_${Math.random().toString(36).slice(2, 9)}`,
+    to,
+    from: "YachtWay <system@yachtway.com>",
+    subject,
+    sentAt: new Date().toISOString(),
+    status: "sent",
+    mock: true,
+    recipientCount: to.length,
+    delivered: to.length,
+    html,
+    kind: "system",
+    provider,
+    providerName: providerName(provider),
+  };
+  state = [record, ...state];
+  persist();
+  listeners.forEach((l) => l());
+  return record;
 }
