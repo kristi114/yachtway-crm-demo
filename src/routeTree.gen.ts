@@ -12,7 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CallbackRouteImport } from './routes/callback'
+import { Route as InsuranceRouteImport } from './routes/insurance'
+import { Route as LenderRouteImport } from './routes/lender'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as VatoRouteImport } from './routes/vato'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAccessRouteImport } from './routes/admin.access'
 import { Route as AdminAmplitudeRouteImport } from './routes/admin.amplitude'
@@ -60,9 +63,24 @@ const CallbackRoute = CallbackRouteImport.update({
   path: '/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InsuranceRoute = InsuranceRouteImport.update({
+  id: '/insurance',
+  path: '/insurance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LenderRoute = LenderRouteImport.update({
+  id: '/lender',
+  path: '/lender',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VatoRoute = VatoRouteImport.update({
+  id: '/vato',
+  path: '/vato',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -225,7 +243,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/callback': typeof CallbackRoute
+  '/insurance': typeof InsuranceRoute
+  '/lender': typeof LenderRoute
   '/services': typeof ServicesRoute
+  '/vato': typeof VatoRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/amplitude': typeof AdminAmplitudeRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -261,7 +282,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/callback': typeof CallbackRoute
+  '/insurance': typeof InsuranceRoute
+  '/lender': typeof LenderRoute
   '/services': typeof ServicesRoute
+  '/vato': typeof VatoRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/amplitude': typeof AdminAmplitudeRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -299,7 +323,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/callback': typeof CallbackRoute
+  '/insurance': typeof InsuranceRoute
+  '/lender': typeof LenderRoute
   '/services': typeof ServicesRoute
+  '/vato': typeof VatoRoute
   '/admin/access': typeof AdminAccessRoute
   '/admin/amplitude': typeof AdminAmplitudeRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -338,7 +365,10 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/callback'
+    | '/insurance'
+    | '/lender'
     | '/services'
+    | '/vato'
     | '/admin/access'
     | '/admin/amplitude'
     | '/admin/audit'
@@ -374,7 +404,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/callback'
+    | '/insurance'
+    | '/lender'
     | '/services'
+    | '/vato'
     | '/admin/access'
     | '/admin/amplitude'
     | '/admin/audit'
@@ -411,7 +444,10 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/callback'
+    | '/insurance'
+    | '/lender'
     | '/services'
+    | '/vato'
     | '/admin/access'
     | '/admin/amplitude'
     | '/admin/audit'
@@ -449,7 +485,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   CallbackRoute: typeof CallbackRoute
+  InsuranceRoute: typeof InsuranceRoute
+  LenderRoute: typeof LenderRoute
   ServicesRoute: typeof ServicesRoute
+  VatoRoute: typeof VatoRoute
   CompaniesIdRoute: typeof CompaniesIdRoute
   ContactsIdRoute: typeof ContactsIdRoute
   EmailsIdRoute: typeof EmailsIdRoute
@@ -499,11 +538,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/insurance': {
+      id: '/insurance'
+      path: '/insurance'
+      fullPath: '/insurance'
+      preLoaderRoute: typeof InsuranceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lender': {
+      id: '/lender'
+      path: '/lender'
+      fullPath: '/lender'
+      preLoaderRoute: typeof LenderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/services': {
       id: '/services'
       path: '/services'
       fullPath: '/services'
       preLoaderRoute: typeof ServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vato': {
+      id: '/vato'
+      path: '/vato'
+      fullPath: '/vato'
+      preLoaderRoute: typeof VatoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -752,7 +812,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   CallbackRoute: CallbackRoute,
+  InsuranceRoute: InsuranceRoute,
+  LenderRoute: LenderRoute,
   ServicesRoute: ServicesRoute,
+  VatoRoute: VatoRoute,
   CompaniesIdRoute: CompaniesIdRoute,
   ContactsIdRoute: ContactsIdRoute,
   EmailsIdRoute: EmailsIdRoute,

@@ -15,6 +15,7 @@ export type ResourceClass =
   | "opportunity.general"
   | "easyfund"
   | "mastercover"
+  | "vato"
   | "conversations.general"
   | "conversations.financing"
   | "billing"

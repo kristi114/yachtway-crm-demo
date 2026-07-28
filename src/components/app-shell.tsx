@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GlobalSearch, GlobalSearchTrigger } from "@/components/global-search";
-import { Users, Building2, LayoutDashboard, Briefcase, Landmark, Wallet, MessageSquare, ShieldCheck, Search, ChevronDown, Lock, CheckSquare, Calendar, CalendarDays, Grid3x3, FileText, FileCheck2, FilePlus2, Receipt, PanelLeftClose, PanelLeftOpen, HandCoins, Mail } from "lucide-react";
+import { Users, Building2, LayoutDashboard, Briefcase, Landmark, Wallet, MessageSquare, ShieldCheck, Search, ChevronDown, Lock, CheckSquare, Calendar, CalendarDays, Grid3x3, FileText, FileCheck2, FilePlus2, Receipt, PanelLeftClose, PanelLeftOpen, HandCoins, Mail, Banknote, Umbrella, Ship } from "lucide-react";
 import { BoatIcon } from "@/components/icons/boat-icon";
 import { DealerIcon } from "@/components/icons/dealer-icon";
 
@@ -65,6 +65,9 @@ const NAV: NavGroup[] = [
       { to: "/companies", label: "Banks & Lenders", icon: Landmark, gate: "company.general", search: { vertical: "FinTech" } },
       { to: "/contacts", label: "Loan Brokers", icon: DealerIcon, gate: "contact.general", search: { vertical: "FinTech", type: "Bank Contact" } },
       { to: "/contacts", label: "Loan Applicants", icon: Wallet, gate: "easyfund", search: { vertical: "FinTech", type: "Loan Applicant" } },
+      { to: "/lender", label: "Lender dashboard", icon: Banknote, gate: "easyfund" },
+      { to: "/insurance", label: "Insurance dashboard", icon: Umbrella, gate: "mastercover" },
+      { to: "/vato", label: "VATO", icon: Ship, gate: "vato" },
       { to: "/referrals", label: "Referrals dashboard", icon: HandCoins, gate: "referrals" },
     ],
   },
