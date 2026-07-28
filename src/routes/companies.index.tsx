@@ -11,6 +11,8 @@ import { CompanyLogo } from "@/components/company-logo";
 import { Button } from "@/components/ui/button";
 import { CreateRecordDialog } from "@/components/create-record-dialog";
 import { COMPANY_SECTIONS } from "@/lib/field-schema";
+import { RecordFilterBar } from "@/components/record-filter-bar";
+import { applyClauses, filterableFields, type FilterClause } from "@/lib/record-filter";
 import { studioToursForCompany, useStudioTours } from "@/lib/studio-tours";
 import { Video } from "lucide-react";
 import {
@@ -154,6 +156,9 @@ function CompaniesList() {
   const navigate = Route.useNavigate();
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [q, setQ] = useState("");
+  const [clauses, setClauses] = useState<FilterClause[]>([]);
+  const filterFields = useMemo(() => filterableFields(COMPANY_SECTIONS), []);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const routerNavigate = useNavigate();
@@ -205,6 +210,15 @@ function CompaniesList() {
     if (noListings) list = list.filter((c) => (c.activeListings ?? 0) === 0);
     if (portalInactive) list = list.filter((c) => daysSince(c.lastLogin) >= 30);
     if (studioNever) list = list.filter((c) => !c.lastStudioSessionAt);
+    const needle = q.trim().toLowerCase();
+    if (needle) {
+      list = list.filter((c) =>
+        [c.name, c.website, c.companyType, c.billingCity, c.billingCountry, c.status]
+          .filter(Boolean).join(" ").toLowerCase().includes(needle),
+      );
+    }
+    // Field-schema-driven advanced filters (any company field).
+    list = applyClauses(list as unknown as Record<string, unknown>[], clauses, filterFields) as unknown as typeof list;
     const enriched = list.map((c) => {
       const tours = studioToursForCompany(c.id);
       const active = tours.filter((t) => t.status !== "expired");
@@ -250,7 +264,7 @@ function CompaniesList() {
       return String(av).localeCompare(String(bv));
     });
     return sortDir === "asc" ? sorted : sorted.reverse();
-  }, [allowedVertical, vertical, type, status, usesSet, notUsesSet, maxBrokers, noListings, portalInactive, studioNever, sortKey, sortDir, apiById]);
+  }, [allowedVertical, vertical, type, status, usesSet, notUsesSet, maxBrokers, noListings, portalInactive, studioNever, sortKey, sortDir, apiById, q, clauses, filterFields]);
 
 
   // Tabs follow the vertical the user actually opened (Companies vs Banks &
@@ -384,6 +398,15 @@ function CompaniesList() {
             </button>
           </div>
         </div>
+
+        <RecordFilterBar
+          fields={filterFields}
+          query={q}
+          onQueryChange={setQ}
+          clauses={clauses}
+          onClausesChange={setClauses}
+          searchPlaceholder="Search name, website, city…"
+        />
 
         {filtersOpen && (
           <div className="mb-3 rounded-sm border border-border bg-surface p-3 shadow-sm">

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, StickyNote } from "lucide-react";
+import { StickyNote } from "lucide-react";
 import { hasNote } from "@/lib/notes";
 import { toNoteViewer } from "@/lib/note-access";
 import { z } from "zod";
@@ -9,7 +9,9 @@ import { AppShell } from "@/components/app-shell";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { ContactAvatar } from "@/components/contact-avatar";
 import { CONTACTS, COMPANIES, type Vertical, type ContactType } from "@/lib/mock-data";
-import { Input } from "@/components/ui/input";
+import { CONTACT_SECTIONS } from "@/lib/field-schema";
+import { RecordFilterBar } from "@/components/record-filter-bar";
+import { applyClauses, filterableFields, type FilterClause } from "@/lib/record-filter";
 import { Badge } from "@/components/ui/badge";
 import { useAuth, canSeeFinTech, isPartnerRole } from "@/lib/auth";
 import { allowedContactIdsForPartner } from "@/lib/fintech-dashboards";
@@ -41,6 +43,8 @@ function ContactsList() {
   const { vertical, type } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [q, setQ] = useState("");
+  const [clauses, setClauses] = useState<FilterClause[]>([]);
+  const filterFields = useMemo(() => filterableFields(CONTACT_SECTIONS), []);
   const { user } = useAuth();
   const canFinTech = canSeeFinTech(user.role);
   const inFinTechView = canFinTech && vertical === "FinTech";
@@ -66,6 +70,8 @@ function ContactsList() {
           .join(" ").toLowerCase().includes(needle),
       );
     }
+    // Field-schema-driven advanced filters (any field, type-aware operators).
+    list = applyClauses(list as unknown as Record<string, unknown>[], clauses, filterFields) as unknown as typeof list;
     return list.map((c) => {
       // API overlay: prefer canonical fields when apps/api has this contact.
       const api = apiContactsById.get(c.id);
@@ -85,7 +91,7 @@ function ContactsList() {
           : "-",
       };
     });
-  }, [q, type, baseVertical, apiContactsById, user]);
+  }, [q, type, baseVertical, apiContactsById, user, clauses, filterFields]);
 
 
   const totalVisible = CONTACTS.filter((c) => c.vertical === baseVertical).length;
@@ -127,18 +133,16 @@ function ContactsList() {
           })}
         </div>
 
-        <div className="mb-3 flex items-center gap-2">
-          <div className="relative w-72">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={q} onChange={(e) => setQ(e.target.value)}
-              placeholder="Search name, email, type…"
-              className="h-8 pl-8"
-            />
-          </div>
-          <div className="ml-auto text-xs text-muted-foreground">
-            {rows.length} of {totalVisible}
-          </div>
+        <RecordFilterBar
+          fields={filterFields}
+          query={q}
+          onQueryChange={setQ}
+          clauses={clauses}
+          onClausesChange={setClauses}
+          searchPlaceholder="Search name, email, type…"
+        />
+        <div className="mb-3 text-right text-xs text-muted-foreground">
+          {rows.length} of {totalVisible}
         </div>
 
         <div className="overflow-hidden rounded-sm border border-border bg-surface shadow-sm">

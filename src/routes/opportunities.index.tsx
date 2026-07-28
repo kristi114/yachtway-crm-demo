@@ -9,6 +9,9 @@ import { AppShell } from "@/components/app-shell";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { OPPORTUNITIES, getCompany, getContact, updateOpportunity, type Opportunity } from "@/lib/mock-data";
+import { OPPORTUNITY_SECTIONS } from "@/lib/field-schema";
+import { RecordFilterBar } from "@/components/record-filter-bar";
+import { applyClauses, filterableFields, type FilterClause } from "@/lib/record-filter";
 import { useAuth, useMoney } from "@/lib/auth";
 import {
   CreateOpportunityDialog,
@@ -50,12 +53,26 @@ function OpportunitiesPage() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null); // `${pipeline}::${stage}`
   const [activeFilter, setActiveFilter] = useState<PipelineName | "all">("all");
+  const [q, setQ] = useState("");
+  const [clauses, setClauses] = useState<FilterClause[]>([]);
+  const filterFields = useMemo(() => filterableFields(OPPORTUNITY_SECTIONS), []);
   const [openForm, setOpenForm] = useState<string | null>(null); // `${pipeline}::${stage}`
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const filteredOpps = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    let list = opps;
+    if (needle) {
+      list = list.filter((o) =>
+        [o.name, o.owner, o.stage, o.pipeline].join(" ").toLowerCase().includes(needle),
+      );
+    }
+    return applyClauses(list as unknown as Record<string, unknown>[], clauses, filterFields) as unknown as Opportunity[];
+  }, [opps, q, clauses, filterFields]);
+
   const grouped = useMemo(() => {
     return visiblePipelines.map((p) => {
-      const list = opps.filter((o) => o.pipeline === p);
+      const list = filteredOpps.filter((o) => o.pipeline === p);
       const stages = PIPELINE_STAGES[p] ?? [];
       const extras = Array.from(new Set(list.map((o) => o.stage))).filter((s) => !stages.includes(s));
       const columns = [...stages, ...extras].map((stage) => ({
@@ -64,7 +81,7 @@ function OpportunitiesPage() {
       }));
       return { pipeline: p, opps: list, columns };
     });
-  }, [opps, visiblePipelines]);
+  }, [filteredOpps, visiblePipelines]);
 
   const totalValue = grouped.reduce((s, g) => s + g.opps.reduce((a, o) => a + o.amountUsd, 0), 0);
   const totalCount = grouped.reduce((s, g) => s + g.opps.length, 0);
@@ -104,6 +121,14 @@ function OpportunitiesPage() {
         }
       />
       <PageBody>
+        <RecordFilterBar
+          fields={filterFields}
+          query={q}
+          onQueryChange={setQ}
+          clauses={clauses}
+          onClausesChange={setClauses}
+          searchPlaceholder="Search opportunities…"
+        />
         <div className="space-y-6">
           {grouped.length === 0 && (
             <div className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">

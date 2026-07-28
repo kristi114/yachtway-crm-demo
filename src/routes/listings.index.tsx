@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo, useSyncExternalStore } from "react";
-import { Search, Plus, ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { Plus, ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { BoatIcon } from "@/components/icons/boat-icon";
 
 import { AppShell } from "@/components/app-shell";
@@ -8,12 +8,13 @@ import { PageHeader, PageBody } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { CreateRecordDialog } from "@/components/create-record-dialog";
 import { LISTING_SECTIONS } from "@/lib/field-schema";
+import { RecordFilterBar } from "@/components/record-filter-bar";
+import { applyClauses, filterableFields, type FilterClause } from "@/lib/record-filter";
 import {
   LISTINGS, BRANDS, COMPANIES, getBrand, getCompany, getContact,
   addListing, subscribeMockData, getMockDataVersion, type Listing,
 } from "@/lib/mock-data";
 import { useMoney } from "@/lib/auth";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { computeListingHeat, HEAT_STYLES } from "@/components/dealer-health-panel";
 
@@ -26,6 +27,8 @@ const STATUSES = ["Active", "Pending", "Sold", "Withdrawn"] as const;
 function ListingsList() {
   const { format: fmtMoney } = useMoney();
   const [q, setQ] = useState("");
+  const [clauses, setClauses] = useState<FilterClause[]>([]);
+  const filterFields = useMemo(() => filterableFields(LISTING_SECTIONS), []);
   const [status, setStatus] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   /** null = natural order, "desc" = hottest first, "asc" = coldest first. */
@@ -35,7 +38,7 @@ function ListingsList() {
 
   const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return LISTINGS
+    let list = LISTINGS
       .filter((l) => !status || l.status === status)
       .map((l) => ({
         ...l,
@@ -48,15 +51,17 @@ function ListingsList() {
         !needle ||
         `${l.brand?.name} ${l.model} ${l.company?.name} ${l.hullId}`
           .toLowerCase().includes(needle),
-      )
-      .sort((a, b) =>
-        heatSort === "desc"
-          ? b.heat.score - a.heat.score
-          : heatSort === "asc"
-            ? a.heat.score - b.heat.score
-            : 0,
       );
-  }, [q, status, heatSort]);
+    // Field-schema-driven advanced filters (any listing field).
+    list = applyClauses(list as unknown as Record<string, unknown>[], clauses, filterFields) as unknown as typeof list;
+    return list.sort((a, b) =>
+      heatSort === "desc"
+        ? b.heat.score - a.heat.score
+        : heatSort === "asc"
+          ? a.heat.score - b.heat.score
+          : 0,
+    );
+  }, [q, status, heatSort, clauses, filterFields]);
 
   return (
     <AppShell>
@@ -105,15 +110,15 @@ function ListingsList() {
         }}
       />
       <PageBody>
+        <RecordFilterBar
+          fields={filterFields}
+          query={q}
+          onQueryChange={setQ}
+          clauses={clauses}
+          onClausesChange={setClauses}
+          searchPlaceholder="Search brand, model, dealer, hull ID…"
+        />
         <div className="mb-3 flex items-center gap-2">
-          <div className="relative w-72">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={q} onChange={(e) => setQ(e.target.value)}
-              placeholder="Search brand, model, dealer, hull ID…"
-              className="h-8 pl-8"
-            />
-          </div>
           <div className="ml-auto flex gap-1">
             {STATUSES.map((s) => (
               <button
