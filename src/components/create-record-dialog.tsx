@@ -84,7 +84,7 @@ function FieldInput({
           <select
             value={String(value ?? "")}
             onChange={(e) => onChange(e.target.value)}
-            className="h-8 w-full rounded-md border border-input bg-transparent px-2 text-[13px]"
+            className="native-select h-8 w-full rounded-md border border-input bg-transparent px-2 text-[13px]"
           >
             <option value="">-</option>
             {field.options.map((o) => (

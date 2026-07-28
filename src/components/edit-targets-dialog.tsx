@@ -65,7 +65,7 @@ export function EditTargetsDialog({ open, onOpenChange, initialUserId, initialPe
                 id="tgt-user"
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+                className="native-select h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
               >
                 {reps.map((u) => (
                   <option key={u.id} value={u.id}>{u.name}</option>

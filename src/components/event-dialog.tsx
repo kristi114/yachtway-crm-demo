@@ -22,7 +22,7 @@ type Props = {
 };
 
 const selectClass =
-  "h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm";
+  "native-select h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm";
 
 function emptyEvent(companyId?: string): NewDealerEvent {
   const company = companyId ? COMPANIES.find((c) => c.id === companyId) : undefined;

@@ -79,7 +79,7 @@ export function EditCompanyDialog({
               id="primaryContactId"
               value={values.primaryContactId ?? ""}
               onChange={(e) => setValues((v) => ({ ...v, primaryContactId: e.target.value }))}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+              className="native-select h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
             >
               <option value="">None selected</option>
               {contacts.map((c) => (
@@ -102,7 +102,7 @@ export function EditCompanyDialog({
                 id="currency"
                 value={values.currency}
                 onChange={(e) => setValues((v) => ({ ...v, currency: e.target.value as CurrencyCode }))}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+                className="native-select h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
               >
                 {CURRENCIES.map((c) => (
                   <option key={c.code} value={c.code}>

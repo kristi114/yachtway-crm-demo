@@ -100,7 +100,7 @@ export function EditContactDialog({
                 id="contactType"
                 value={values.contactType}
                 onChange={update("contactType")}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+                className="native-select h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
               >
                 {CONTACT_TYPES.map((t) => (
                   <option key={t} value={t}>
@@ -115,7 +115,7 @@ export function EditContactDialog({
                 id="lifecycleStage"
                 value={values.lifecycleStage}
                 onChange={update("lifecycleStage")}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+                className="native-select h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
               >
                 {LIFECYCLE_STAGES.map((s) => (
                   <option key={s} value={s}>
@@ -133,7 +133,7 @@ export function EditContactDialog({
                 id="companyRole"
                 value={values.companyRole ?? ""}
                 onChange={update("companyRole")}
-                className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+                className="native-select h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
               >
                 <option value="">None selected</option>
                 {COMPANY_ROLES.map((r: CompanyRole) => (

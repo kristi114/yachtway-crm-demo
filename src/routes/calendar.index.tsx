@@ -224,7 +224,7 @@ function CalendarPage() {
               aria-label="Calendar owner"
               value={personId}
               onChange={(e) => setPersonId(e.target.value)}
-              className="mr-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium hover:bg-secondary"
+              className="native-select mr-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium hover:bg-secondary"
             >
               <option value={user.id}>My calendar</option>
               <option value="all">Whole team</option>

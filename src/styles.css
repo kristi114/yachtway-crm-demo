@@ -5,6 +5,22 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
+ * Native <select> styling: reset the OS arrow and draw our own chevron with
+ * comfortable right padding so it never crowds the border. `select.native-select`
+ * (element+class) beats Tailwind's px-* utilities, so the padding-right wins.
+ */
+select.native-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 1rem 1rem;
+  padding-right: 2rem;
+}
+
+/*
  * YachtWay CRM - Soft-neutral glass design system.
  * Palette: warm off-white bg (~#eef1f6), near-black ink (#1a1d24),
  * deep-purple accent family (#3a1878 brightest, #23094d mid, #17063a darkest).

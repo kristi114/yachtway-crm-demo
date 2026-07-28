@@ -63,7 +63,7 @@ export function OfficeDialog({ open, onOpenChange, companyId, office, contacts }
               id="purpose"
               value={v.purpose}
               onChange={(e) => setV((s) => ({ ...s, purpose: e.target.value as OfficePurpose }))}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+              className="native-select h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
             >
               {OFFICE_PURPOSES.map((p) => (
                 <option key={p} value={p}>{p}</option>
@@ -120,7 +120,7 @@ export function OfficeDialog({ open, onOpenChange, companyId, office, contacts }
               id="manager"
               value={v.managerContactId ?? ""}
               onChange={(e) => setV((s) => ({ ...s, managerContactId: e.target.value || null }))}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
+              className="native-select h-9 w-full rounded-md border border-input bg-transparent px-2 text-sm"
             >
               <option value="">None selected</option>
               {contacts.map((c) => (
