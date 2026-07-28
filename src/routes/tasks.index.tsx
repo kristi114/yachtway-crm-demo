@@ -48,22 +48,29 @@ function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>(TASKS);
   const [editing, setEditing] = useState<Task | null>(null);
   const [open, setOpen] = useState(false);
+  // Default to just the current user's tasks; "All" shows every user's.
+  const [scope, setScope] = useState<"mine" | "all">("mine");
 
   const today = todayISO();
   const isOverdue = (t: Task) => t.status !== "Done" && !!t.dueDate && t.dueDate < today;
+
+  const scoped = useMemo(
+    () => (scope === "mine" ? tasks.filter((t) => t.assignee === user.name) : tasks),
+    [tasks, scope, user.name],
+  );
 
   // Overdue is its own bucket (past-due & not Done), pulled out of Open/In Progress
   // so each task shows once.
   const sections = useMemo(
     () =>
       ({
-        Overdue: tasks.filter(isOverdue).sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
-        Open: tasks.filter((t) => t.status === "Open" && !isOverdue(t)),
-        "In Progress": tasks.filter((t) => t.status === "In Progress" && !isOverdue(t)),
-        Done: tasks.filter((t) => t.status === "Done"),
+        Overdue: scoped.filter(isOverdue).sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
+        Open: scoped.filter((t) => t.status === "Open" && !isOverdue(t)),
+        "In Progress": scoped.filter((t) => t.status === "In Progress" && !isOverdue(t)),
+        Done: scoped.filter((t) => t.status === "Done"),
       }) as Record<"Overdue" | "Open" | "In Progress" | "Done", Task[]>,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tasks, today],
+    [scoped, today],
   );
 
   const openTask = (t: Task) => { setEditing(t); setOpen(true); };
@@ -79,12 +86,34 @@ function TasksPage() {
     <AppShell>
       <PageHeader
         eyebrow="Tasks"
-        title="All tasks"
-        subtitle={`${tasks.length} across every record - click any row to edit or reschedule`}
+        title={scope === "mine" ? "My tasks" : "All tasks"}
+        subtitle={
+          scope === "mine"
+            ? `${scoped.length} assigned to you - click any row to edit or reschedule`
+            : `${scoped.length} across every record - click any row to edit or reschedule`
+        }
         actions={
-          <Button onClick={createTask}>
-            <Plus className="h-4 w-4" /> Create task
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-lg border border-border bg-surface p-0.5 text-sm">
+              <button
+                type="button"
+                onClick={() => setScope("mine")}
+                className={`rounded-md px-3 py-1 font-medium transition-colors ${scope === "mine" ? "bg-brand text-brand-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                My tasks
+              </button>
+              <button
+                type="button"
+                onClick={() => setScope("all")}
+                className={`rounded-md px-3 py-1 font-medium transition-colors ${scope === "all" ? "bg-brand text-brand-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                All tasks
+              </button>
+            </div>
+            <Button onClick={createTask}>
+              <Plus className="h-4 w-4" /> Create task
+            </Button>
+          </div>
         }
       />
       <PageBody>
