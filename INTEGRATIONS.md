@@ -41,9 +41,28 @@ delivery currently calls the mock `sendSystemEmail`. When SES is real, this
 path sends genuine email; consider batching/digesting and an unsubscribe/mute
 per notification type.
 
+## Planned connectors (to wire when we get to real integration)
+
+These back features already present or planned in the CRM. All are mock/absent
+today; capture auth, scopes and webhooks as each is built.
+
+| Connector | Powers | Notes for real wiring |
+|---|---|---|
+| **Google Calendar** | Appointments / scheduling sync | OAuth (calendar scopes); two-way event sync + webhook channel for changes. |
+| **YouTube** | Marketing social stats (channel) | Part of Google OAuth; YouTube Data/Analytics API for views/subscribers. |
+| **Amplitude** | Product analytics destination | Receiver exists in `apps/api` (`/webhooks/amplitude/*`); set shared secret / signing key. |
+| **Meta** | Facebook + Instagram social stats & publishing | Meta Graph API; Business/Page tokens, long-lived token refresh; Instagram insights permissions. |
+| **LinkedIn** | LinkedIn social stats & publishing | LinkedIn Marketing API; org page access + analytics scopes. |
+| **WhatsApp** | Conversations channel | WhatsApp Business/Cloud API; number provisioning, template approval, inbound webhooks. |
+| **Notion** | Content calendar / UTM link manager (see brand + UTM skills) | Notion OAuth integration; database IDs for Content Calendar + Bitly Link Manager. |
+| **OpenAI** | AI assist (captions, summaries, drafting) | API key server-side; usage/rate limits; never expose key client-side. |
+
+Social-stats providers (Meta, LinkedIn, YouTube, plus TikTok/Pinterest/Threads/
+Bluesky/GBP shown in the Marketing statistics page) feed the per-channel
+metrics on the Marketing → Social statistics dashboard, which runs on mock data
+until these are connected.
+
 ## Previously stubbed (context)
 
-- **Amplitude destination** — receiver exists in `apps/api`
-  (`/webhooks/amplitude/*`); needs the shared secret / signing key configured.
 - **WorkOS AuthKit** — set `VITE_WORKOS_CLIENT_ID` for real sign-in (demo role
   switcher otherwise).

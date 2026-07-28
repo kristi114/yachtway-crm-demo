@@ -36,6 +36,7 @@ import { Route as EmailsIdRouteImport } from './routes/emails.$id'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as ListingsIndexRouteImport } from './routes/listings.index'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
+import { Route as MarketingStatisticsRouteImport } from './routes/marketing.statistics'
 import { Route as OpportunitiesIndexRouteImport } from './routes/opportunities.index'
 import { Route as OpportunitiesIdRouteImport } from './routes/opportunities.$id'
 import { Route as ReferralsIndexRouteImport } from './routes/referrals.index'
@@ -187,6 +188,11 @@ const ListingsIdRoute = ListingsIdRouteImport.update({
   path: '/listings/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MarketingStatisticsRoute = MarketingStatisticsRouteImport.update({
+  id: '/marketing/statistics',
+  path: '/marketing/statistics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OpportunitiesIndexRoute = OpportunitiesIndexRouteImport.update({
   id: '/opportunities/',
   path: '/opportunities/',
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/contacts/$id': typeof ContactsIdRoute
   '/emails/$id': typeof EmailsIdRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/marketing/statistics': typeof MarketingStatisticsRoute
   '/opportunities/$id': typeof OpportunitiesIdRoute
   '/settings/notifications': typeof SettingsNotificationsRoute
   '/admin/': typeof AdminIndexRoute
@@ -327,6 +334,7 @@ export interface FileRoutesByTo {
   '/contacts/$id': typeof ContactsIdRoute
   '/emails/$id': typeof EmailsIdRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/marketing/statistics': typeof MarketingStatisticsRoute
   '/opportunities/$id': typeof OpportunitiesIdRoute
   '/settings/notifications': typeof SettingsNotificationsRoute
   '/admin': typeof AdminIndexRoute
@@ -372,6 +380,7 @@ export interface FileRoutesById {
   '/contacts/$id': typeof ContactsIdRoute
   '/emails/$id': typeof EmailsIdRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/marketing/statistics': typeof MarketingStatisticsRoute
   '/opportunities/$id': typeof OpportunitiesIdRoute
   '/settings/notifications': typeof SettingsNotificationsRoute
   '/admin/': typeof AdminIndexRoute
@@ -418,6 +427,7 @@ export interface FileRouteTypes {
     | '/contacts/$id'
     | '/emails/$id'
     | '/listings/$id'
+    | '/marketing/statistics'
     | '/opportunities/$id'
     | '/settings/notifications'
     | '/admin/'
@@ -461,6 +471,7 @@ export interface FileRouteTypes {
     | '/contacts/$id'
     | '/emails/$id'
     | '/listings/$id'
+    | '/marketing/statistics'
     | '/opportunities/$id'
     | '/settings/notifications'
     | '/admin'
@@ -505,6 +516,7 @@ export interface FileRouteTypes {
     | '/contacts/$id'
     | '/emails/$id'
     | '/listings/$id'
+    | '/marketing/statistics'
     | '/opportunities/$id'
     | '/settings/notifications'
     | '/admin/'
@@ -541,6 +553,7 @@ export interface RootRouteChildren {
   ContactsIdRoute: typeof ContactsIdRoute
   EmailsIdRoute: typeof EmailsIdRoute
   ListingsIdRoute: typeof ListingsIdRoute
+  MarketingStatisticsRoute: typeof MarketingStatisticsRoute
   OpportunitiesIdRoute: typeof OpportunitiesIdRoute
   SettingsNotificationsRoute: typeof SettingsNotificationsRoute
   CalendarIndexRoute: typeof CalendarIndexRoute
@@ -755,6 +768,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ListingsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/marketing/statistics': {
+      id: '/marketing/statistics'
+      path: '/marketing/statistics'
+      fullPath: '/marketing/statistics'
+      preLoaderRoute: typeof MarketingStatisticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/opportunities/': {
       id: '/opportunities/'
       path: '/opportunities'
@@ -903,6 +923,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactsIdRoute: ContactsIdRoute,
   EmailsIdRoute: EmailsIdRoute,
   ListingsIdRoute: ListingsIdRoute,
+  MarketingStatisticsRoute: MarketingStatisticsRoute,
   OpportunitiesIdRoute: OpportunitiesIdRoute,
   SettingsNotificationsRoute: SettingsNotificationsRoute,
   CalendarIndexRoute: CalendarIndexRoute,

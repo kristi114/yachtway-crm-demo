@@ -1,7 +1,7 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GlobalSearch, GlobalSearchTrigger } from "@/components/global-search";
-import { Users, Building2, LayoutDashboard, Briefcase, Landmark, Wallet, MessageSquare, ShieldCheck, Search, ChevronDown, Lock, CheckSquare, Calendar, CalendarDays, Grid3x3, FileText, FileCheck2, FilePlus2, Receipt, PanelLeftClose, PanelLeftOpen, HandCoins, Mail, Banknote, Umbrella, Bell } from "lucide-react";
+import { Users, Building2, LayoutDashboard, Briefcase, Landmark, Wallet, MessageSquare, ShieldCheck, Search, ChevronDown, Lock, CheckSquare, Calendar, CalendarDays, Grid3x3, FileText, FileCheck2, FilePlus2, Receipt, PanelLeftClose, PanelLeftOpen, HandCoins, Mail, Banknote, Umbrella, Bell, BarChart3 } from "lucide-react";
 import { BoatIcon } from "@/components/icons/boat-icon";
 import { DealerIcon } from "@/components/icons/dealer-icon";
 
@@ -83,6 +83,7 @@ const NAV: NavGroup[] = [
     label: "Marketing",
     items: [
       { to: "/emails", label: "Emails", icon: Mail, gate: "emails" },
+      { to: "/marketing/statistics", label: "Social statistics", icon: BarChart3, gate: "emails", hiddenForRoles: ["lender_partner", "insurance_partner"] },
       { to: "/buyers", label: "Buyers", icon: Users, gate: "contact.general", hiddenForRoles: ["lender_partner", "insurance_partner"] },
     ],
   },
