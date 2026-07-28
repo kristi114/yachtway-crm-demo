@@ -86,7 +86,8 @@ const NAV: NavGroup[] = [
   {
     label: "System",
     items: [
-      { to: "/conversations", label: "Conversations", icon: MessageSquare, gate: "conversations.general", stub: true },
+      // Conversations are not a standalone object — they surface on Contact and
+      // Company records (Activity tab). No top-level nav entry by design.
       { to: "/admin", label: "Admin", icon: ShieldCheck, gate: "admin" },
     ],
   },
