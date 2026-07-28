@@ -1,14 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, type DragEvent } from "react";
+import { useEffect, useMemo, useState, type DragEvent } from "react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell,
 } from "recharts";
-import { Plus, LayoutDashboard, X, Trash2, GripVertical, Maximize2, Minimize2, RefreshCw } from "lucide-react";
+import { Plus, LayoutDashboard, X, Trash2, GripVertical, Maximize2, Minimize2, RefreshCw, Save, Undo2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { PageBody } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
-  useDashboards, createDashboard, deleteDashboard, removeWidget, setWidgetSpan, reorderWidgets,
+  useDashboards, createDashboard, deleteDashboard, saveDashboardLayout, type DashWidget,
 } from "@/lib/dashboards";
 import { getReport, runReport, fieldDef, formatCell } from "@/lib/reports";
 
@@ -24,6 +25,12 @@ function AdminDashboardsPage() {
   const [activeId, setActiveId] = useState<string>(dashboards[0]?.id ?? "");
   const active = dashboards.find((d) => d.id === activeId) ?? dashboards[0];
 
+  // Layout edits (reorder / resize / remove) go to a local draft and are only
+  // persisted when the user clicks Save.
+  const [draft, setDraft] = useState<DashWidget[]>(active?.widgets ?? []);
+  useEffect(() => { setDraft(active?.widgets ?? []); }, [activeId]); // reset when switching dashboards
+  const dirty = JSON.stringify(draft) !== JSON.stringify(active?.widgets ?? []);
+
   // Bumping the token forces every widget to re-run; lastRefreshed drives the label.
   const [refreshToken, setRefreshToken] = useState(0);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
@@ -33,6 +40,25 @@ function AdminDashboardsPage() {
   function runAll() {
     setRefreshToken((n) => n + 1);
     setLastRefreshed(new Date());
+  }
+  function reorderDraft(dId: string, targetId: string) {
+    if (dId === targetId) return;
+    setDraft((prev) => {
+      const ws = [...prev];
+      const from = ws.findIndex((w) => w.id === dId);
+      const to = ws.findIndex((w) => w.id === targetId);
+      if (from === -1 || to === -1) return prev;
+      const [moved] = ws.splice(from, 1);
+      ws.splice(to, 0, moved);
+      return ws;
+    });
+  }
+  const toggleSpanDraft = (id: string) => setDraft((prev) => prev.map((w) => (w.id === id ? { ...w, w: (w.w ?? 1) === 2 ? 1 : 2 } : w)));
+  const removeDraft = (id: string) => setDraft((prev) => prev.filter((w) => w.id !== id));
+  function save() {
+    if (!active) return;
+    saveDashboardLayout(active.id, draft);
+    toast.success("Dashboard saved.");
   }
 
   return (
@@ -53,7 +79,7 @@ function AdminDashboardsPage() {
           ))}
         </div>
         <div className="ml-auto flex items-center gap-2">
-          {active && active.widgets.length > 0 && (
+          {active && draft.length > 0 && (
             <>
               {lastRefreshed && (
                 <span className="text-xs text-muted-foreground">Refreshed {time(lastRefreshed)}</span>
@@ -63,6 +89,14 @@ function AdminDashboardsPage() {
               </Button>
             </>
           )}
+          {dirty && (
+            <Button size="sm" variant="ghost" onClick={() => setDraft(active?.widgets ?? [])}>
+              <Undo2 className="h-4 w-4" /> Discard
+            </Button>
+          )}
+          <Button size="sm" onClick={save} disabled={!dirty}>
+            <Save className="h-4 w-4" /> {dirty ? "Save" : "Saved"}
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -88,13 +122,13 @@ function AdminDashboardsPage() {
 
       {!active ? (
         <Empty />
-      ) : active.widgets.length === 0 ? (
+      ) : draft.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-surface p-10 text-center text-sm text-muted-foreground">
           No widgets yet. Open a report in Admin → Reports and click <span className="font-medium">Add to dashboard</span>.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          {active.widgets.map((w) => (
+          {draft.map((w) => (
             <Widget
               key={w.id}
               reportId={w.reportId}
@@ -102,12 +136,12 @@ function AdminDashboardsPage() {
               refreshToken={refreshToken}
               dragging={dragId === w.id}
               over={overId === w.id && dragId !== w.id}
-              onRemove={() => removeWidget(active.id, w.id)}
-              onToggleSpan={() => setWidgetSpan(active.id, w.id, (w.w ?? 1) === 2 ? 1 : 2)}
+              onRemove={() => removeDraft(w.id)}
+              onToggleSpan={() => toggleSpanDraft(w.id)}
               onDragStart={() => setDragId(w.id)}
               onDragEnd={() => { setDragId(null); setOverId(null); }}
               onDragOver={(e) => { e.preventDefault(); if (overId !== w.id) setOverId(w.id); }}
-              onDrop={() => { if (dragId) reorderWidgets(active.id, dragId, w.id); setDragId(null); setOverId(null); }}
+              onDrop={() => { if (dragId) reorderDraft(dragId, w.id); setDragId(null); setOverId(null); }}
             />
           ))}
         </div>

@@ -115,3 +115,10 @@ export function reorderWidgets(dashboardId: string, dragId: string, targetId: st
   });
   emit();
 }
+
+/** Persist a full widget layout at once (used by the dashboard's Save button,
+ * which edits a local draft and commits it intentionally). */
+export function saveDashboardLayout(dashboardId: string, widgets: DashWidget[]) {
+  state = state.map((d) => (d.id === dashboardId ? { ...d, widgets } : d));
+  emit();
+}
