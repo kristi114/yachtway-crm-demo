@@ -20,6 +20,13 @@ export interface FieldDef {
   /** Optional unit suffix rendered after numeric values (e.g. "min", "%"). */
   unit?: string;
   secondary?: boolean;
+  /**
+   * Pipelines this field placement applies to. Omitted = all pipelines. Used
+   * for fields that live in different sections depending on the pipeline (e.g.
+   * Dealer sits in "Opportunity" for most pipelines but in "Referral & Dealer"
+   * for EasyFund / MasterCover).
+   */
+  pipelines?: readonly string[];
 }
 
 export interface FieldSection {
@@ -471,8 +478,8 @@ export const OPPORTUNITY_SECTIONS: readonly FieldSection[] = [
   {
     id: "opp_referral_dealer", title: "Referral & Dealer", sensitivity: "opportunity.general",
     fields: [
-      { key: "dealerId", label: "Dealer Id", type: "text", sensitivity: "opportunity.general", help: "System identifier - read-only; Sensitive" },
-      { key: "dealer", label: "Dealer", type: "text", sensitivity: "opportunity.general" },
+      { key: "dealerId", label: "Dealer Id", type: "text", sensitivity: "opportunity.general", help: "System identifier - read-only; Sensitive", pipelines: ["EasyFund", "MasterCover"] },
+      { key: "dealer", label: "Dealer", type: "text", sensitivity: "opportunity.general", help: "Shown in Referral & Dealer for EasyFund & MasterCover", pipelines: ["EasyFund", "MasterCover"] },
       { key: "lenderId", label: "Lender Id", type: "text", sensitivity: "opportunity.general", help: "System identifier - read-only; Sensitive" },
       { key: "lender", label: "Lender", type: "text", sensitivity: "opportunity.general" },
       { key: "addedToDealerClosedReferrals", label: "Added to Dealer Closed Referrals", type: "checkbox", sensitivity: "opportunity.general" },
@@ -488,6 +495,11 @@ export const OPPORTUNITY_SECTIONS: readonly FieldSection[] = [
   {
     id: "opp_opportunity", title: "Opportunity", sensitivity: "opportunity.general",
     fields: [
+      // Dealer is available on every opportunity. For EasyFund / MasterCover it
+      // lives in the "Referral & Dealer" section; for all other pipelines it
+      // shows here on the Opportunity section.
+      { key: "dealerId", label: "Dealer Id", type: "text", sensitivity: "opportunity.general", help: "System identifier - read-only; Sensitive", pipelines: ["SaaS Sales", "Dealer Signups", "Studio", "EasyClose", "Referral Partners"] },
+      { key: "dealer", label: "Dealer", type: "text", sensitivity: "opportunity.general", help: "Shown on Opportunity for pipelines other than EasyFund & MasterCover", pipelines: ["SaaS Sales", "Dealer Signups", "Studio", "EasyClose", "Referral Partners"] },
       { key: "contactId", label: "Primary Contact Id", type: "text", sensitivity: "opportunity.general", help: "System identifier - read-only" },
       { key: "contact", label: "Primary Contact", type: "text", sensitivity: "opportunity.general" },
       { key: "coapplicantId", label: "Co-applicant Id", type: "text", sensitivity: "opportunity.general", help: "System identifier - read-only" },

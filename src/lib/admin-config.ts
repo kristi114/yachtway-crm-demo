@@ -304,6 +304,8 @@ export interface AdminField {
   /** Option list (override or schema default) for option-type fields. */
   options?: string[];
   defaultOptions?: string[];
+  /** Pipelines this field placement applies to (opportunity only). */
+  pipelines?: readonly string[];
 }
 
 export function adminFields(
@@ -332,6 +334,7 @@ export function adminFields(
         customized: Object.keys(o).length > 0,
         defaultOptions: declared ? [...declared] : undefined,
         options: o.options ?? (declared ? [...declared] : undefined),
+        pipelines: f.pipelines,
       });
     }
   }

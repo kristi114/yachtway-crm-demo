@@ -147,6 +147,16 @@ function AdminFieldsPage() {
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
                       <code className="rounded bg-secondary px-1 py-0.5">{f.key}</code>
+                      {f.pipelines && f.pipelines.length > 0 && (
+                        <span
+                          title={`Only on pipelines: ${f.pipelines.join(", ")}`}
+                          className="rounded bg-brand/10 px-1.5 py-0.5 font-medium text-brand-deep"
+                        >
+                          {f.pipelines.length <= 2
+                            ? f.pipelines.join(" · ")
+                            : `${f.pipelines.length} pipelines`}
+                        </span>
+                      )}
                       <Badge variant="outline" className="h-4 px-1.5 text-[10px] font-normal">
                         {f.type}
                       </Badge>
