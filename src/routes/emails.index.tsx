@@ -1,67 +1,43 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { Mail, Plus, Code2, LayoutTemplate, Trash2 } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { Plus } from "lucide-react";
 
 import { guarded } from "@/components/require-access";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  useEmailTemplatesStore,
-  deleteEmailTemplate,
-  newTemplateId,
-  type EmailTemplate,
-} from "@/lib/email-templates";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { EmailStatisticsTab } from "@/components/email-builder/email-statistics-tab";
+import { EmailSentTab } from "@/components/email-builder/email-sent-tab";
+import { EmailTemplatesTab } from "@/components/email-builder/email-templates-tab";
+import { newTemplateId } from "@/lib/email-templates";
 
 export const Route = createFileRoute("/emails/")({
   head: () => {
-    const title = "Emails - YachtWay CRM";
+    const title = "Email Marketing - YachtWay CRM";
     return {
       meta: [
         { title },
-        { name: "description", content: "Build campaign and transactional emails with a drag-and-drop designer or a live HTML editor." },
+        {
+          name: "description",
+          content:
+            "Email marketing: engagement statistics, sent history, and the template designer.",
+        },
       ],
     };
   },
-  component: guarded("emails", "Emails", EmailsPage),
+  component: guarded("emails", "Email Marketing", EmailMarketingPage),
 });
 
-function relTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.round(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return new Date(iso).toLocaleDateString();
-}
-
-function ModeBadge({ mode }: { mode: EmailTemplate["mode"] }) {
-  return mode === "design" ? (
-    <Badge className="gap-1 bg-brand/10 text-brand hover:bg-brand/10">
-      <LayoutTemplate className="h-3 w-3" /> Designer
-    </Badge>
-  ) : (
-    <Badge variant="secondary" className="gap-1">
-      <Code2 className="h-3 w-3" /> HTML
-    </Badge>
-  );
-}
-
-function EmailsPage() {
-  const store = useEmailTemplatesStore();
-  const templates = useMemo(
-    () => [...store].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
-    [store],
-  );
+function EmailMarketingPage() {
   const navigate = useNavigate();
+  const [tab, setTab] = useState("statistics");
 
   return (
     <AppShell>
       <PageHeader
-        title="Emails"
-        subtitle={<span>{templates.length} templates · drag-and-drop designer + live HTML editor</span>}
+        title="Email Marketing"
+        subtitle="Engagement statistics, sent history, and the template designer."
         actions={
           <Button onClick={() => navigate({ to: "/emails/$id", params: { id: newTemplateId() } })}>
             <Plus className="h-4 w-4" /> New email
@@ -69,66 +45,23 @@ function EmailsPage() {
         }
       />
       <PageBody>
-        {templates.length === 0 ? (
-          <div className="mx-auto max-w-md rounded-lg border border-dashed border-border bg-surface p-10 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
-              <Mail className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <h2 className="mt-4 text-lg font-semibold">No emails yet</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Create your first template with the visual designer or by writing HTML.
-            </p>
-            <Button
-              className="mt-4"
-              onClick={() => navigate({ to: "/emails/$id", params: { id: newTemplateId() } })}
-            >
-              <Plus className="h-4 w-4" /> New email
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {templates.map((t) => (
-              <div
-                key={t.id}
-                className="group flex flex-col overflow-hidden rounded-lg border border-border bg-surface transition-shadow hover:shadow-sm"
-              >
-                <Link
-                  to="/emails/$id"
-                  params={{ id: t.id }}
-                  className="flex flex-1 flex-col p-4"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <ModeBadge mode={t.mode} />
-                    <span className="text-[11px] text-muted-foreground">{relTime(t.updatedAt)}</span>
-                  </div>
-                  <h3 className="mt-3 line-clamp-1 text-sm font-semibold">{t.name}</h3>
-                  <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{t.subject}</p>
-                  <div className="mt-3 flex-1 overflow-hidden rounded border border-border bg-[#f4f5f7]">
-                    <iframe
-                      title={`Preview of ${t.name}`}
-                      sandbox="allow-same-origin"
-                      tabIndex={-1}
-                      className="pointer-events-none h-40 w-full origin-top-left"
-                      srcDoc={t.html}
-                    />
-                  </div>
-                </Link>
-                <div className="flex items-center justify-between border-t border-border px-4 py-2">
-                  <span className="text-[11px] text-muted-foreground">Updated by {t.updatedBy}</span>
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-destructive"
-                    onClick={() => {
-                      if (confirm(`Delete "${t.name}"?`)) deleteEmailTemplate(t.id);
-                    }}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" /> Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList>
+            <TabsTrigger value="statistics">Statistics</TabsTrigger>
+            <TabsTrigger value="sent">Sent</TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="statistics" className="mt-5">
+            <EmailStatisticsTab />
+          </TabsContent>
+          <TabsContent value="sent" className="mt-5">
+            <EmailSentTab />
+          </TabsContent>
+          <TabsContent value="templates" className="mt-5">
+            <EmailTemplatesTab />
+          </TabsContent>
+        </Tabs>
       </PageBody>
     </AppShell>
   );

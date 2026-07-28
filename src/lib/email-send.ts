@@ -30,9 +30,14 @@ export interface SentEmail {
   templateId?: string;
   templateName?: string;
   sentAt: string; // ISO
-  status: "sent" | "failed";
+  status: "sent" | "failed" | "sending";
   /** True when produced by the mock transport (no real email left the app). */
   mock: boolean;
+  /** Optional engagement metrics (present for seeded campaign-style sends). */
+  recipientCount?: number;
+  delivered?: number;
+  opened?: number;
+  clicked?: number;
 }
 
 const STORAGE_KEY = "yw:email-sent-log:v1";
@@ -55,13 +60,61 @@ export function invalidRecipients(list: string[]): string[] {
 /* Sent-log store (localStorage-backed)                                */
 /* ------------------------------------------------------------------ */
 
+function seed(): SentEmail[] {
+  const daysAgo = (d: number, h = 0) =>
+    new Date(Date.now() - d * 86_400_000 - h * 3_600_000).toISOString();
+  return [
+    {
+      id: "snt_seed_1",
+      to: ["dealers@yachtway.com"],
+      from: "YachtWay <news@yachtway.com>",
+      subject: "This month on the water ⚓",
+      templateName: "Monthly newsletter",
+      sentAt: daysAgo(1, 2),
+      status: "sent",
+      mock: true,
+      recipientCount: 3440,
+      delivered: 3320,
+      opened: 1040,
+      clicked: 560,
+    },
+    {
+      id: "snt_seed_2",
+      to: ["brokers@yachtway.com"],
+      from: "YachtWay <news@yachtway.com>",
+      subject: "New listings you'll want to see",
+      templateName: "New Listing Digest",
+      sentAt: daysAgo(3, 5),
+      status: "sent",
+      mock: true,
+      recipientCount: 2380,
+      delivered: 2290,
+      opened: 690,
+      clicked: 360,
+    },
+    {
+      id: "snt_seed_3",
+      to: ["marco.delgado@example.com"],
+      from: "YachtWay <noreply@yachtway.com>",
+      subject: "Welcome aboard, Marco!",
+      templateName: "Welcome — new account",
+      sentAt: daysAgo(4),
+      status: "sent",
+      mock: true,
+      recipientCount: 1,
+    },
+  ];
+}
+
 function load(): SentEmail[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") return seed();
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as SentEmail[]) : [];
+    if (!raw) return seed();
+    const parsed = JSON.parse(raw) as SentEmail[];
+    return Array.isArray(parsed) ? parsed : seed();
   } catch {
-    return [];
+    return seed();
   }
 }
 
@@ -128,6 +181,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
     sentAt: new Date().toISOString(),
     status: "sent",
     mock,
+    recipientCount: input.to.length,
   };
   state = [record, ...state];
   persist();
