@@ -47,41 +47,162 @@ export type ActionKey =
   | "add_tag"
   | "webhook";
 
+export type FieldControl =
+  | "text"
+  | "number"
+  | "template" // dropdown of email templates
+  | "object-field" // dropdown of the trigger object's fields
+  | "value-for-field" // input/dropdown driven by the field picked in `dependsOn`
+  | "record-link" // link a created record to the triggering / related record
+  | "object-select" // dropdown of objects
+  | "select"; // fixed options
+
+export interface ActionFieldSpec {
+  key: string;
+  label: string;
+  placeholder?: string;
+  control: FieldControl;
+  options?: string[];
+  dependsOn?: string;
+  required?: boolean;
+}
+
 export interface ActionSpec {
   key: ActionKey;
   label: string;
-  fields: { key: string; label: string; placeholder?: string }[];
+  fields: ActionFieldSpec[];
 }
 
 export const ACTIONS: ActionSpec[] = [
   { key: "send_email", label: "Send email", fields: [
-    { key: "template", label: "Template", placeholder: "Welcome — new account" },
-    { key: "to", label: "To", placeholder: "{{contact.email}}" },
-    { key: "subject", label: "Subject (override)", placeholder: "Optional" },
+    { key: "template", label: "Template", control: "template", required: true },
+    { key: "to", label: "To", control: "text", placeholder: "{{contact.email}}", required: true },
+    { key: "subject", label: "Subject (override)", control: "text", placeholder: "Optional" },
   ] },
   { key: "create_record", label: "Create record", fields: [
-    { key: "object", label: "Object", placeholder: "task / opportunity / …" },
-    { key: "values", label: "Field values", placeholder: "name=…, amount=…" },
+    { key: "object", label: "Object", control: "object-select", required: true },
+    { key: "values", label: "Field values", control: "text", placeholder: "name=…, amount=…" },
   ] },
   { key: "update_field", label: "Update field", fields: [
-    { key: "field", label: "Field", placeholder: "status" },
-    { key: "value", label: "New value", placeholder: "Customer" },
+    { key: "field", label: "Field", control: "object-field", required: true },
+    { key: "value", label: "New value", control: "value-for-field", dependsOn: "field", required: true },
   ] },
   { key: "create_task", label: "Create task", fields: [
-    { key: "subject", label: "Subject", placeholder: "Follow up" },
-    { key: "assignee", label: "Assign to", placeholder: "Record owner" },
-    { key: "dueInDays", label: "Due in (days)", placeholder: "3" },
+    { key: "subject", label: "Subject", control: "text", placeholder: "Follow up", required: true },
+    { key: "assignee", label: "Assign to", control: "select", options: ["Record owner", "Record creator", "Specific user"] },
+    { key: "relateTo", label: "Related to", control: "record-link" },
+    { key: "dueInDays", label: "Due in (days)", control: "number", placeholder: "3" },
   ] },
   { key: "notify", label: "Send notification", fields: [
-    { key: "to", label: "Notify", placeholder: "Record owner / #channel" },
-    { key: "message", label: "Message", placeholder: "New high-intent lead" },
+    { key: "to", label: "Notify", control: "text", placeholder: "Record owner / #channel", required: true },
+    { key: "message", label: "Message", control: "text", placeholder: "New high-intent lead", required: true },
   ] },
-  { key: "add_tag", label: "Add tag", fields: [{ key: "tag", label: "Tag", placeholder: "hot-lead" }] },
+  { key: "add_tag", label: "Add tag", fields: [{ key: "tag", label: "Tag", control: "text", placeholder: "hot-lead", required: true }] },
   { key: "webhook", label: "Call webhook", fields: [
-    { key: "url", label: "URL", placeholder: "https://…" },
-    { key: "method", label: "Method", placeholder: "POST" },
+    { key: "url", label: "URL", control: "text", placeholder: "https://…", required: true },
+    { key: "method", label: "Method", control: "select", options: ["POST", "GET", "PUT", "PATCH", "DELETE"] },
   ] },
 ];
+
+/* ------------------------------------------------------------------ */
+/* Conditions (structured, type-aware)                                 */
+/* ------------------------------------------------------------------ */
+
+export interface Clause {
+  id: string;
+  field: string;
+  op: string;
+  value?: string;
+}
+export interface ConditionGroup {
+  match: "all" | "any";
+  clauses: Clause[];
+}
+export function emptyGroup(): ConditionGroup {
+  return { match: "all", clauses: [] };
+}
+export function clauseId(): string {
+  return `cl_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export type OpCat = "text" | "number" | "date" | "checkbox" | "option" | "multioption" | "lookup";
+
+export const OPERATORS: Record<OpCat, { value: string; label: string; noValue?: boolean }[]> = {
+  text: [
+    { value: "eq", label: "equals" },
+    { value: "neq", label: "does not equal" },
+    { value: "contains", label: "contains" },
+    { value: "ncontains", label: "does not contain" },
+    { value: "starts", label: "starts with" },
+    { value: "empty", label: "is empty", noValue: true },
+    { value: "nempty", label: "is not empty", noValue: true },
+  ],
+  number: [
+    { value: "eq", label: "=" },
+    { value: "neq", label: "≠" },
+    { value: "gt", label: ">" },
+    { value: "lt", label: "<" },
+    { value: "gte", label: "≥" },
+    { value: "lte", label: "≤" },
+    { value: "empty", label: "is empty", noValue: true },
+    { value: "nempty", label: "is not empty", noValue: true },
+  ],
+  date: [
+    { value: "eq", label: "is on" },
+    { value: "before", label: "is before" },
+    { value: "after", label: "is after" },
+    { value: "empty", label: "is empty", noValue: true },
+    { value: "nempty", label: "is not empty", noValue: true },
+  ],
+  checkbox: [
+    { value: "true", label: "is checked", noValue: true },
+    { value: "false", label: "is unchecked", noValue: true },
+  ],
+  option: [
+    { value: "eq", label: "is" },
+    { value: "neq", label: "is not" },
+    { value: "empty", label: "is empty", noValue: true },
+    { value: "nempty", label: "is not empty", noValue: true },
+  ],
+  multioption: [
+    { value: "contains", label: "includes" },
+    { value: "ncontains", label: "does not include" },
+    { value: "empty", label: "is empty", noValue: true },
+    { value: "nempty", label: "is not empty", noValue: true },
+  ],
+  lookup: [
+    { value: "set", label: "is set", noValue: true },
+    { value: "nset", label: "is not set", noValue: true },
+    { value: "eq", label: "equals (id)" },
+  ],
+};
+
+export function opCatForType(type: string): OpCat {
+  switch (type) {
+    case "number":
+    case "currency":
+    case "percent":
+      return "number";
+    case "date":
+    case "datetime":
+      return "date";
+    case "checkbox":
+      return "checkbox";
+    case "picklist":
+      return "option";
+    case "multipicklist":
+      return "multioption";
+    case "lookup":
+      return "lookup";
+    default:
+      return "text";
+  }
+}
+
+export function opNeedsValue(cat: OpCat, op: string): boolean {
+  const spec = OPERATORS[cat].find((o) => o.value === op);
+  return !spec?.noValue;
+}
 
 export type StepKind = "action" | "delay" | "branch";
 
@@ -91,7 +212,7 @@ export interface FlowStep {
   action?: ActionKey;
   config?: Record<string, string>;
   delay?: { amount: number; unit: "minutes" | "hours" | "days" };
-  condition?: string;
+  condition?: ConditionGroup;
   yes?: FlowStep[];
   no?: FlowStep[];
 }
@@ -101,7 +222,7 @@ export interface FlowTrigger {
   objectKey?: string;
   field?: string;
   detail?: string;
-  filter?: string;
+  filter?: ConditionGroup;
 }
 
 export type FlowStatus = "draft" | "active" | "inactive";
@@ -116,7 +237,7 @@ export interface Flow {
   updatedAt: string;
 }
 
-const KEY = "yw:admin-flows:v1";
+const KEY = "yw:admin-flows:v2";
 
 let sid = 0;
 export function stepId(): string {
@@ -191,7 +312,7 @@ function seed(): Flow[] {
         {
           id: stepId(),
           kind: "branch",
-          condition: "buyer_intent_score > 70",
+          condition: { match: "all", clauses: [{ id: clauseId(), field: "buyer_intent_score", op: "gt", value: "70" }] },
           yes: [
             { id: stepId(), kind: "action", action: "notify", config: { to: "Record owner", message: "High-intent new contact 🔥" } },
             { id: stepId(), kind: "action", action: "create_task", config: { subject: "Call the lead", assignee: "Record owner", dueInDays: "1" } },

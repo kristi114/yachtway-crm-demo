@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { EyeOff, Eye, RotateCcw, Search, Sparkles } from "lucide-react";
+import { EyeOff, Eye, RotateCcw, Search, Sparkles, ListChecks } from "lucide-react";
 
 import { PageBody } from "@/components/page-header";
+import { OptionsDialog } from "@/components/admin/options-dialog";
+import type { AdminField } from "@/lib/admin-config";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -28,6 +30,7 @@ function AdminFieldsPage() {
 
   const actor = { name: user.name, role: user.role };
   const fields = useMemo(() => adminFields(object, overrides), [object, overrides]);
+  const [optDialog, setOptDialog] = useState<{ open: boolean; field: AdminField | null }>({ open: false, field: null });
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -187,6 +190,17 @@ function AdminFieldsPage() {
                       />
                       Required
                     </label>
+                    {(f.type === "single_option" || f.type === "multi_option") && (
+                      <button
+                        type="button"
+                        title="Edit options"
+                        onClick={() => setOptDialog({ open: true, field: f })}
+                        className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      >
+                        <ListChecks className="h-3.5 w-3.5" />
+                        {(f.options?.length ?? 0)} options
+                      </button>
+                    )}
                     <button
                       type="button"
                       title={f.hidden ? "Show field" : "Hide field"}
@@ -215,6 +229,25 @@ function AdminFieldsPage() {
           </section>
         ))}
       </div>
+
+      {optDialog.field && (
+        <OptionsDialog
+          open={optDialog.open}
+          onOpenChange={(v) => setOptDialog((s) => ({ ...s, open: v }))}
+          fieldLabel={optDialog.field.label}
+          options={optDialog.field.options ?? []}
+          defaultOptions={optDialog.field.defaultOptions}
+          onSave={(opts) => {
+            const fld = optDialog.field;
+            if (!fld) return;
+            setFieldOverride(object, fld.key, { options: opts }, actor, {
+              action: "Field options edited",
+              before: String((fld.options ?? []).length),
+              after: String(opts.length),
+            });
+          }}
+        />
+      )}
     </PageBody>
   );
 }

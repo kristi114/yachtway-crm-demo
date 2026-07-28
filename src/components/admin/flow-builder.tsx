@@ -9,9 +9,9 @@ import {
   Trash2,
   ArrowLeft,
   Save,
-  ChevronRight,
   Check,
   X,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { useObjects, useFields } from "@/lib/admin-objects";
+import { ConditionBuilder } from "@/components/admin/condition-builder";
+import { useObjects, useFields, type CrmField, type CrmObject } from "@/lib/admin-objects";
+import { listEmailTemplates } from "@/lib/email-templates";
 import {
   ACTIONS,
   TRIGGERS,
@@ -41,14 +43,52 @@ import {
   newStep,
   getFlow,
   saveFlow,
+  emptyGroup,
   type Flow,
   type FlowStep,
   type StepKind,
   type ActionKey,
   type FlowStatus,
+  type ActionFieldSpec,
 } from "@/lib/admin-automations";
 
 const ACTION_MAP = Object.fromEntries(ACTIONS.map((a) => [a.key, a]));
+const NO_VALUE_OPS = new Set(["empty", "nempty", "set", "nset", "true", "false"]);
+
+interface Ctx {
+  objects: CrmObject[];
+  objectFields: CrmField[];
+  templates: { id: string; name: string }[];
+}
+
+/* ----------------------------- validation ----------------------------- */
+
+function collectErrors(steps: FlowStep[], out: Record<string, string[]>) {
+  for (const s of steps) {
+    const errs: string[] = [];
+    if (s.kind === "action") {
+      const spec = ACTION_MAP[s.action ?? "send_email"];
+      for (const f of spec.fields) {
+        if (f.required && !(s.config?.[f.key] ?? "").trim()) errs.push(`${f.label} is required`);
+      }
+    } else if (s.kind === "branch") {
+      if (!s.condition || s.condition.clauses.length === 0) errs.push("Add at least one condition");
+      else {
+        for (const c of s.condition.clauses) {
+          if (!c.field) errs.push("Choose a field for every condition");
+          else if (!NO_VALUE_OPS.has(c.op) && !(c.value ?? "").trim()) errs.push("A condition is missing its value");
+        }
+      }
+    }
+    if (errs.length) out[s.id] = errs;
+    if (s.kind === "branch") {
+      collectErrors(s.yes ?? [], out);
+      collectErrors(s.no ?? [], out);
+    }
+  }
+}
+
+/* ----------------------------- add-step menu ----------------------------- */
 
 function AddStepMenu({ onPick }: { onPick: (kind: StepKind) => void }) {
   return (
@@ -76,25 +116,173 @@ function AddStepMenu({ onPick }: { onPick: (kind: StepKind) => void }) {
   );
 }
 
-function StepConnector() {
-  return <div className="mx-auto h-5 w-px bg-border" />;
+const StepConnector = () => <div className="mx-auto h-5 w-px bg-border" />;
+
+/* ----------------------------- action config ----------------------------- */
+
+function ActionFieldControl({
+  spec,
+  config,
+  onSet,
+  ctx,
+}: {
+  spec: ActionFieldSpec;
+  config: Record<string, string>;
+  onSet: (key: string, value: string) => void;
+  ctx: Ctx;
+}) {
+  const val = config[spec.key] ?? "";
+
+  switch (spec.control) {
+    case "template":
+      return (
+        <Select value={val} onValueChange={(v) => onSet(spec.key, v)}>
+          <SelectTrigger className="h-8 text-sm">
+            <SelectValue placeholder={ctx.templates.length ? "Choose a template" : "No templates yet"} />
+          </SelectTrigger>
+          <SelectContent>
+            {ctx.templates.map((t) => (
+              <SelectItem key={t.id} value={t.name}>
+                {t.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    case "object-select":
+      return (
+        <Select value={val} onValueChange={(v) => onSet(spec.key, v)}>
+          <SelectTrigger className="h-8 text-sm">
+            <SelectValue placeholder="Choose object" />
+          </SelectTrigger>
+          <SelectContent>
+            {ctx.objects.map((o) => (
+              <SelectItem key={o.key} value={o.key}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    case "object-field":
+      return ctx.objectFields.length ? (
+        <Select value={val} onValueChange={(v) => onSet(spec.key, v)}>
+          <SelectTrigger className="h-8 text-sm">
+            <SelectValue placeholder="Choose field" />
+          </SelectTrigger>
+          <SelectContent>
+            {ctx.objectFields.map((f) => (
+              <SelectItem key={f.id} value={f.apiName}>
+                {f.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Input disabled placeholder="Set the trigger object first" className="h-8 text-sm" />
+      );
+    case "value-for-field": {
+      const targetApi = config[spec.dependsOn ?? ""] ?? "";
+      const field = ctx.objectFields.find((f) => f.apiName === targetApi);
+      if (!field) return <Input disabled placeholder="Pick a field first" className="h-8 text-sm" />;
+      if (field.type === "picklist" || field.type === "multipicklist") {
+        return (
+          <Select value={val} onValueChange={(v) => onSet(spec.key, v)}>
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue placeholder="Choose value" />
+            </SelectTrigger>
+            <SelectContent>
+              {(field.options ?? []).map((o) => (
+                <SelectItem key={o} value={o}>
+                  {o}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      }
+      if (field.type === "checkbox") {
+        return (
+          <Select value={val} onValueChange={(v) => onSet(spec.key, v)}>
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue placeholder="Choose" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">Checked</SelectItem>
+              <SelectItem value="false">Unchecked</SelectItem>
+            </SelectContent>
+          </Select>
+        );
+      }
+      const inputType = ["number", "currency", "percent"].includes(field.type)
+        ? "number"
+        : field.type === "date" || field.type === "datetime"
+          ? "date"
+          : "text";
+      return (
+        <Input type={inputType} value={val} onChange={(e) => onSet(spec.key, e.target.value)} className="h-8 text-sm" />
+      );
+    }
+    case "record-link":
+      return (
+        <Select value={val} onValueChange={(v) => onSet(spec.key, v)}>
+          <SelectTrigger className="h-8 text-sm">
+            <SelectValue placeholder="Link to a record" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="triggering">Triggering record</SelectItem>
+            {ctx.objects.map((o) => (
+              <SelectItem key={o.key} value={`related:${o.key}`}>
+                Related {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    case "select":
+      return (
+        <Select value={val} onValueChange={(v) => onSet(spec.key, v)}>
+          <SelectTrigger className="h-8 text-sm">
+            <SelectValue placeholder="Choose" />
+          </SelectTrigger>
+          <SelectContent>
+            {(spec.options ?? []).map((o) => (
+              <SelectItem key={o} value={o}>
+                {o}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    default:
+      return (
+        <Input
+          type={spec.control === "number" ? "number" : "text"}
+          value={val}
+          placeholder={spec.placeholder}
+          onChange={(e) => onSet(spec.key, e.target.value)}
+          className="h-8 text-sm"
+        />
+      );
+  }
 }
 
 function ActionStep({
   step,
+  ctx,
   onChange,
 }: {
   step: FlowStep;
+  ctx: Ctx;
   onChange: (patch: Partial<FlowStep>) => void;
 }) {
   const spec = ACTION_MAP[step.action ?? "send_email"];
   const config = step.config ?? {};
+  const setCfg = (key: string, value: string) => onChange({ config: { ...config, [key]: value } });
+
   return (
     <div className="space-y-3">
-      <Select
-        value={step.action}
-        onValueChange={(v) => onChange({ action: v as ActionKey, config: {} })}
-      >
+      <Select value={step.action} onValueChange={(v) => onChange({ action: v as ActionKey, config: {} })}>
         <SelectTrigger className="h-8 w-56">
           <SelectValue />
         </SelectTrigger>
@@ -109,13 +297,11 @@ function ActionStep({
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {spec.fields.map((f) => (
           <div key={f.key}>
-            <Label className="text-[11px] text-muted-foreground">{f.label}</Label>
-            <Input
-              value={config[f.key] ?? ""}
-              placeholder={f.placeholder}
-              onChange={(e) => onChange({ config: { ...config, [f.key]: e.target.value } })}
-              className="h-8 text-sm"
-            />
+            <Label className="text-[11px] text-muted-foreground">
+              {f.label}
+              {f.required && <span className="text-destructive"> *</span>}
+            </Label>
+            <ActionFieldControl spec={f} config={config} onSet={setCfg} ctx={ctx} />
           </div>
         ))}
       </div>
@@ -157,23 +343,30 @@ const KIND_META: Record<StepKind, { icon: typeof Mail; title: string; color: str
 
 function StepCard({
   step,
-  fieldNames,
+  ctx,
+  errors,
   onUpdate,
   onRemove,
   onAdd,
 }: {
   step: FlowStep;
-  fieldNames: string[];
+  ctx: Ctx;
+  errors: Record<string, string[]>;
   onUpdate: (id: string, patch: Partial<FlowStep>) => void;
   onRemove: (id: string) => void;
   onAdd: (containerId: string, kind: StepKind) => void;
 }) {
   const meta = KIND_META[step.kind];
-  const title =
-    step.kind === "action" ? (ACTION_MAP[step.action ?? "send_email"]?.label ?? "Action") : meta.title;
+  const title = step.kind === "action" ? (ACTION_MAP[step.action ?? "send_email"]?.label ?? "Action") : meta.title;
+  const stepErrors = errors[step.id] ?? [];
+  const hasError = stepErrors.length > 0;
 
   return (
-    <div className="mx-auto w-full max-w-xl rounded-lg border border-border bg-surface p-4 shadow-sm">
+    <div
+      className={`mx-auto w-full max-w-xl rounded-lg border bg-surface p-4 shadow-sm ${
+        hasError ? "border-destructive/50" : "border-border"
+      }`}
+    >
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <meta.icon className={`h-4 w-4 ${meta.color}`} />
@@ -189,48 +382,36 @@ function StepCard({
         </button>
       </div>
 
-      {step.kind === "action" && (
-        <ActionStep step={step} onChange={(patch) => onUpdate(step.id, patch)} />
-      )}
-      {step.kind === "delay" && (
-        <DelayStep step={step} onChange={(patch) => onUpdate(step.id, patch)} />
-      )}
+      {step.kind === "action" && <ActionStep step={step} ctx={ctx} onChange={(patch) => onUpdate(step.id, patch)} />}
+      {step.kind === "delay" && <DelayStep step={step} onChange={(patch) => onUpdate(step.id, patch)} />}
       {step.kind === "branch" && (
         <div className="space-y-3">
           <div>
-            <Label className="text-[11px] text-muted-foreground">Condition</Label>
-            <Input
-              value={step.condition ?? ""}
-              placeholder={fieldNames.length ? `e.g. ${fieldNames[0]} > 70` : "e.g. amount > 10000"}
-              onChange={(e) => onUpdate(step.id, { condition: e.target.value })}
-              className="h-8 font-mono text-sm"
-            />
+            <Label className="text-[11px] text-muted-foreground">When…</Label>
+            <div className="mt-1">
+              <ConditionBuilder
+                value={step.condition ?? emptyGroup()}
+                onChange={(g) => onUpdate(step.id, { condition: g })}
+                fields={ctx.objectFields}
+                emptyHint="Set the trigger object to build a condition."
+              />
+            </div>
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <BranchColumn
-              label="Yes"
-              tone="emerald"
-              icon={Check}
-              steps={step.yes ?? []}
-              containerId={`${step.id}:yes`}
-              fieldNames={fieldNames}
-              onUpdate={onUpdate}
-              onRemove={onRemove}
-              onAdd={onAdd}
-            />
-            <BranchColumn
-              label="No"
-              tone="rose"
-              icon={X}
-              steps={step.no ?? []}
-              containerId={`${step.id}:no`}
-              fieldNames={fieldNames}
-              onUpdate={onUpdate}
-              onRemove={onRemove}
-              onAdd={onAdd}
-            />
+            <BranchColumn label="Yes" tone="emerald" icon={Check} steps={step.yes ?? []} containerId={`${step.id}:yes`} ctx={ctx} errors={errors} onUpdate={onUpdate} onRemove={onRemove} onAdd={onAdd} />
+            <BranchColumn label="No" tone="rose" icon={X} steps={step.no ?? []} containerId={`${step.id}:no`} ctx={ctx} errors={errors} onUpdate={onUpdate} onRemove={onRemove} onAdd={onAdd} />
           </div>
         </div>
+      )}
+
+      {hasError && (
+        <ul className="mt-3 space-y-0.5 border-t border-destructive/20 pt-2">
+          {stepErrors.map((e, i) => (
+            <li key={i} className="flex items-center gap-1.5 text-xs text-destructive">
+              <AlertTriangle className="h-3 w-3" /> {e}
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
@@ -242,7 +423,8 @@ function BranchColumn({
   icon: Icon,
   steps,
   containerId,
-  fieldNames,
+  ctx,
+  errors,
   onUpdate,
   onRemove,
   onAdd,
@@ -252,17 +434,14 @@ function BranchColumn({
   icon: typeof Check;
   steps: FlowStep[];
   containerId: string;
-  fieldNames: string[];
+  ctx: Ctx;
+  errors: Record<string, string[]>;
   onUpdate: (id: string, patch: Partial<FlowStep>) => void;
   onRemove: (id: string) => void;
   onAdd: (containerId: string, kind: StepKind) => void;
 }) {
-  const toneCls =
-    tone === "emerald"
-      ? "border-emerald-500/30 bg-emerald-500/5"
-      : "border-rose-400/30 bg-rose-500/5";
-  const badgeCls =
-    tone === "emerald" ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600";
+  const toneCls = tone === "emerald" ? "border-emerald-500/30 bg-emerald-500/5" : "border-rose-400/30 bg-rose-500/5";
+  const badgeCls = tone === "emerald" ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600";
   return (
     <div className={`rounded-lg border ${toneCls} p-2.5`}>
       <div className="mb-2 flex items-center gap-1.5">
@@ -273,13 +452,7 @@ function BranchColumn({
       <div className="space-y-2">
         {steps.map((s) => (
           <div key={s.id}>
-            <StepCard
-              step={s}
-              fieldNames={fieldNames}
-              onUpdate={onUpdate}
-              onRemove={onRemove}
-              onAdd={onAdd}
-            />
+            <StepCard step={s} ctx={ctx} errors={errors} onUpdate={onUpdate} onRemove={onRemove} onAdd={onAdd} />
           </div>
         ))}
         <AddStepMenu onPick={(kind) => onAdd(containerId, kind)} />
@@ -291,22 +464,37 @@ function BranchColumn({
 export function FlowBuilder({ flowId, onClose }: { flowId: string; onClose: () => void }) {
   const objects = useObjects();
   const allFields = useFields();
+  const templates = useMemo(() => listEmailTemplates().map((t) => ({ id: t.id, name: t.name })), []);
   const [flow, setFlow] = useState<Flow | null>(() => getFlow(flowId) ?? null);
 
-  const triggerSpec = useMemo(
-    () => TRIGGERS.find((t) => t.key === flow?.trigger.type),
-    [flow?.trigger.type],
-  );
+  const triggerSpec = useMemo(() => TRIGGERS.find((t) => t.key === flow?.trigger.type), [flow?.trigger.type]);
   const objectFields = useMemo(
     () => allFields.filter((f) => f.objectKey === flow?.trigger.objectKey),
     [allFields, flow?.trigger.objectKey],
   );
-  const fieldNames = objectFields.map((f) => f.apiName);
+
+  const ctx: Ctx = { objects, objectFields, templates };
+
+  const validation = useMemo(() => {
+    const stepErrors: Record<string, string[]> = {};
+    const triggerErrors: string[] = [];
+    if (flow) {
+      if (triggerSpec?.needsObject && !flow.trigger.objectKey) triggerErrors.push("Select an object");
+      if (triggerSpec?.needsField && !flow.trigger.field) triggerErrors.push("Select a field");
+      collectErrors(flow.steps, stepErrors);
+    }
+    const total = triggerErrors.length + Object.values(stepErrors).reduce((n, a) => n + a.length, 0);
+    return { stepErrors, triggerErrors, total };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flow, triggerSpec]);
 
   if (!flow) {
     return (
       <div className="rounded-lg border border-border bg-surface p-8 text-center text-sm text-muted-foreground">
-        Flow not found. <button className="text-brand hover:underline" onClick={onClose}>Back to flows</button>
+        Flow not found.{" "}
+        <button className="text-brand hover:underline" onClick={onClose}>
+          Back to flows
+        </button>
       </div>
     );
   }
@@ -314,7 +502,6 @@ export function FlowBuilder({ flowId, onClose }: { flowId: string; onClose: () =
   const patchFlow = (patch: Partial<Flow>) => setFlow((f) => (f ? { ...f, ...patch } : f));
   const patchTrigger = (patch: Partial<Flow["trigger"]>) =>
     setFlow((f) => (f ? { ...f, trigger: { ...f.trigger, ...patch } } : f));
-
   const handleAdd = (containerId: string, kind: StepKind) =>
     setFlow((f) => (f ? { ...f, steps: addStep(f.steps, containerId, newStep(kind)) } : f));
   const handleUpdate = (id: string, patch: Partial<FlowStep>) =>
@@ -324,6 +511,12 @@ export function FlowBuilder({ flowId, onClose }: { flowId: string; onClose: () =
 
   function save() {
     if (!flow) return;
+    if (validation.total > 0 && flow.status === "active") {
+      toast.error("Resolve errors before activating", { description: `${validation.total} issue(s) — saved as draft.` });
+      saveFlow({ ...flow, status: "draft" });
+      setFlow({ ...flow, status: "draft" });
+      return;
+    }
     saveFlow(flow);
     toast.success("Flow saved", { description: flow.name });
     onClose();
@@ -337,11 +530,7 @@ export function FlowBuilder({ flowId, onClose }: { flowId: string; onClose: () =
           <Button variant="ghost" size="sm" onClick={onClose}>
             <ArrowLeft className="h-4 w-4" /> Flows
           </Button>
-          <Input
-            value={flow.name}
-            onChange={(e) => patchFlow({ name: e.target.value })}
-            className="h-9 w-64 text-base font-semibold"
-          />
+          <Input value={flow.name} onChange={(e) => patchFlow({ name: e.target.value })} className="h-9 w-64 text-base font-semibold" />
         </div>
         <div className="flex items-center gap-2">
           <Select value={flow.status} onValueChange={(v) => patchFlow({ status: v as FlowStatus })}>
@@ -367,10 +556,23 @@ export function FlowBuilder({ flowId, onClose }: { flowId: string; onClose: () =
         className="max-w-2xl"
       />
 
+      {/* Error banner */}
+      {validation.total > 0 && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-700">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p className="font-medium">{validation.total} issue{validation.total === 1 ? "" : "s"} to fix before this flow can go live.</p>
+            {validation.triggerErrors.length > 0 && (
+              <p className="text-xs">Trigger: {validation.triggerErrors.join(", ")}</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Canvas */}
       <div className="rounded-xl border border-border bg-secondary/20 p-6">
         {/* Trigger */}
-        <div className="mx-auto w-full max-w-xl rounded-lg border-2 border-brand/40 bg-surface p-4 shadow-sm">
+        <div className={`mx-auto w-full max-w-xl rounded-lg border-2 bg-surface p-4 shadow-sm ${validation.triggerErrors.length ? "border-destructive/50" : "border-brand/40"}`}>
           <div className="mb-3 flex items-center gap-2">
             <Zap className="h-4 w-4 text-brand" />
             <span className="text-sm font-semibold">Trigger</span>
@@ -394,7 +596,7 @@ export function FlowBuilder({ flowId, onClose }: { flowId: string; onClose: () =
             </div>
             {triggerSpec?.needsObject && (
               <div>
-                <Label className="text-[11px] text-muted-foreground">Object</Label>
+                <Label className="text-[11px] text-muted-foreground">Object <span className="text-destructive">*</span></Label>
                 <Select value={flow.trigger.objectKey} onValueChange={(v) => patchTrigger({ objectKey: v, field: undefined })}>
                   <SelectTrigger className="h-8">
                     <SelectValue placeholder="Select object" />
@@ -411,7 +613,7 @@ export function FlowBuilder({ flowId, onClose }: { flowId: string; onClose: () =
             )}
             {triggerSpec?.needsField && (
               <div>
-                <Label className="text-[11px] text-muted-foreground">Field</Label>
+                <Label className="text-[11px] text-muted-foreground">Field <span className="text-destructive">*</span></Label>
                 <Select value={flow.trigger.field} onValueChange={(v) => patchTrigger({ field: v })}>
                   <SelectTrigger className="h-8">
                     <SelectValue placeholder="Select field" />
@@ -429,22 +631,19 @@ export function FlowBuilder({ flowId, onClose }: { flowId: string; onClose: () =
             {triggerSpec?.needsDetail && (
               <div>
                 <Label className="text-[11px] text-muted-foreground">{triggerSpec.detailLabel}</Label>
-                <Input
-                  value={flow.trigger.detail ?? ""}
-                  onChange={(e) => patchTrigger({ detail: e.target.value })}
-                  className="h-8"
-                />
+                <Input value={flow.trigger.detail ?? ""} onChange={(e) => patchTrigger({ detail: e.target.value })} className="h-8" />
               </div>
             )}
           </div>
           <div className="mt-3">
             <Label className="text-[11px] text-muted-foreground">Only when (filter, optional)</Label>
-            <Input
-              value={flow.trigger.filter ?? ""}
-              onChange={(e) => patchTrigger({ filter: e.target.value })}
-              placeholder="e.g. status = 'Lead'"
-              className="h-8 font-mono text-sm"
-            />
+            <div className="mt-1">
+              <ConditionBuilder
+                value={flow.trigger.filter ?? emptyGroup()}
+                onChange={(g) => patchTrigger({ filter: g })}
+                fields={objectFields}
+              />
+            </div>
           </div>
         </div>
 
@@ -453,13 +652,7 @@ export function FlowBuilder({ flowId, onClose }: { flowId: string; onClose: () =
           {flow.steps.map((s) => (
             <div key={s.id}>
               <StepConnector />
-              <StepCard
-                step={s}
-                fieldNames={fieldNames}
-                onUpdate={handleUpdate}
-                onRemove={handleRemove}
-                onAdd={handleAdd}
-              />
+              <StepCard step={s} ctx={ctx} errors={validation.stepErrors} onUpdate={handleUpdate} onRemove={handleRemove} onAdd={handleAdd} />
             </div>
           ))}
           <StepConnector />

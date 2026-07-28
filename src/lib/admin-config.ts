@@ -32,6 +32,8 @@ export interface FieldOverride {
   hidden?: boolean;
   required?: boolean;
   sensitivity?: ResourceClass;
+  /** Overridden option list for single_option / multi_option fields. */
+  options?: string[];
 }
 
 export interface AuditEntry {
@@ -294,6 +296,9 @@ export interface AdminField {
   hidden: boolean;
   required: boolean;
   customized: boolean;
+  /** Option list (override or schema default) for option-type fields. */
+  options?: string[];
+  defaultOptions?: string[];
 }
 
 export function adminFields(
@@ -318,6 +323,8 @@ export function adminFields(
         hidden: o.hidden ?? false,
         required: o.required ?? false,
         customized: Object.keys(o).length > 0,
+        defaultOptions: f.options ? [...f.options] : undefined,
+        options: o.options ?? (f.options ? [...f.options] : undefined),
       });
     }
   }
