@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GlobalSearch, GlobalSearchTrigger } from "@/components/global-search";
 import { Users, Building2, LayoutDashboard, Briefcase, Landmark, Wallet, MessageSquare, ShieldCheck, Search, ChevronDown, Lock, CheckSquare, Calendar, CalendarDays, Grid3x3, FileText, FileCheck2, FilePlus2, Receipt, PanelLeftClose, PanelLeftOpen, HandCoins, Mail, Banknote, Umbrella } from "lucide-react";
@@ -141,6 +141,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   const { user, setRole, setCurrency, can, isRealSession } = useAuth();
+  const navigate = useNavigate();
+  // Switching into a partner role drops you on that partner's scoped dashboard
+  // (otherwise you'd stay on the current, now-restricted, page).
+  const switchRole = (r: Role) => {
+    setRole(r);
+    if (r === "lender_partner") navigate({ to: "/lender" });
+    else if (r === "insurance_partner") navigate({ to: "/insurance" });
+  };
   const { apiStatus, source } = usePermissions();
   const [sigOpen, setSigOpen] = useState(false);
 
@@ -213,7 +221,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>Switch demo role</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuRadioGroup value={user.role} onValueChange={(v) => setRole(v as Role)}>
+                  <DropdownMenuRadioGroup value={user.role} onValueChange={(v) => switchRole(v as Role)}>
                     <DropdownMenuRadioItem value="sales_rep">Sales Rep</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="fintech">Fintech</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="marketing">Marketing</DropdownMenuRadioItem>
