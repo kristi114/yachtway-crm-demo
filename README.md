@@ -19,6 +19,8 @@ pnpm dev          # → http://localhost:3000
 
 The UI runs on seeded mock data with a demo role switcher (top-right), so you can browse and iterate on the interface immediately. Anything under `src/` hot-reloads. The API status pill shows **"Mock"** — expected; it means no backend is required.
 
+> **pnpm users:** an `.npmrc` sets `node-linker=hoisted` so pnpm installs a flat `node_modules` (like npm/bun). This is required — TanStack Router's code-splitter and `@babel/core` do bare `require()`s that fail on pnpm's default isolated layout with `Cannot find module '@babel/helper-compilation-targets'`. A fresh `pnpm install` picks this up automatically. **If you installed before this `.npmrc` existed, reinstall once:** `rm -rf node_modules && pnpm install`.
+
 ### Where the headline features live
 
 | Feature | Where to click | Key files |
