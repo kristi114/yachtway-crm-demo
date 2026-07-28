@@ -3,6 +3,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +48,34 @@ export const ROLE_PIPELINES: Record<Role, PipelineName[]> = {
   insurance_partner: ["MasterCover"],
 };
 
+// A red asterisk marking a required field, per the Field Catalog.
+function RequiredMark() {
+  return <span className="text-destructive" aria-hidden="true"> *</span>;
+}
+
+/**
+ * Extra required fields that only apply to specific pipelines, taken from the
+ * Field Catalog's Opportunity sheet ("Conditionally required" + "Required
+ * conditions"). Opportunity Name and Stage are always-required for every
+ * pipeline and are handled directly in the form. The Opportunity Id is a
+ * system identifier — auto-generated on create, never entered here.
+ */
+type ExtraField = { key: string; label: string; control: "text" | "textarea" };
+
+const PIPELINE_REQUIRED_FIELDS: Record<PipelineName, ExtraField[]> = {
+  // Catalog: `lender` required "If pipeline=easyfund".
+  "EasyFund": [{ key: "lender", label: "Lender", control: "text" }],
+  // Catalog: `insurance_company` required "If pipeline=mastercover".
+  "MasterCover": [{ key: "insuranceCompany", label: "Insurance company", control: "text" }],
+  // Catalog: `access_information` required "If pipeline=studio".
+  "Studio": [{ key: "accessInformation", label: "Access information", control: "textarea" }],
+  // No pipeline-specific always/pipeline-required fields in the catalog.
+  "SaaS Sales": [],
+  "Dealer Signups": [],
+  "EasyClose": [],
+  "Referral Partners": [],
+};
+
 export type CreateOpportunityDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -71,6 +100,8 @@ export function CreateOpportunityDialog({
   const [name, setName] = useState(defaultName ?? "");
   const [amount, setAmount] = useState("");
   const [closeDate, setCloseDate] = useState("");
+  // Values for the pipeline-specific required fields (keyed by ExtraField.key).
+  const [extras, setExtras] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (open) {
@@ -79,10 +110,21 @@ export function CreateOpportunityDialog({
       setName(defaultName ?? "");
       setAmount("");
       setCloseDate("");
+      setExtras({});
     }
   }, [open, defaultName]);
 
   const stages = pipeline ? PIPELINE_STAGES[pipeline] ?? [] : [];
+  // Required fields that appear only once a pipeline is chosen.
+  const requiredExtras = pipeline ? PIPELINE_REQUIRED_FIELDS[pipeline] ?? [] : [];
+
+  // The form is valid only when every required field is filled: the always-
+  // required Name + Pipeline + Stage, plus each pipeline-specific required field.
+  const missingRequired =
+    !name.trim() ||
+    !pipeline ||
+    !stage ||
+    requiredExtras.some((f) => !(extras[f.key] ?? "").trim());
 
   function formatCurrencyInput(value: string) {
     // Strip everything except digits and a single decimal point.
@@ -100,10 +142,18 @@ export function CreateOpportunityDialog({
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!pipeline || !stage || !name.trim()) return;
+    // `!pipeline` is included in missingRequired; repeating it here narrows the
+    // type from `PipelineName | ""` to `PipelineName` for the assignment below.
+    if (missingRequired || !pipeline) return;
     const today = new Date().toISOString().slice(0, 10);
+    // Only carry the required extras that belong to the selected pipeline.
+    const extraValues = Object.fromEntries(
+      requiredExtras.map((f) => [f.key, (extras[f.key] ?? "").trim()]),
+    );
     const newOpp: Opportunity = {
-      id: `opp_${Date.now().toString(36)}`,
+      // Opportunity Id is a system identifier: generated here, never entered by
+      // the user. Randomised so concurrent creates can't collide.
+      id: `opp_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
       name: name.trim(),
       pipeline,
       stage,
@@ -117,6 +167,7 @@ export function CreateOpportunityDialog({
       stageEnteredAt: today,
       lostReason: null,
       closeReason: "",
+      ...extraValues,
     };
     // Push into the shared mock store so the Opportunities page picks it up.
     OPPORTUNITIES.unshift(newOpp);
@@ -138,7 +189,7 @@ export function CreateOpportunityDialog({
           </DialogHeader>
           <div className="grid gap-5 py-6">
             <div className="grid gap-2">
-              <Label htmlFor="opp-name" className="text-sm font-medium">Opportunity name</Label>
+              <Label htmlFor="opp-name" className="text-sm font-medium">Opportunity name<RequiredMark /></Label>
               <Input
                 id="opp-name"
                 autoFocus
@@ -150,12 +201,14 @@ export function CreateOpportunityDialog({
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
-                <Label htmlFor="opp-pipeline" className="text-sm font-medium">Pipeline</Label>
+                <Label htmlFor="opp-pipeline" className="text-sm font-medium">Pipeline<RequiredMark /></Label>
                 <Select
                   value={pipeline}
                   onValueChange={(value) => {
                     setPipeline(value as PipelineName);
                     setStage("");
+                    // Different pipeline = different required fields; clear old values.
+                    setExtras({});
                   }}
                 >
                   <SelectTrigger id="opp-pipeline" className="h-11 text-base">
@@ -169,7 +222,7 @@ export function CreateOpportunityDialog({
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="opp-stage" className="text-sm font-medium">Stage</Label>
+                <Label htmlFor="opp-stage" className="text-sm font-medium">Stage<RequiredMark /></Label>
                 <Select value={stage} onValueChange={setStage} disabled={!pipeline}>
                   <SelectTrigger id="opp-stage" className="h-11 text-base">
                     <SelectValue placeholder={pipeline ? "Select stage" : "Choose pipeline first"} />
@@ -182,6 +235,34 @@ export function CreateOpportunityDialog({
                 </Select>
               </div>
             </div>
+
+            {/* Pipeline-specific required fields (revealed once a pipeline is chosen). */}
+            {requiredExtras.map((f) => (
+              <div key={f.key} className="grid gap-2">
+                <Label htmlFor={`opp-${f.key}`} className="text-sm font-medium">
+                  {f.label}
+                  <RequiredMark />
+                </Label>
+                {f.control === "textarea" ? (
+                  <Textarea
+                    id={`opp-${f.key}`}
+                    value={extras[f.key] ?? ""}
+                    onChange={(e) => setExtras((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                    placeholder={`Enter ${f.label.toLowerCase()}`}
+                    className="min-h-[76px] text-base"
+                  />
+                ) : (
+                  <Input
+                    id={`opp-${f.key}`}
+                    value={extras[f.key] ?? ""}
+                    onChange={(e) => setExtras((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                    placeholder={`Enter ${f.label.toLowerCase()}`}
+                    className="h-11 text-base"
+                  />
+                )}
+              </div>
+            ))}
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="opp-amount" className="text-sm font-medium">Opportunity amount (USD)</Label>
@@ -210,7 +291,7 @@ export function CreateOpportunityDialog({
             <Button type="button" variant="outline" size="lg" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" size="lg" disabled={!pipeline || !stage || !name.trim()}>
+            <Button type="submit" size="lg" disabled={missingRequired}>
               Create opportunity
             </Button>
           </DialogFooter>
