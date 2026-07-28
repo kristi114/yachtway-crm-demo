@@ -38,6 +38,8 @@ export interface SentEmail {
   delivered?: number;
   opened?: number;
   clicked?: number;
+  /** The exact HTML that was sent — rendered in the per-send report. */
+  html?: string;
 }
 
 const STORAGE_KEY = "yw:email-sent-log:v1";
@@ -60,6 +62,31 @@ export function invalidRecipients(list: string[]): string[] {
 /* Sent-log store (localStorage-backed)                                */
 /* ------------------------------------------------------------------ */
 
+function seedHtml(heading: string, body: string, cta = "Open your dashboard"): string {
+  return `<!doctype html>
+<html>
+  <body style="margin:0;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif;color:#1a2b3c;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:24px 0;">
+      <tr><td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;">
+          <tr><td style="background:#0b1f33;padding:24px 32px;">
+            <span style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:0.5px;">YachtWay</span>
+          </td></tr>
+          <tr><td style="padding:32px;">
+            <h1 style="margin:0 0 12px;font-size:24px;">${heading}</h1>
+            <p style="margin:0 0 16px;font-size:15px;line-height:1.6;">${body}</p>
+            <a href="https://crm.yachtway.app" style="display:inline-block;background:#0b1f33;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:600;">${cta}</a>
+          </td></tr>
+          <tr><td style="padding:20px 32px;background:#f4f5f7;color:#5b6b7b;font-size:12px;">
+            YachtWay · You are receiving this because you're a YachtWay member.
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
+}
+
 function seed(): SentEmail[] {
   const daysAgo = (d: number, h = 0) =>
     new Date(Date.now() - d * 86_400_000 - h * 3_600_000).toISOString();
@@ -77,6 +104,11 @@ function seed(): SentEmail[] {
       delivered: 3320,
       opened: 1040,
       clicked: 560,
+      html: seedHtml(
+        "This month on the water ⚓",
+        "New listings, dealer wins and studio openings — here's everything happening across the YachtWay network this month.",
+        "See what's new",
+      ),
     },
     {
       id: "snt_seed_2",
@@ -91,6 +123,11 @@ function seed(): SentEmail[] {
       delivered: 2290,
       opened: 690,
       clicked: 360,
+      html: seedHtml(
+        "New listings you'll want to see",
+        "Fresh yachts just hit the market that match your buyers' saved searches. Preview the latest listings and share them in one click.",
+        "Browse new listings",
+      ),
     },
     {
       id: "snt_seed_3",
@@ -102,6 +139,13 @@ function seed(): SentEmail[] {
       status: "sent",
       mock: true,
       recipientCount: 1,
+      delivered: 1,
+      opened: 1,
+      clicked: 1,
+      html: seedHtml(
+        "Welcome aboard, Marco 🚤",
+        "Your YachtWay account is ready. Manage listings, brokers and buyers from one place.",
+      ),
     },
   ];
 }
@@ -143,6 +187,10 @@ export function listSentEmails(): SentEmail[] {
   return [...state].sort((a, b) => b.sentAt.localeCompare(a.sentAt));
 }
 
+export function getSentEmail(id: string): SentEmail | undefined {
+  return state.find((s) => s.id === id);
+}
+
 export function useSentLog(): SentEmail[] {
   return useSyncExternalStore(subscribe, snapshot, snapshot);
 }
@@ -182,6 +230,8 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
     status: "sent",
     mock,
     recipientCount: input.to.length,
+    delivered: input.to.length,
+    html: input.html,
   };
   state = [record, ...state];
   persist();

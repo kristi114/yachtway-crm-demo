@@ -83,7 +83,11 @@ export function EmailSentTab() {
         </TableHeader>
         <TableBody>
           {sent.map((s) => (
-            <TableRow key={s.id}>
+            <TableRow
+              key={s.id}
+              className="cursor-pointer"
+              onClick={() => navigate({ to: "/emails/sent/$id", params: { id: s.id } })}
+            >
               <TableCell className="max-w-[280px]">
                 <div className="truncate font-medium">{s.subject || "(no subject)"}</div>
                 {s.templateName && (

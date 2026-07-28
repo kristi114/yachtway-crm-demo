@@ -41,6 +41,7 @@ import { Route as BillingInvoicesIndexRouteImport } from './routes/billing.invoi
 import { Route as BillingInvoicesIdRouteImport } from './routes/billing.invoices.$id'
 import { Route as BillingInvoicesNewRouteImport } from './routes/billing.invoices.new'
 import { Route as BillingShareTokenRouteImport } from './routes/billing.share.$token'
+import { Route as EmailsSentIdRouteImport } from './routes/emails.sent.$id'
 import { Route as ReferralsIdEditRouteImport } from './routes/referrals.$id.edit'
 import { Route as ReferralsNewOppIdRouteImport } from './routes/referrals.new.$oppId'
 
@@ -204,6 +205,11 @@ const BillingShareTokenRoute = BillingShareTokenRouteImport.update({
   path: '/billing/share/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailsSentIdRoute = EmailsSentIdRouteImport.update({
+  id: '/emails/sent/$id',
+  path: '/emails/sent/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReferralsIdEditRoute = ReferralsIdEditRouteImport.update({
   id: '/referrals/$id/edit',
   path: '/referrals/$id/edit',
@@ -246,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/billing/invoices/$id': typeof BillingInvoicesIdRoute
   '/billing/invoices/new': typeof BillingInvoicesNewRoute
   '/billing/share/$token': typeof BillingShareTokenRoute
+  '/emails/sent/$id': typeof EmailsSentIdRoute
   '/referrals/$id/edit': typeof ReferralsIdEditRoute
   '/referrals/new/$oppId': typeof ReferralsNewOppIdRoute
   '/billing/estimates/': typeof BillingEstimatesIndexRoute
@@ -281,6 +288,7 @@ export interface FileRoutesByTo {
   '/billing/invoices/$id': typeof BillingInvoicesIdRoute
   '/billing/invoices/new': typeof BillingInvoicesNewRoute
   '/billing/share/$token': typeof BillingShareTokenRoute
+  '/emails/sent/$id': typeof EmailsSentIdRoute
   '/referrals/$id/edit': typeof ReferralsIdEditRoute
   '/referrals/new/$oppId': typeof ReferralsNewOppIdRoute
   '/billing/estimates': typeof BillingEstimatesIndexRoute
@@ -318,6 +326,7 @@ export interface FileRoutesById {
   '/billing/invoices/$id': typeof BillingInvoicesIdRoute
   '/billing/invoices/new': typeof BillingInvoicesNewRoute
   '/billing/share/$token': typeof BillingShareTokenRoute
+  '/emails/sent/$id': typeof EmailsSentIdRoute
   '/referrals/$id/edit': typeof ReferralsIdEditRoute
   '/referrals/new/$oppId': typeof ReferralsNewOppIdRoute
   '/billing/estimates/': typeof BillingEstimatesIndexRoute
@@ -356,6 +365,7 @@ export interface FileRouteTypes {
     | '/billing/invoices/$id'
     | '/billing/invoices/new'
     | '/billing/share/$token'
+    | '/emails/sent/$id'
     | '/referrals/$id/edit'
     | '/referrals/new/$oppId'
     | '/billing/estimates/'
@@ -391,6 +401,7 @@ export interface FileRouteTypes {
     | '/billing/invoices/$id'
     | '/billing/invoices/new'
     | '/billing/share/$token'
+    | '/emails/sent/$id'
     | '/referrals/$id/edit'
     | '/referrals/new/$oppId'
     | '/billing/estimates'
@@ -427,6 +438,7 @@ export interface FileRouteTypes {
     | '/billing/invoices/$id'
     | '/billing/invoices/new'
     | '/billing/share/$token'
+    | '/emails/sent/$id'
     | '/referrals/$id/edit'
     | '/referrals/new/$oppId'
     | '/billing/estimates/'
@@ -457,6 +469,7 @@ export interface RootRouteChildren {
   BillingInvoicesIdRoute: typeof BillingInvoicesIdRoute
   BillingInvoicesNewRoute: typeof BillingInvoicesNewRoute
   BillingShareTokenRoute: typeof BillingShareTokenRoute
+  EmailsSentIdRoute: typeof EmailsSentIdRoute
   ReferralsIdEditRoute: typeof ReferralsIdEditRoute
   ReferralsNewOppIdRoute: typeof ReferralsNewOppIdRoute
   BillingEstimatesIndexRoute: typeof BillingEstimatesIndexRoute
@@ -689,6 +702,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillingShareTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/emails/sent/$id': {
+      id: '/emails/sent/$id'
+      path: '/emails/sent/$id'
+      fullPath: '/emails/sent/$id'
+      preLoaderRoute: typeof EmailsSentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/referrals/$id/edit': {
       id: '/referrals/$id/edit'
       path: '/referrals/$id/edit'
@@ -752,6 +772,7 @@ const rootRouteChildren: RootRouteChildren = {
   BillingInvoicesIdRoute: BillingInvoicesIdRoute,
   BillingInvoicesNewRoute: BillingInvoicesNewRoute,
   BillingShareTokenRoute: BillingShareTokenRoute,
+  EmailsSentIdRoute: EmailsSentIdRoute,
   ReferralsIdEditRoute: ReferralsIdEditRoute,
   ReferralsNewOppIdRoute: ReferralsNewOppIdRoute,
   BillingEstimatesIndexRoute: BillingEstimatesIndexRoute,
