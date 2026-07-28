@@ -14,6 +14,7 @@ import tsConfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
 import viteReact from "@vitejs/plugin-react";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import { nitro } from "nitro/vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -31,6 +32,14 @@ export default defineConfig({
     // TanStack Start (SSR). `customViteReactPlugin: true` means we add the React
     // plugin ourselves immediately after (required by the plugin in this mode).
     tanstackStart({ customViteReactPlugin: true }),
+    // Nitro is TanStack Start's server build layer. It must be present for any
+    // server/SSR deployment: on a plain `vite build` it emits a Node server
+    // (.output/), and when it detects a provider environment (e.g. Vercel sets
+    // VERCEL=1) it switches presets automatically and emits that provider's
+    // output format (.vercel/output). Without this plugin the build produces
+    // only a static client bundle with no server, which is why the Vercel
+    // deployment 404'd.
+    nitro(),
     viteReact(),
   ],
   resolve: {

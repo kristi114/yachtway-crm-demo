@@ -16,8 +16,10 @@ variables are required.
    - **Install Command:** `pnpm install --no-frozen-lockfile` (we don't commit a
      lockfile, so a frozen install would otherwise fail)
    - Framework preset can stay on auto-detect. TanStack Start builds through
-     Nitro, which detects the Vercel environment and emits Vercel's output
-     format automatically — no output directory to set.
+     the Nitro plugin (wired into `vite.config.ts`), which detects the Vercel
+     environment and emits Vercel's output format (`.vercel/output`)
+     automatically — no output directory to set. Leave **Output Directory**
+     blank; Vercel serves the Build Output API result directly.
 4. Click **Deploy**. First build takes a few minutes (installing deps).
 5. When it finishes you'll get a URL like
    `https://yachtway-crm-demo.vercel.app` — that's the shared preview.
