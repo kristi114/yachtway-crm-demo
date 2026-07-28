@@ -60,6 +60,12 @@ function AdminDashboardsPage() {
     saveDashboardLayout(active.id, draft);
     toast.success("Dashboard saved.");
   }
+  // Guard against losing unsaved layout edits when leaving the current dashboard.
+  function switchTo(id: string) {
+    if (id === activeId) return;
+    if (dirty && !confirm("You have unsaved changes to this dashboard. Discard them?")) return;
+    setActiveId(id);
+  }
 
   return (
     <PageBody>
@@ -69,7 +75,7 @@ function AdminDashboardsPage() {
             <button
               key={d.id}
               type="button"
-              onClick={() => setActiveId(d.id)}
+              onClick={() => switchTo(d.id)}
               className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                 active?.id === d.id ? "border-brand bg-brand text-brand-foreground" : "border-border text-muted-foreground hover:text-foreground"
               }`}
@@ -101,6 +107,7 @@ function AdminDashboardsPage() {
             size="sm"
             variant="outline"
             onClick={() => {
+              if (dirty && !confirm("You have unsaved changes to this dashboard. Discard them?")) return;
               const name = window.prompt("New dashboard name");
               if (name) { const d = createDashboard(name); setActiveId(d.id); }
             }}
