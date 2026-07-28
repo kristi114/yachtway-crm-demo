@@ -156,8 +156,8 @@ export function ServicesRevenuePanel() {
               <li key={r.key} className="rounded-xl border border-border/60 bg-background p-3">
                 <div className="flex items-baseline justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold text-brand-deep">{r.label}</div>
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="truncate text-sm font-semibold text-brand-deep">{r.label}</div>
+                    <div className="truncate text-[11px] text-muted-foreground">
                       {r.wonCount} won · {r.openCount} open opps
                     </div>
                   </div>
@@ -174,21 +174,29 @@ export function ServicesRevenuePanel() {
                 </div>
 
                 {/* Revenue bar: won (solid) + open (lighter) */}
-                <div className="mt-2 flex h-2 gap-[2px] overflow-hidden rounded-full bg-secondary/60">
-                  <div
-                    className="h-full rounded-l-full bg-success transition-[width] duration-700"
-                    style={{ width: `${revPct * (wonPct / 100)}%` }}
-                    title={`Won ${fmt(r.wonRevenue)}`}
-                  />
-                  <div
-                    className="h-full rounded-r-full bg-brand/50 transition-[width] duration-700"
-                    style={{ width: `${revPct * (1 - wonPct / 100)}%` }}
-                    title={`Open ${fmt(r.openRevenue)}`}
-                  />
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="w-16 shrink-0 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                    Revenue
+                  </span>
+                  <div className="flex h-2 flex-1 gap-[2px] overflow-hidden rounded-full bg-secondary/60">
+                    <div
+                      className="h-full rounded-l-full bg-success transition-[width] duration-700"
+                      style={{ width: `${revPct * (wonPct / 100)}%` }}
+                      title={`Won ${fmt(r.wonRevenue)}`}
+                    />
+                    <div
+                      className="h-full rounded-r-full bg-brand/50 transition-[width] duration-700"
+                      style={{ width: `${revPct * (1 - wonPct / 100)}%` }}
+                      title={`Open ${fmt(r.openRevenue)}`}
+                    />
+                  </div>
                 </div>
 
                 {/* Adoption bar */}
                 <div className="mt-1.5 flex items-center gap-2">
+                  <span className="w-16 shrink-0 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                    Adoption
+                  </span>
                   <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary/60">
                     <div
                       className={
@@ -198,9 +206,6 @@ export function ServicesRevenuePanel() {
                       style={{ width: `${r.adoptionPct}%` }}
                     />
                   </div>
-                  <span className="w-14 text-right text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                    adoption
-                  </span>
                 </div>
               </li>
             );
