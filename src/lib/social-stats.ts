@@ -133,9 +133,10 @@ function scaleSum(ids: string[]): number {
 }
 const r = (n: number, f: number) => Math.round(n * f);
 
-/** Per-channel stats aggregated across the selected accounts. */
-export function channelStatsFor(accountIds: string[]): Record<ChannelId, ChannelStats> {
-  const f = scaleSum(accountIds);
+/** Per-channel stats aggregated across the selected accounts, scaled by the
+ * period multiplier (1 = 7 days, ~4.3 = 30 days, …). */
+export function channelStatsFor(accountIds: string[], mult = 1): Record<ChannelId, ChannelStats> {
+  const f = scaleSum(accountIds) * mult;
   const out = {} as Record<ChannelId, ChannelStats>;
   for (const c of CHANNELS) {
     const b = BASE_CHANNEL_STATS[c.id];
@@ -148,14 +149,14 @@ export function channelStatsFor(accountIds: string[]): Record<ChannelId, Channel
       impressions: r(b.impressions, f),
       reach: r(b.reach, f),
       linkClicks: r(b.linkClicks, f),
-      followers: r(b.followers, f),
+      followers: r(b.followers, scaleSum(accountIds)), // followers are a count, not period-cumulative
     };
   }
   return out;
 }
 
-export function dailyFor(accountIds: string[]): DayPoint[] {
-  const f = scaleSum(accountIds);
+export function dailyFor(accountIds: string[], mult = 1): DayPoint[] {
+  const f = scaleSum(accountIds) * mult;
   return BASE_DAILY.map((d) => ({
     day: d.day,
     facebookPosts: r(d.facebookPosts, f),
@@ -166,6 +167,34 @@ export function dailyFor(accountIds: string[]): DayPoint[] {
   }));
 }
 
+export interface ChannelDayPoint {
+  day: string;
+  posts: number;
+  impressions: number;
+  likes: number;
+  comments: number;
+}
+
+/** Daily series for a single channel: the aggregate daily curve apportioned by
+ * that channel's share of impressions / posts / engagement. */
+export function dailyForChannel(accountIds: string[], channel: ChannelId, mult = 1): ChannelDayPoint[] {
+  const stats = channelStatsFor(accountIds, mult);
+  const tot = totalsFor(stats);
+  const s = stats[channel];
+  const impShare = tot.impressions ? s.impressions / tot.impressions : 0;
+  const likeShare = tot.likes ? s.likes / tot.likes : 0;
+  const commentShare = tot.comments ? s.comments / tot.comments : 0;
+  const postShare = tot.posts ? s.posts / tot.posts : 0;
+  const base = dailyFor(accountIds, mult);
+  return base.map((d) => ({
+    day: d.day,
+    posts: Math.round((d.facebookPosts + d.instagramPosts) * postShare),
+    impressions: Math.round(d.impressions * impShare),
+    likes: Math.round(d.likes * likeShare),
+    comments: Math.round(d.comments * commentShare),
+  }));
+}
+
 export function topPostsFor(accountIds: string[]): TopPost[] {
   return BASE_TOP_POSTS
     .filter((p) => accountIds.includes(p.accountId))
@@ -173,8 +202,8 @@ export function topPostsFor(accountIds: string[]): TopPost[] {
     .slice(0, 5);
 }
 
-export function demographyFor(accountIds: string[]) {
-  const f = scaleSum(accountIds);
+export function demographyFor(accountIds: string[], mult = 1) {
+  const f = scaleSum(accountIds) * mult;
   return {
     ageBands: BASE_AGE_BANDS.map((a) => ({ ...a, value: r(a.value, f) })),
     gender: {

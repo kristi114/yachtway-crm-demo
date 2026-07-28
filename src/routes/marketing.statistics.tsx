@@ -10,9 +10,16 @@ import { guarded } from "@/components/require-access";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader, PageBody } from "@/components/page-header";
 import {
-  CHANNELS, ACCOUNTS, channelStatsFor, dailyFor, topPostsFor, demographyFor,
-  totalsFor, compact, channelColor, type ChannelId, type ChannelStats,
+  CHANNELS, ACCOUNTS, channelStatsFor, dailyFor, dailyForChannel, topPostsFor, demographyFor,
+  totalsFor, compact, channelColor, channelName, type ChannelId, type ChannelStats,
 } from "@/lib/social-stats";
+
+type RangeId = "7d" | "30d" | "90d";
+const RANGES: { id: RangeId; label: string; mult: number; compare: string }[] = [
+  { id: "7d", label: "Last 7 days", mult: 1, compare: "vs previous 7 days" },
+  { id: "30d", label: "Last 30 days", mult: 4.3, compare: "vs previous 30 days" },
+  { id: "90d", label: "Last 90 days", mult: 13, compare: "vs previous 90 days" },
+];
 
 export const Route = createFileRoute("/marketing/statistics")({
   component: guarded("emails", "Social statistics", SocialStatisticsPage),
@@ -55,7 +62,10 @@ const KPIS = (t: ReturnType<typeof totalsFor>) => [
 function SocialStatisticsPage() {
   // Default: all accounts selected.
   const [accounts, setAccounts] = useState<string[]>(ACCOUNTS.map((a) => a.id));
+  const [rangeId, setRangeId] = useState<RangeId>("7d");
+  const [channel, setChannel] = useState<ChannelId | "all">("all");
   const allOn = accounts.length === ACCOUNTS.length;
+  const range = RANGES.find((r) => r.id === rangeId)!;
 
   function toggleAccount(id: string) {
     setAccounts((prev) => {
@@ -65,16 +75,26 @@ function SocialStatisticsPage() {
     });
   }
 
-  const stats = useMemo(() => channelStatsFor(accounts), [accounts]);
-  const daily = useMemo(() => dailyFor(accounts), [accounts]);
+  const stats = useMemo(() => channelStatsFor(accounts, range.mult), [accounts, range.mult]);
+  const daily = useMemo(() => dailyFor(accounts, range.mult), [accounts, range.mult]);
   const topPosts = useMemo(() => topPostsFor(accounts), [accounts]);
-  const demo = useMemo(() => demographyFor(accounts), [accounts]);
+  const demo = useMemo(() => demographyFor(accounts, range.mult), [accounts, range.mult]);
   const t = useMemo(() => totalsFor(stats), [stats]);
   const rows = CHANNELS.map((c) => ({ ...c, s: stats[c.id] }));
+  const channelDaily = useMemo(
+    () => (channel === "all" ? [] : dailyForChannel(accounts, channel, range.mult)),
+    [accounts, channel, range.mult],
+  );
 
   const selectedLabel = allOn
     ? "all accounts"
     : ACCOUNTS.filter((a) => accounts.includes(a.id)).map((a) => a.name).join(", ");
+
+  // KPI values reflect the whole book or the drilled-in channel.
+  const cs = channel === "all" ? null : stats[channel];
+  const kpiTotals = cs
+    ? { posts: cs.posts, likes: cs.likes, followers: cs.followers, impressions: cs.impressions, comments: cs.comments, reach: cs.reach }
+    : t;
 
   return (
     <AppShell>
@@ -85,7 +105,7 @@ function SocialStatisticsPage() {
       />
       <PageBody>
         <div className="space-y-6">
-          {/* Account filter */}
+          {/* Account filter + date range */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Accounts</span>
             <button
@@ -112,11 +132,46 @@ function SocialStatisticsPage() {
                 </button>
               );
             })}
+            <select
+              value={rangeId}
+              onChange={(e) => setRangeId(e.target.value as RangeId)}
+              className="native-select ml-auto h-8 rounded-lg border border-border bg-surface px-2.5 text-xs font-medium"
+            >
+              {RANGES.map((r) => (
+                <option key={r.id} value={r.id}>{r.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Channel drill-down selector */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Channel</span>
+            <button
+              type="button"
+              onClick={() => setChannel("all")}
+              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                channel === "all" ? "border-brand bg-brand text-brand-foreground" : "border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              All channels
+            </button>
+            {CHANNELS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setChannel(c.id)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  channel === c.id ? "border-brand bg-brand/10 text-brand-deep" : "border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} /> {c.name}
+              </button>
+            ))}
           </div>
 
           {/* KPI row */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-            {KPIS(t).map((k) => (
+            {KPIS(kpiTotals).map((k) => (
               <div key={k.label} className="rounded-lg border border-border bg-surface p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                   <k.icon className="h-4 w-4 text-brand" /> {k.label}
@@ -126,6 +181,17 @@ function SocialStatisticsPage() {
             ))}
           </div>
 
+          {channel !== "all" && (
+            <ChannelDetail
+              channelId={channel}
+              stats={stats[channel]}
+              daily={channelDaily}
+              topPosts={topPosts.filter((p) => p.channel === channel)}
+              compareLabel={range.compare}
+            />
+          )}
+
+          {channel === "all" && (<>
           {/* Social post performance */}
           <Card title="Social post performance">
             <div className="h-[360px] px-2 py-4">
@@ -246,9 +312,97 @@ function SocialStatisticsPage() {
               </div>
             </div>
           </Card>
+          </>)}
         </div>
       </PageBody>
     </AppShell>
+  );
+}
+
+/* ---------- Single-channel drill-down ---------- */
+function ChannelDetail({
+  channelId, stats, daily, topPosts, compareLabel,
+}: {
+  channelId: ChannelId;
+  stats: ChannelStats;
+  daily: import("@/lib/social-stats").ChannelDayPoint[];
+  topPosts: import("@/lib/social-stats").TopPost[];
+  compareLabel: string;
+}) {
+  const kpis = [
+    { label: "Posts", value: String(stats.posts), trend: stats.postsTrendPct },
+    { label: "Likes", value: compact(stats.likes), trend: stats.engagementTrendPct },
+    { label: "Comments", value: stats.comments ? String(stats.comments) : "–" },
+    { label: "Shares", value: stats.shares ? compact(stats.shares) : "–" },
+    { label: "Impressions", value: compact(stats.impressions), trend: stats.impressionsTrendPct },
+    { label: "Reach", value: compact(stats.reach), trend: stats.reachTrendPct },
+  ];
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <span className="h-3 w-3 rounded-full" style={{ background: channelColor(channelId) }} />
+        <h2 className="text-lg font-semibold">{channelName(channelId)}</h2>
+        <span className="text-xs text-muted-foreground">{compareLabel}</span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+        {kpis.map((k) => (
+          <div key={k.label} className="rounded-lg border border-border bg-surface p-4 shadow-sm">
+            <div className="text-xs font-medium text-muted-foreground">{k.label}</div>
+            <div className="mt-1.5 text-2xl font-semibold tabular-nums text-brand-deep">{k.value}</div>
+            {k.trend !== undefined && <div className="mt-1"><Trend pct={k.trend} /></div>}
+          </div>
+        ))}
+      </div>
+
+      <Card title={`${channelName(channelId)} · daily performance`}>
+        <div className="h-[320px] px-2 py-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={daily} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+              <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} label={{ value: "Posts", angle: -90, position: "insideLeft", style: { fontSize: 11 } }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} tickFormatter={(v) => compact(v)} />
+              <Tooltip />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Bar yAxisId="left" dataKey="posts" name="Posts" fill={channelColor(channelId)} radius={[3, 3, 0, 0]} maxBarSize={36} />
+              <Line yAxisId="right" type="monotone" dataKey="impressions" name="Impressions" stroke="#E1306C" strokeWidth={2} dot={{ r: 3 }} />
+              <Line yAxisId="right" type="monotone" dataKey="likes" name="Likes" stroke="#F59E0B" strokeWidth={2} dot={{ r: 2 }} />
+              <Line yAxisId="right" type="monotone" dataKey="comments" name="Comments" stroke="#10B981" strokeWidth={2} dot={{ r: 2 }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </Card>
+
+      <Card title={`Top ${channelName(channelId)} posts`}>
+        {topPosts.length === 0 ? (
+          <p className="px-4 py-8 text-center text-sm text-muted-foreground">No posts for this channel in the selected accounts/period.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-secondary/40 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-2 font-semibold">Caption</th>
+                  <th className="px-4 py-2 font-semibold">Likes</th>
+                  <th className="px-4 py-2 font-semibold">Comments</th>
+                  <th className="px-4 py-2 font-semibold">Shares</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {topPosts.map((p) => (
+                  <tr key={p.id}>
+                    <td className="max-w-[560px] truncate px-4 py-2.5">{p.caption}</td>
+                    <td className="px-4 py-2.5 tabular-nums">{compact(p.likes)}</td>
+                    <td className="px-4 py-2.5 tabular-nums">{p.comments}</td>
+                    <td className="px-4 py-2.5 tabular-nums">{p.shares}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }
 
