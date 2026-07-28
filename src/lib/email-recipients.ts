@@ -1,5 +1,5 @@
 import { CONTACTS } from "@/lib/mock-data";
-import type { SentEmail } from "@/lib/email-send";
+import { listSentEmails, type SentEmail } from "@/lib/email-send";
 
 /**
  * Expand a send into individual recipient rows for the per-send report.
@@ -82,4 +82,19 @@ export function buildRecipientRows(s: SentEmail): {
   });
 
   return { rows, total, shown };
+}
+
+/**
+ * Reverse lookup: every send this contact received, with the contact's status
+ * for that send. Reuses buildRecipientRows so a contact's inbox view is
+ * consistent with each send's per-recipient report.
+ */
+export function emailsForContact(contactId: string): { send: SentEmail; status: RecipientStatus }[] {
+  const out: { send: SentEmail; status: RecipientStatus }[] = [];
+  for (const send of listSentEmails()) {
+    const { rows } = buildRecipientRows(send);
+    const row = rows.find((r) => r.contactId === contactId);
+    if (row) out.push({ send, status: row.status });
+  }
+  return out; // listSentEmails() is already newest-first
 }

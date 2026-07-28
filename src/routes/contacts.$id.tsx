@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronRight, GitMerge, Lock, MessageSquarePlus, MoreHorizontal, Pencil, Plus, Info, MessageSquare, Landmark } from "lucide-react";
+import { ChevronRight, GitMerge, Lock, MessageSquarePlus, MoreHorizontal, Pencil, Plus, Info, MessageSquare, Landmark, Mail } from "lucide-react";
 import { BoatIcon } from "@/components/icons/boat-icon";
 
 import { AppShell } from "@/components/app-shell";
@@ -16,6 +16,8 @@ import { CreateOpportunityDialog } from "@/components/create-opportunity-dialog"
 import { EditContactDialog } from "@/components/edit-contact-dialog";
 import { MergeRecordDialog } from "@/components/merge-record-dialog";
 import { SectionTabs } from "@/components/section-tabs";
+import { ContactEmailsPanel } from "@/components/email-builder/contact-emails-panel";
+import { emailsForContact } from "@/lib/email-recipients";
 import { CONTACT_SECTIONS, LOAN_APPLICATION_FIELDS } from "@/lib/field-schema";
 import { getContact, getCompany, getLoanApplication, listingsForBroker, getBrand, updateContact } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +71,7 @@ function ContactDetail() {
   const company = contact.companyId ? getCompany(contact.companyId) : null;
   const loan = getLoanApplication(contact.loanApplicationId);
   const brokerListings = contact.contactType === "Broker" ? listingsForBroker(contact.id) : [];
+  const receivedEmails = emailsForContact(contact.id);
   const contactName = `${contact.firstName} ${contact.lastName}`;
 
   const handleSave = (values: Partial<typeof contact>) => {
@@ -179,6 +182,7 @@ function ContactDetail() {
         items={[
           { id: "overview", label: "Overview", icon: Info },
           { id: "activity", label: "Activity", icon: MessageSquare },
+          { id: "emails", label: `Emails (${receivedEmails.length})`, icon: Mail },
           ...(brokerListings.length > 0
             ? [{ id: "listings", label: `Listings (${brokerListings.length})`, icon: BoatIcon }]
             : []),
@@ -208,6 +212,8 @@ function ContactDetail() {
         {activeTab === "activity" && (
           <ActivityPanel type="contact" id={contact.id} />
         )}
+
+        {activeTab === "emails" && <ContactEmailsPanel contactId={contact.id} />}
 
         {activeTab === "listings" && brokerListings.length > 0 && (
           <section className="overflow-hidden rounded-sm border border-border bg-surface shadow-sm">
