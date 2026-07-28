@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Plus, BarChart3, Folder, Trash2, Table, PieChart, Grid3x3 } from "lucide-react";
+import { Plus, BarChart3, Folder, Trash2, Table, PieChart, Grid3x3, Clock } from "lucide-react";
 
 import { PageBody } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -86,6 +86,11 @@ function AdminReportsPage() {
                             {typeLabel(r.objectKey)} · {r.format}{r.description ? ` · ${r.description}` : ""}
                           </div>
                         </button>
+                        {r.schedule?.enabled && (
+                          <span className="inline-flex items-center gap-1 rounded-sm border border-brand/40 bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-deep" title="Scheduled delivery">
+                            <Clock className="h-3 w-3" /> Scheduled
+                          </span>
+                        )}
                         <Badge variant="outline" className="text-[10px] capitalize">{r.format}</Badge>
                         <Button size="sm" variant="outline" onClick={() => setEditingId(r.id)}>Open</Button>
                         <button

@@ -2,16 +2,20 @@ import { useMemo, useState } from "react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell,
 } from "recharts";
-import { ArrowLeft, Plus, X, Download, Save, Play } from "lucide-react";
+import { ArrowLeft, Plus, X, Download, Save, Play, Clock, Send as SendIcon } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RecordFilterBar } from "@/components/record-filter-bar";
 import type { ObjectKey } from "@/lib/admin-config";
 import {
-  getReport, saveReport, runReport, exportReportCsv, fieldsFor, fieldDef, isNumeric, formatCell,
-  REPORT_TYPES, type ReportDef, type ReportFormat, type SummaryFn,
+  getReport, saveReport, runReport, exportReportCsv, deliverReport, fieldsFor, fieldDef, isNumeric, formatCell,
+  scheduleLabel, parseEmails, DEFAULT_SCHEDULE,
+  REPORT_TYPES, type ReportDef, type ReportFormat, type SummaryFn, type ScheduleFrequency,
 } from "@/lib/reports";
+
+const WEEKDAY_OPTS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const FORMATS: { id: ReportFormat; label: string; hint: string }[] = [
   { id: "tabular", label: "Tabular", hint: "Flat list of rows" },
@@ -42,6 +46,19 @@ export function ReportBuilder({ reportId, onClose }: { reportId: string; onClose
   }
   function toggleColumn(key: string) {
     patch({ columns: def.columns.includes(key) ? def.columns.filter((c) => c !== key) : [...def.columns, key] });
+  }
+
+  const sched = def.schedule ?? DEFAULT_SCHEDULE;
+  function patchSchedule(p: Partial<typeof sched>) {
+    patch({ schedule: { ...sched, ...p } });
+  }
+  function sendNow() {
+    // Persist first so the delivered snapshot matches what's on screen.
+    saveReport(def);
+    setDirty(false);
+    const n = deliverReport(def);
+    if (n === 0) toast.error("Add at least one recipient email to send.");
+    else toast.success(`Report sent to ${n} recipient${n === 1 ? "" : "s"} via AWS SES.`);
   }
 
   const colLabel = (k: string) => fieldDef(def.objectKey, k)?.label ?? k;
@@ -150,6 +167,53 @@ export function ReportBuilder({ reportId, onClose }: { reportId: string; onClose
               ))}
             </div>
           </Field>
+
+          {/* Scheduled delivery */}
+          <div className="rounded-lg border border-border bg-secondary/30 p-3">
+            <label className="flex items-center gap-2 text-xs font-semibold">
+              <input type="checkbox" checked={sched.enabled} onChange={(e) => patchSchedule({ enabled: e.target.checked })} className="h-3.5 w-3.5 accent-[hsl(var(--brand))]" />
+              <Clock className="h-3.5 w-3.5 text-brand" /> Schedule delivery
+            </label>
+            {sched.enabled && (
+              <div className="mt-3 space-y-2">
+                <div className="flex gap-2">
+                  <select className="native-select h-8 flex-1 rounded-md border border-border bg-surface px-2 text-xs"
+                    value={sched.frequency} onChange={(e) => patchSchedule({ frequency: e.target.value as ScheduleFrequency })}>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                  {sched.frequency === "weekly" && (
+                    <select className="native-select h-8 flex-1 rounded-md border border-border bg-surface px-2 text-xs"
+                      value={sched.weekday} onChange={(e) => patchSchedule({ weekday: Number(e.target.value) })}>
+                      {WEEKDAY_OPTS.map((d, i) => <option key={d} value={i}>{d}</option>)}
+                    </select>
+                  )}
+                  {sched.frequency === "monthly" && (
+                    <Input type="number" min={1} max={28} value={sched.monthday}
+                      onChange={(e) => patchSchedule({ monthday: Math.min(28, Math.max(1, Number(e.target.value) || 1)) })}
+                      className="h-8 w-16 text-xs" title="Day of month" />
+                  )}
+                  <Input type="time" value={sched.time} onChange={(e) => patchSchedule({ time: e.target.value })} className="h-8 w-24 text-xs" />
+                </div>
+                <Input
+                  value={sched.recipients}
+                  onChange={(e) => patchSchedule({ recipients: e.target.value })}
+                  placeholder="Recipient emails (comma separated)"
+                  className="h-8 text-xs"
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-muted-foreground">Sends {scheduleLabel(sched)}</span>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={sendNow} disabled={parseEmails(sched.recipients).length === 0}>
+                    <SendIcon className="h-3.5 w-3.5" /> Send now
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Delivered via AWS SES (system email). Cadence runs on the server once connected.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Preview */}

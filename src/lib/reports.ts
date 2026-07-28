@@ -3,6 +3,7 @@ import { useSyncExternalStore } from "react";
 import { COMPANIES, CONTACTS, OPPORTUNITIES, LISTINGS } from "@/lib/mock-data";
 import { OBJECTS, type ObjectKey } from "@/lib/admin-config";
 import { filterableFields, applyClauses, type FilterClause } from "@/lib/record-filter";
+import { sendSystemEmail } from "@/lib/email-send";
 import type { FieldDef } from "@/lib/field-schema";
 
 /**
@@ -22,6 +23,17 @@ export interface SummaryField {
   fn: SummaryFn;
 }
 
+export type ScheduleFrequency = "daily" | "weekly" | "monthly";
+
+export interface ScheduleConfig {
+  enabled: boolean;
+  frequency: ScheduleFrequency;
+  weekday: number;  // 0 (Sun) – 6 (Sat), used for weekly
+  monthday: number; // 1 – 28, used for monthly
+  time: string;     // "08:00"
+  recipients: string; // comma / space separated emails
+}
+
 export interface ReportDef {
   id: string;
   name: string;
@@ -35,8 +47,29 @@ export interface ReportDef {
   groupByCol?: string; // column grouping (matrix)
   summaries: SummaryField[];
   chart: "none" | "bar" | "donut";
+  schedule?: ScheduleConfig;
   createdAt: string;
   updatedAt: string;
+}
+
+export const DEFAULT_SCHEDULE: ScheduleConfig = {
+  enabled: false, frequency: "weekly", weekday: 1, monthday: 1, time: "08:00", recipients: "",
+};
+
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+export function parseEmails(raw: string): string[] {
+  return raw.split(/[,;\s]+/).map((s) => s.trim()).filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
+}
+
+/** Human summary of when a schedule fires. */
+export function scheduleLabel(s: ScheduleConfig): string {
+  const when =
+    s.frequency === "daily" ? `every day at ${s.time}`
+    : s.frequency === "weekly" ? `every ${WEEKDAYS[s.weekday]} at ${s.time}`
+    : `on day ${s.monthday} each month at ${s.time}`;
+  const n = parseEmails(s.recipients).length;
+  return `${when} · ${n} recipient${n === 1 ? "" : "s"}`;
 }
 
 /* -------- Data source + fields -------- */
@@ -254,4 +287,37 @@ export function exportReportCsv(def: ReportDef, result: RunResult) {
   a.download = `${def.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+/** Build an HTML email body for a report run. */
+function reportHtml(def: ReportDef, result: RunResult): string {
+  const th = (s: string) => `<th style="text-align:left;padding:6px 10px;border-bottom:2px solid #e5e7eb;font-size:12px;color:#6b7280;">${s}</th>`;
+  const td = (s: string) => `<td style="padding:6px 10px;border-bottom:1px solid #eef2f7;font-size:13px;">${s}</td>`;
+  let table = "";
+  if (def.format === "summary" && result.groups && def.groupBy) {
+    table = `<table style="border-collapse:collapse;width:100%;"><thead><tr>${th(fieldDef(def.objectKey, def.groupBy)?.label ?? def.groupBy)}${th("Count")}</tr></thead><tbody>` +
+      result.groups.map((g) => `<tr>${td(g.key)}${td(String(g.count))}</tr>`).join("") + `</tbody></table>`;
+  } else {
+    const cols = def.columns;
+    table = `<table style="border-collapse:collapse;width:100%;"><thead><tr>${cols.map((c) => th(fieldDef(def.objectKey, c)?.label ?? c)).join("")}</tr></thead><tbody>` +
+      result.rows.slice(0, 50).map((r) => `<tr>${cols.map((c) => td(formatCell(def.objectKey, c, r[c]))).join("")}</tr>`).join("") + `</tbody></table>`;
+  }
+  return `<div style="font-family:Arial,Helvetica,sans-serif;color:#1a2b3c;">
+    <h2 style="margin:0 0 4px;">${def.name}</h2>
+    <p style="margin:0 0 16px;color:#6b7280;font-size:13px;">${result.total} records${def.description ? " · " + def.description : ""}</p>
+    ${table}
+    <p style="margin:16px 0 0;color:#9ca3af;font-size:11px;">Automated report from YachtWay CRM.</p>
+  </div>`;
+}
+
+/**
+ * Deliver a report now: run it and email the results to the schedule's
+ * recipients via SES (system email). Returns the recipient count (0 if none).
+ */
+export function deliverReport(def: ReportDef): number {
+  const emails = parseEmails(def.schedule?.recipients ?? "");
+  if (emails.length === 0) return 0;
+  const result = runReport(def);
+  sendSystemEmail(emails, `Report: ${def.name}`, reportHtml(def, result));
+  return emails.length;
 }

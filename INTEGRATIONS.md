@@ -62,6 +62,14 @@ Bluesky/GBP shown in the Marketing statistics page) feed the per-channel
 metrics on the Marketing → Social statistics dashboard, which runs on mock data
 until these are connected.
 
+## Scheduled report delivery (added — mock)
+
+Admin → Reports lets a report define a delivery **schedule** (daily / weekly /
+monthly + time + recipient emails). "Send now" dispatches immediately via
+`sendSystemEmail` → **AWS SES**. The recurring cadence itself is not executed
+client-side — wire a **server scheduler** (cron / queue) to call the same
+delivery path on schedule when the backend lands.
+
 ## Previously stubbed (context)
 
 - **WorkOS AuthKit** — set `VITE_WORKOS_CLIENT_ID` for real sign-in (demo role
