@@ -31,6 +31,9 @@ export const ROLE_PIPELINES: Record<Role, PipelineName[]> = {
     "SaaS Sales", "Dealer Signups", "EasyFund", "MasterCover",
     "Studio", "EasyClose", "Referral Partners",
   ],
+  // External partners can't create CRM opportunities — scoped to their product only.
+  lender_partner: ["EasyFund"],
+  insurance_partner: ["MasterCover"],
 };
 
 export type CreateOpportunityDialogProps = {

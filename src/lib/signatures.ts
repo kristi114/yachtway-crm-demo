@@ -147,6 +147,8 @@ const ROLE_TITLES: Record<Role, string> = {
   fintech: "FinTech Specialist",
   marketing: "Marketing",
   admin: "Operations",
+  lender_partner: "Lending Partner",
+  insurance_partner: "Insurance Partner",
 };
 
 /** Fill tokens for a given user. */
