@@ -4,22 +4,47 @@ import {
   ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell,
 } from "recharts";
-import { Send, ThumbsUp, Users, MousePointerClick, MessageCircle, TrendingUp, Check } from "lucide-react";
+import { format } from "date-fns";
+import { Send, ThumbsUp, Users, MousePointerClick, MessageCircle, TrendingUp, Check, Download } from "lucide-react";
 
 import { guarded } from "@/components/require-access";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader, PageBody } from "@/components/page-header";
+import { DateRangePicker, rangeDays, previousRange, type RangeValue } from "@/components/date-range-picker";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   CHANNELS, ACCOUNTS, channelStatsFor, dailyFor, dailyForChannel, topPostsFor, demographyFor,
   totalsFor, compact, channelColor, channelName, type ChannelId, type ChannelStats,
 } from "@/lib/social-stats";
 
-type RangeId = "7d" | "30d" | "90d";
-const RANGES: { id: RangeId; label: string; mult: number; compare: string }[] = [
-  { id: "7d", label: "Last 7 days", mult: 1, compare: "vs previous 7 days" },
-  { id: "30d", label: "Last 30 days", mult: 4.3, compare: "vs previous 30 days" },
-  { id: "90d", label: "Last 90 days", mult: 13, compare: "vs previous 90 days" },
-];
+const fmtDate = (d: Date) => format(d, "MMM d, yyyy");
+
+/** Build a CSV of the current per-channel view and trigger a download. */
+function exportCsv(
+  stats: Record<ChannelId, ChannelStats>,
+  meta: { accounts: string; range: string; compare: string },
+) {
+  const header = ["Channel", "Posts", "Likes", "Comments", "Shares", "Impressions", "Reach", "Link clicks", "Followers"];
+  const lines = CHANNELS.map((c) => {
+    const s = stats[c.id];
+    return [c.name, s.posts, s.likes, s.comments, s.shares, s.impressions, s.reach, s.linkClicks, s.followers].join(",");
+  });
+  const preamble = [
+    `YachtWay social statistics`,
+    `Accounts,${meta.accounts}`,
+    `Period,${meta.range}`,
+    `Compared to,${meta.compare}`,
+    ``,
+  ];
+  const csv = [...preamble, header.join(","), ...lines].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `social-statistics-${format(new Date(), "yyyy-MM-dd")}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export const Route = createFileRoute("/marketing/statistics")({
   component: guarded("emails", "Social statistics", SocialStatisticsPage),
@@ -62,10 +87,14 @@ const KPIS = (t: ReturnType<typeof totalsFor>) => [
 function SocialStatisticsPage() {
   // Default: all accounts selected.
   const [accounts, setAccounts] = useState<string[]>(ACCOUNTS.map((a) => a.id));
-  const [rangeId, setRangeId] = useState<RangeId>("7d");
+  // Default period: Jul 21–27, 2026 (matches the seeded mock week).
+  const [range, setRange] = useState<RangeValue>({ from: new Date(2026, 6, 21), to: new Date(2026, 6, 27) });
   const [channel, setChannel] = useState<ChannelId | "all">("all");
   const allOn = accounts.length === ACCOUNTS.length;
-  const range = RANGES.find((r) => r.id === rangeId)!;
+  const mult = rangeDays(range) / 7;
+  const prev = previousRange(range);
+  const rangeLabel = `${fmtDate(range.from)} – ${fmtDate(range.to)}`;
+  const compareLabel = `vs ${fmtDate(prev.from)} – ${fmtDate(prev.to)}`;
 
   function toggleAccount(id: string) {
     setAccounts((prev) => {
@@ -75,15 +104,15 @@ function SocialStatisticsPage() {
     });
   }
 
-  const stats = useMemo(() => channelStatsFor(accounts, range.mult), [accounts, range.mult]);
-  const daily = useMemo(() => dailyFor(accounts, range.mult), [accounts, range.mult]);
+  const stats = useMemo(() => channelStatsFor(accounts, mult), [accounts, mult]);
+  const daily = useMemo(() => dailyFor(accounts, mult), [accounts, mult]);
   const topPosts = useMemo(() => topPostsFor(accounts), [accounts]);
-  const demo = useMemo(() => demographyFor(accounts, range.mult), [accounts, range.mult]);
+  const demo = useMemo(() => demographyFor(accounts, mult), [accounts, mult]);
   const t = useMemo(() => totalsFor(stats), [stats]);
   const rows = CHANNELS.map((c) => ({ ...c, s: stats[c.id] }));
   const channelDaily = useMemo(
-    () => (channel === "all" ? [] : dailyForChannel(accounts, channel, range.mult)),
-    [accounts, channel, range.mult],
+    () => (channel === "all" ? [] : dailyForChannel(accounts, channel, mult)),
+    [accounts, channel, mult],
   );
 
   const selectedLabel = allOn
@@ -101,7 +130,7 @@ function SocialStatisticsPage() {
       <PageHeader
         eyebrow="Marketing"
         title="Social statistics"
-        subtitle={`Jul 21, 2026 – Jul 27, 2026 vs previous 7 days · ${selectedLabel}`}
+        subtitle={`${rangeLabel} ${compareLabel} · ${selectedLabel}`}
       />
       <PageBody>
         <div className="space-y-6">
@@ -132,15 +161,31 @@ function SocialStatisticsPage() {
                 </button>
               );
             })}
-            <select
-              value={rangeId}
-              onChange={(e) => setRangeId(e.target.value as RangeId)}
-              className="native-select ml-auto h-8 rounded-lg border border-border bg-surface px-2.5 text-xs font-medium"
-            >
-              {RANGES.map((r) => (
-                <option key={r.id} value={r.id}>{r.label}</option>
-              ))}
-            </select>
+            <div className="ml-auto flex items-center gap-2">
+              <DateRangePicker value={range} onChange={setRange} />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+                  >
+                    <Download className="h-4 w-4 text-muted-foreground" /> Export
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() =>
+                      exportCsv(stats, { accounts: selectedLabel, range: rangeLabel, compare: compareLabel })
+                    }
+                  >
+                    Export CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => window.print()}>
+                    Export PDF (print)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           {/* Channel drill-down selector */}
@@ -187,7 +232,7 @@ function SocialStatisticsPage() {
               stats={stats[channel]}
               daily={channelDaily}
               topPosts={topPosts.filter((p) => p.channel === channel)}
-              compareLabel={range.compare}
+              compareLabel={compareLabel}
             />
           )}
 
@@ -231,8 +276,8 @@ function SocialStatisticsPage() {
 
           {/* Impressions + reach */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <GaugeCard title="Impressions" total={t.impressions} deltaPct={-19.84} rows={rows} value={(s) => (s.impressions ? compact(s.impressions) : "–")} trend={(s) => s.impressionsTrendPct} />
-            <GaugeCard title="Post reach" total={t.reach} deltaPct={-40.22} rows={rows} value={(s) => (s.reach ? compact(s.reach) : "–")} trend={(s) => s.reachTrendPct} />
+            <GaugeCard title="Impressions" total={t.impressions} deltaPct={-19.84} compareLabel={compareLabel} rows={rows} value={(s) => (s.impressions ? compact(s.impressions) : "–")} trend={(s) => s.impressionsTrendPct} />
+            <GaugeCard title="Post reach" total={t.reach} deltaPct={-40.22} compareLabel={compareLabel} rows={rows} value={(s) => (s.reach ? compact(s.reach) : "–")} trend={(s) => s.reachTrendPct} />
           </div>
 
           {/* Link clicks by socials */}
@@ -449,11 +494,12 @@ function ChannelTable({
 
 /* ---------- Gauge + table card (impressions / reach) ---------- */
 function GaugeCard({
-  title, total, deltaPct, rows, value, trend,
+  title, total, deltaPct, compareLabel, rows, value, trend,
 }: {
   title: string;
   total: number;
   deltaPct: number;
+  compareLabel: string;
   rows: Row[];
   value: (s: Row["s"]) => string;
   trend: (s: Row["s"]) => number;
@@ -466,7 +512,7 @@ function GaugeCard({
           <div className="text-xs uppercase tracking-wide text-muted-foreground">{title} count</div>
           <div className="text-3xl font-semibold tabular-nums text-brand-deep">{compact(total)}</div>
           <Trend pct={deltaPct} />
-          <div className="text-[11px] text-muted-foreground">vs previous 7 days</div>
+          <div className="text-[11px] text-muted-foreground">{compareLabel}</div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
