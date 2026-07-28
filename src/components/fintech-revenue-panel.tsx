@@ -89,7 +89,7 @@ export function FintechRevenuePanel() {
           </span>
         </header>
 
-        <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-2 sm:divide-x lg:grid-cols-4 lg:divide-y-0">
+        <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-2 sm:divide-x sm:divide-y-0">
           {tools.map((t) => (
             <div key={t.key} className="px-4 py-3">
               <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">

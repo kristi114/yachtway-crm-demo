@@ -62,12 +62,12 @@ export function fintechProductPnl(): ProductPnl[] {
 
 // ---------------- Bank tool adoption ----------------
 
-/** Tools a bank / lender partner can be live on. */
+// Tools a bank / lender partner can be live on. MasterCover (insurance) and the
+// generic API-connected flag are intentionally excluded — they aren't lending
+// products, so they don't belong on the bank-partner adoption view.
 export const BANK_TOOLS = [
   { key: "vato", label: "VATO valuations", hint: "Vessel valuation & titling checks" },
   { key: "easyfund", label: "Loan applications", hint: "EasyFund application intake" },
-  { key: "mastercover", label: "MasterCover", hint: "Insurance attach on funded loans" },
-  { key: "api", label: "API connected", hint: "Live decisioning / status webhooks" },
 ] as const;
 
 export type BankToolKey = (typeof BANK_TOOLS)[number]["key"];
@@ -79,7 +79,6 @@ export function bankPartners(): Company[] {
 }
 
 export function bankUsesTool(c: Company, key: BankToolKey): boolean {
-  if (key === "api") return Boolean(c.apiConnected);
   return Boolean(c.servicesUsed[key]);
 }
 
