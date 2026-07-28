@@ -32,7 +32,7 @@ export function FintechRevenuePanel() {
               Annual revenue &amp; profit · {year}
             </h2>
           </div>
-          <span className="text-xs text-muted-foreground">Booked (won) deals this year</span>
+          <span className="text-xs text-muted-foreground">Won deals this year</span>
         </header>
 
         <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0">
