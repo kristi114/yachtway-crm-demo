@@ -175,7 +175,7 @@ export function ServicesRevenuePanel() {
 
                 {/* Revenue bar: won (solid) + open (lighter) */}
                 <div className="mt-2 flex items-center gap-2">
-                  <span className="w-16 shrink-0 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  <span className="w-[74px] shrink-0 whitespace-nowrap text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                     Revenue
                   </span>
                   <div className="flex h-2 flex-1 gap-[2px] overflow-hidden rounded-full bg-secondary/60">
@@ -194,7 +194,7 @@ export function ServicesRevenuePanel() {
 
                 {/* Adoption bar */}
                 <div className="mt-1.5 flex items-center gap-2">
-                  <span className="w-16 shrink-0 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  <span className="w-[74px] shrink-0 whitespace-nowrap text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                     Adoption
                   </span>
                   <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary/60">
