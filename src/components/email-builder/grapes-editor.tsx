@@ -10,6 +10,9 @@ import {
 // the server); the grapesjs runtime itself is dynamically imported below so it
 // never touches `window` during SSR.
 import "grapesjs/dist/css/grapes.min.css";
+// Enlarges GrapesJS's small editor-chrome text (block labels, device selector,
+// panel labels). Imported after grapes.min.css so it wins.
+import "./grapes-overrides.css";
 
 export interface GrapesContent {
   /** Inlined, email-safe HTML (styles pushed onto elements). */

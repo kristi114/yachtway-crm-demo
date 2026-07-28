@@ -1,0 +1,75 @@
+/*
+ * GrapesJS editor-chrome font overrides.
+ *
+ * GrapesJS ships very small UI text (block labels, panel labels, the device
+ * selector, style/settings/layers panels). These rules enlarge only the editor
+ * CHROME — the .gjs-* classes. The email canvas lives in an iframe (.gjs-frame),
+ * so none of this affects the actual email content/preview.
+ */
+
+/* Base UI text bump */
+.gjs-editor,
+.gjs-pn-panel,
+.gjs-one-bg,
+.gjs-two-color {
+  font-size: 13px;
+}
+
+/* Block panel: labels + roomier tiles */
+.gjs-block-label {
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+  font-weight: 500 !important;
+}
+.gjs-block {
+  min-height: 84px !important;
+  padding: 12px 8px !important;
+}
+.gjs-block svg,
+.gjs-block__media svg {
+  width: 26px !important;
+  height: 26px !important;
+}
+
+/* Category / sector / layer titles */
+.gjs-block-category .gjs-title,
+.gjs-title,
+.gjs-sm-sector-title,
+.gjs-sm-sector .gjs-sm-title,
+.gjs-layer-title,
+.gjs-clm-tags .gjs-sm-title {
+  font-size: 13px !important;
+}
+
+/* Device selector ("Device" label + the Desktop/Mobile dropdown) */
+.gjs-devices-c,
+.gjs-devices-c *,
+.gjs-devices-c label,
+.gjs-devices-c .gjs-select,
+.gjs-devices-c select {
+  font-size: 13px !important;
+}
+
+/* Top/side toolbar icon buttons */
+.gjs-pn-btn {
+  font-size: 16px !important;
+}
+
+/* Style manager, trait/settings, and form fields */
+.gjs-sm-label,
+.gjs-sm-property .gjs-sm-label,
+.gjs-label,
+.gjs-trt-trait .gjs-label,
+.gjs-field input,
+.gjs-field select,
+.gjs-field textarea,
+.gjs-clm-select,
+.gjs-sm-field input,
+.gjs-sm-field select {
+  font-size: 13px !important;
+}
+
+/* Layer manager rows */
+.gjs-layer-name {
+  font-size: 13px !important;
+}
