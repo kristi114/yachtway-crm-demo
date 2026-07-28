@@ -26,6 +26,8 @@ export interface Deal {
   stage: string;
   vessel: string;
   tab: string;
+  /** Loan-closed / policy-bound date, set when the deal reaches a closed status. */
+  closedDate?: string;
 }
 
 /** Partner organizations (the "logins"). */
@@ -77,6 +79,8 @@ export interface DashboardConfig {
   amountLabel: string;
   tabs: DashboardTab[];
   closedTab: string;
+  /** Column label for the closed-tab date (e.g. "Loan Closed Date" / "Bound Date"). */
+  closedDateLabel: string;
   statusOptions: string[];
   stageOptions: string[];
 }
@@ -92,6 +96,7 @@ export function lenderConfig(): DashboardConfig {
       { key: "funded", label: "Funded", icon: CheckCircle2 },
     ],
     closedTab: "funded",
+    closedDateLabel: "Loan Closed Date",
     statusOptions: ["New", "In Progress", "Approved", "Rejected", "Funded"],
     stageOptions: ["Application Assessment", "Conditional Approval", "Underwriting", "Docs Out", "Funded"],
   };
@@ -107,12 +112,16 @@ export function insuranceConfig(): DashboardConfig {
       { key: "bound", label: "Bound", icon: CheckCircle2 },
     ],
     closedTab: "bound",
+    closedDateLabel: "Bound Date",
     statusOptions: ["Quote", "In Progress", "Rejected", "Bound"],
     stageOptions: ["Quote Requested", "Underwriting", "Bound", "Renewed"],
   };
 }
 
 const CLOSED_STATUSES = new Set(["Funded", "Bound", "Active", "Completed"]);
+export function isClosedStatus(status: string): boolean {
+  return CLOSED_STATUSES.has(status);
+}
 
 /* ------------------------------------------------------------------ */
 /* Seed                                                                */
@@ -124,22 +133,22 @@ function seed(): Deal[] {
     { id: "ln_1", product: "lender", partnerId: "lp_oceanline", ...who(0), amount: 80_450, submittedOn: daysAgo(2), status: "New", stage: "Application Assessment", vessel: VESSELS[0], tab: "in_progress" },
     { id: "ln_2", product: "lender", partnerId: "lp_oceanline", ...who(1), amount: 240_000, submittedOn: daysAgo(3), status: "In Progress", stage: "Conditional Approval", vessel: VESSELS[1], tab: "in_progress" },
     { id: "ln_3", product: "lender", partnerId: "lp_oceanline", ...who(2), amount: 425_000, submittedOn: daysAgo(4), status: "In Progress", stage: "Underwriting", vessel: VESSELS[2], tab: "in_progress" },
-    { id: "ln_6", product: "lender", partnerId: "lp_oceanline", ...who(5), amount: 1_200_000, submittedOn: daysAgo(9), status: "Funded", stage: "Funded", vessel: VESSELS[5], tab: "funded" },
-    { id: "ln_7", product: "lender", partnerId: "lp_oceanline", ...who(6), amount: 318_000, submittedOn: daysAgo(12), status: "Funded", stage: "Funded", vessel: VESSELS[6], tab: "funded" },
+    { id: "ln_6", product: "lender", partnerId: "lp_oceanline", ...who(5), amount: 1_200_000, submittedOn: daysAgo(9), status: "Funded", stage: "Funded", vessel: VESSELS[5], tab: "funded", closedDate: daysAgo(4) },
+    { id: "ln_7", product: "lender", partnerId: "lp_oceanline", ...who(6), amount: 318_000, submittedOn: daysAgo(12), status: "Funded", stage: "Funded", vessel: VESSELS[6], tab: "funded", closedDate: daysAgo(6) },
     // Lender — Meridian Marine Finance (different partner)
     { id: "ln_4", product: "lender", partnerId: "lp_meridian", ...who(3), amount: 155_000, submittedOn: daysAgo(4), status: "Rejected", stage: "Application Assessment", vessel: VESSELS[3], tab: "in_progress" },
     { id: "ln_5", product: "lender", partnerId: "lp_meridian", ...who(4), amount: 92_500, submittedOn: daysAgo(6), status: "New", stage: "Application Assessment", vessel: VESSELS[4], tab: "in_progress" },
-    { id: "ln_8", product: "lender", partnerId: "lp_meridian", ...who(7), amount: 540_000, submittedOn: daysAgo(15), status: "Funded", stage: "Funded", vessel: VESSELS[7], tab: "funded" },
+    { id: "ln_8", product: "lender", partnerId: "lp_meridian", ...who(7), amount: 540_000, submittedOn: daysAgo(15), status: "Funded", stage: "Funded", vessel: VESSELS[7], tab: "funded", closedDate: daysAgo(8) },
     // Insurance — MasterCover Underwriters
     { id: "ins_1", product: "insurance", partnerId: "ip_mastercover", ...who(2), amount: 4_850, submittedOn: daysAgo(1), status: "Quote", stage: "Quote Requested", vessel: VESSELS[2], tab: "in_progress" },
     { id: "ins_2", product: "insurance", partnerId: "ip_mastercover", ...who(4), amount: 7_200, submittedOn: daysAgo(3), status: "In Progress", stage: "Underwriting", vessel: VESSELS[4], tab: "in_progress" },
     { id: "ins_3", product: "insurance", partnerId: "ip_mastercover", ...who(8), amount: 3_400, submittedOn: daysAgo(5), status: "Rejected", stage: "Underwriting", vessel: VESSELS[8], tab: "in_progress" },
-    { id: "ins_5", product: "insurance", partnerId: "ip_mastercover", ...who(5), amount: 12_600, submittedOn: daysAgo(11), status: "Bound", stage: "Bound", vessel: VESSELS[5], tab: "bound" },
-    { id: "ins_6", product: "insurance", partnerId: "ip_mastercover", ...who(6), amount: 5_950, submittedOn: daysAgo(14), status: "Bound", stage: "Renewed", vessel: VESSELS[6], tab: "bound" },
+    { id: "ins_5", product: "insurance", partnerId: "ip_mastercover", ...who(5), amount: 12_600, submittedOn: daysAgo(11), status: "Bound", stage: "Bound", vessel: VESSELS[5], tab: "bound", closedDate: daysAgo(5) },
+    { id: "ins_6", product: "insurance", partnerId: "ip_mastercover", ...who(6), amount: 5_950, submittedOn: daysAgo(14), status: "Bound", stage: "Renewed", vessel: VESSELS[6], tab: "bound", closedDate: daysAgo(7) },
   ];
 }
 
-const KEY = "yw:fintech-deals:v1";
+const KEY = "yw:fintech-deals:v2";
 
 function load(): Deal[] {
   if (typeof window === "undefined") return seed();
@@ -184,10 +193,17 @@ export function updateDeal(id: string, patch: Partial<Deal>) {
   deals = deals.map((d) => {
     if (d.id !== id) return d;
     const next = { ...d, ...patch };
-    // Keep the tab consistent with the (possibly changed) status.
+    // Keep the tab + closed date consistent with the (possibly changed) status.
     if (patch.status) {
       const cfg = next.product === "lender" ? lenderConfig() : insuranceConfig();
-      next.tab = CLOSED_STATUSES.has(next.status) ? cfg.closedTab : "in_progress";
+      if (CLOSED_STATUSES.has(next.status)) {
+        next.tab = cfg.closedTab;
+        // Stamp the close date if the edit didn't supply one and none exists.
+        next.closedDate = patch.closedDate ?? next.closedDate ?? new Date().toISOString();
+      } else {
+        next.tab = "in_progress";
+        next.closedDate = undefined;
+      }
     }
     return next;
   });

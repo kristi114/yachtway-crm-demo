@@ -29,9 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Deal, DashboardConfig } from "@/lib/fintech-dashboards";
+import { isClosedStatus, type Deal, type DashboardConfig } from "@/lib/fintech-dashboards";
 
-type SortKey = "applicant" | "amount" | "submittedOn" | "status" | "stage" | "vessel";
+type SortKey = "applicant" | "amount" | "submittedOn" | "status" | "stage" | "vessel" | "closedDate";
 
 function statusClass(status: string): string {
   switch (status) {
@@ -97,6 +97,8 @@ function EditDealDialog({
   const [status, setStatus] = useState(deal.status);
   const [stage, setStage] = useState(deal.stage);
   const [amount, setAmount] = useState(String(deal.amount));
+  const [closedDate, setClosedDate] = useState((deal.closedDate ?? "").slice(0, 10));
+  const showClosed = isClosedStatus(status);
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
@@ -130,6 +132,12 @@ function EditDealDialog({
             <Label>{config.amountLabel} (USD)</Label>
             <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </div>
+          {showClosed && (
+            <div className="space-y-1.5">
+              <Label>{config.closedDateLabel}</Label>
+              <Input type="date" value={closedDate} onChange={(e) => setClosedDate(e.target.value)} />
+            </div>
+          )}
           {deal.contactId && (
             <p className="text-xs text-muted-foreground">
               Applicant:{" "}
@@ -143,7 +151,12 @@ function EditDealDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button
             onClick={() => {
-              onSave(deal.id, { status, stage, amount: Number(amount) || 0 });
+              onSave(deal.id, {
+                status,
+                stage,
+                amount: Number(amount) || 0,
+                closedDate: showClosed ? (closedDate ? new Date(closedDate).toISOString() : undefined) : undefined,
+              });
               toast.success("Deal updated", { description: deal.applicant });
               onOpenChange(false);
             }}
@@ -184,7 +197,14 @@ export function ApplicationsDashboard({
       (r) => r.tab === tab && (!needle || r.applicant.toLowerCase().includes(needle) || r.vessel.toLowerCase().includes(needle)),
     );
     const dir = sort.dir === "asc" ? 1 : -1;
-    const val = (r: Deal) => (sort.key === "amount" ? r.amount : sort.key === "submittedOn" ? r.submittedOn : String(r[sort.key]).toLowerCase());
+    const val = (r: Deal) =>
+      sort.key === "amount"
+        ? r.amount
+        : sort.key === "submittedOn"
+          ? r.submittedOn
+          : sort.key === "closedDate"
+            ? r.closedDate ?? ""
+            : String(r[sort.key] ?? "").toLowerCase();
     return [...filtered].sort((a, b) => {
       const av = val(a), bv = val(b);
       return av < bv ? -1 * dir : av > bv ? 1 * dir : 0;
@@ -196,6 +216,9 @@ export function ApplicationsDashboard({
     for (const t of config.tabs) m[t.key] = allRows.filter((r) => r.tab === t.key).length;
     return m;
   }, [config, allRows]);
+
+  const showClosed = tab === config.closedTab;
+  const colCount = 6 + (showClosed ? 1 : 0) + (editable ? 1 : 0);
 
   return (
     <div>
@@ -229,6 +252,7 @@ export function ApplicationsDashboard({
               <SortableHead label="Applicant" col="applicant" sort={sort} onSort={onSort} />
               <SortableHead label={config.amountLabel} col="amount" sort={sort} onSort={onSort} hint />
               <SortableHead label="Submitted On" col="submittedOn" sort={sort} onSort={onSort} />
+              {showClosed && <SortableHead label={config.closedDateLabel} col="closedDate" sort={sort} onSort={onSort} />}
               <SortableHead label="Status" col="status" sort={sort} onSort={onSort} />
               <SortableHead label="Stage" col="stage" sort={sort} onSort={onSort} />
               <SortableHead label="Vessel Make & Model" col="vessel" sort={sort} onSort={onSort} />
@@ -238,7 +262,7 @@ export function ApplicationsDashboard({
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={editable ? 7 : 6} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={colCount} className="py-10 text-center text-sm text-muted-foreground">
                   No records in “{config.tabs.find((t) => t.key === tab)?.label}”.
                 </TableCell>
               </TableRow>
@@ -256,6 +280,11 @@ export function ApplicationsDashboard({
                   </TableCell>
                   <TableCell className="font-semibold">${r.amount.toLocaleString()}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{fmtDate(r.submittedOn)}</TableCell>
+                  {showClosed && (
+                    <TableCell className="text-sm text-muted-foreground">
+                      {r.closedDate ? fmtDate(r.closedDate) : "—"}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusClass(r.status)}`}>{r.status}</span>
                   </TableCell>
