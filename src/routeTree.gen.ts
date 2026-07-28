@@ -24,6 +24,7 @@ import { Route as AdminAutomationsRouteImport } from './routes/admin.automations
 import { Route as AdminBrandsRouteImport } from './routes/admin.brands'
 import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
 import { Route as AdminObjectsRouteImport } from './routes/admin.objects'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminSignaturesRouteImport } from './routes/admin.signatures'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as CalendarIndexRouteImport } from './routes/calendar.index'
@@ -126,6 +127,11 @@ const AdminIntegrationsRoute = AdminIntegrationsRouteImport.update({
 const AdminObjectsRoute = AdminObjectsRouteImport.update({
   id: '/objects',
   path: '/objects',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSignaturesRoute = AdminSignaturesRouteImport.update({
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/admin/brands': typeof AdminBrandsRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/objects': typeof AdminObjectsRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/signatures': typeof AdminSignaturesRoute
   '/admin/users': typeof AdminUsersRoute
   '/companies/$id': typeof CompaniesIdRoute
@@ -328,6 +335,7 @@ export interface FileRoutesByTo {
   '/admin/brands': typeof AdminBrandsRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/objects': typeof AdminObjectsRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/signatures': typeof AdminSignaturesRoute
   '/admin/users': typeof AdminUsersRoute
   '/companies/$id': typeof CompaniesIdRoute
@@ -374,6 +382,7 @@ export interface FileRoutesById {
   '/admin/brands': typeof AdminBrandsRoute
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/objects': typeof AdminObjectsRoute
+  '/admin/reports': typeof AdminReportsRoute
   '/admin/signatures': typeof AdminSignaturesRoute
   '/admin/users': typeof AdminUsersRoute
   '/companies/$id': typeof CompaniesIdRoute
@@ -421,6 +430,7 @@ export interface FileRouteTypes {
     | '/admin/brands'
     | '/admin/integrations'
     | '/admin/objects'
+    | '/admin/reports'
     | '/admin/signatures'
     | '/admin/users'
     | '/companies/$id'
@@ -465,6 +475,7 @@ export interface FileRouteTypes {
     | '/admin/brands'
     | '/admin/integrations'
     | '/admin/objects'
+    | '/admin/reports'
     | '/admin/signatures'
     | '/admin/users'
     | '/companies/$id'
@@ -510,6 +521,7 @@ export interface FileRouteTypes {
     | '/admin/brands'
     | '/admin/integrations'
     | '/admin/objects'
+    | '/admin/reports'
     | '/admin/signatures'
     | '/admin/users'
     | '/companies/$id'
@@ -682,6 +694,13 @@ declare module '@tanstack/react-router' {
       path: '/objects'
       fullPath: '/admin/objects'
       preLoaderRoute: typeof AdminObjectsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/signatures': {
@@ -891,6 +910,7 @@ interface AdminRouteChildren {
   AdminBrandsRoute: typeof AdminBrandsRoute
   AdminIntegrationsRoute: typeof AdminIntegrationsRoute
   AdminObjectsRoute: typeof AdminObjectsRoute
+  AdminReportsRoute: typeof AdminReportsRoute
   AdminSignaturesRoute: typeof AdminSignaturesRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -904,6 +924,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBrandsRoute: AdminBrandsRoute,
   AdminIntegrationsRoute: AdminIntegrationsRoute,
   AdminObjectsRoute: AdminObjectsRoute,
+  AdminReportsRoute: AdminReportsRoute,
   AdminSignaturesRoute: AdminSignaturesRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
