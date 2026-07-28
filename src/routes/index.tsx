@@ -32,6 +32,7 @@ import {
   type Company, type ScoreTier,
 } from "@/lib/mock-data";
 import { formatDate } from "@/lib/format-date";
+import { MyTasksPanel } from "@/components/my-tasks-panel";
 
 
 export const Route = createFileRoute("/")({
@@ -109,6 +110,10 @@ function MarketingHome({ name }: { name: string }) {
             Your shoot schedule: dates, vessels, locations and on-site contacts.
           </p>
         </section>
+
+        <div className="mt-6">
+          <MyTasksPanel />
+        </div>
 
         <section className="mt-6 overflow-hidden rounded-sm border border-border bg-surface shadow-sm">
           <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-secondary/60 px-4 py-2.5">
@@ -233,6 +238,10 @@ function FintechHome({ name }: { name: string }) {
             </div>
           ))}
         </section>
+
+        <div className="mt-6">
+          <MyTasksPanel />
+        </div>
 
         <FintechRevenuePanel />
 
@@ -534,6 +543,10 @@ function SalesRepHome({ userId, name }: { userId: string; name: string }) {
 
           </div>
         </section>
+
+        <div className="mt-6">
+          <MyTasksPanel />
+        </div>
 
         {/* KPI row */}
         <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -1172,6 +1185,10 @@ function GenericHome() {
               </Link>
             );
           })}
+        </div>
+
+        <div className="mt-6">
+          <MyTasksPanel />
         </div>
 
         {user.role === "admin" && (
