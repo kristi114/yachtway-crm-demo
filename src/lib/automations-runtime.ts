@@ -45,7 +45,6 @@ export function runContactSaveAutomations(prev: ContactLike, next: ContactLike) 
         message: `${name} now has a paid seat on the platform. As the account owner, you've been emailed.`,
         audienceUserName: owner,
         banner: true,
-        emailed: true,
         link: { to: "/contacts/$id", params: { id: next.id }, label: "Open contact" },
       });
     }

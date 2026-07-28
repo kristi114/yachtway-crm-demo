@@ -61,6 +61,9 @@ export interface ManagedUser {
   extraGrants: ResourceClass[];
   /** Access areas removed from the user's role. */
   revokedGrants: ResourceClass[];
+  /** Notification delivery preferences (both default on). */
+  notifyBanner: boolean;
+  notifyEmail: boolean;
 }
 
 interface AdminState {
@@ -158,7 +161,7 @@ export const BASE_ROLE_GRANTS: Record<Role, ResourceClass[]> = {
 function seedUser(
   id: string, name: string, email: string, role: Role, region = "US", currency = "USD",
 ): ManagedUser {
-  return { id, name, email, role, region, currency, status: "active", extraGrants: [], revokedGrants: [] };
+  return { id, name, email, role, region, currency, status: "active", extraGrants: [], revokedGrants: [], notifyBanner: true, notifyEmail: true };
 }
 
 const SEED_USERS: ManagedUser[] = [
@@ -192,7 +195,12 @@ function hydrate() {
         overrides: parsed.overrides ?? {},
         audit: parsed.audit?.length ? parsed.audit : SEED_AUDIT,
         roleGrants: parsed.roleGrants ?? {},
-        users: parsed.users?.length ? parsed.users : SEED_USERS,
+        // Backfill notification prefs for users persisted before they existed.
+        users: (parsed.users?.length ? parsed.users : SEED_USERS).map((u) => ({
+          notifyBanner: true,
+          notifyEmail: true,
+          ...u,
+        })),
       };
     }
   } catch {
@@ -406,6 +414,23 @@ export function readAdminConfig(): AdminState {
   return state;
 }
 
+/** Notification channel prefs for a user by name (defaults on if unknown). */
+export function notifyPrefsForName(name: string): { banner: boolean; email: boolean } {
+  hydrate();
+  const u = state.users.find((x) => x.name === name);
+  return { banner: u?.notifyBanner ?? true, email: u?.notifyEmail ?? true };
+}
+
+/** Managed users matching a notification audience (role members + a named user). */
+export function usersForAudience(audienceRole?: Role, audienceUserName?: string): ManagedUser[] {
+  hydrate();
+  return state.users.filter(
+    (u) =>
+      u.status !== "disabled" &&
+      ((audienceRole && u.role === audienceRole) || (audienceUserName && u.name === audienceUserName)),
+  );
+}
+
 type Actor = { name: string; role: Role };
 
 export function setRoleGrant(
@@ -448,6 +473,8 @@ export function addUser(
     status: "invited",
     extraGrants: [],
     revokedGrants: [],
+    notifyBanner: true,
+    notifyEmail: true,
   };
   state = { ...state, users: [...state.users, user] };
   logAudit({

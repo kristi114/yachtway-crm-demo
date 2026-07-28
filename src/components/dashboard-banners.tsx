@@ -27,7 +27,7 @@ export function DashboardBanners() {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-brand-deep">{n.title}</span>
-              {n.emailed && (
+              {n.emailedTo?.includes(user.name) && (
                 <span className="rounded-sm bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-deep">
                   Emailed you
                 </span>

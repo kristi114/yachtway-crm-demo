@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { UserCog, UserPlus, Sliders, Trash2 } from "lucide-react";
+import { UserCog, UserPlus, Sliders, Trash2, Bell, Mail } from "lucide-react";
 
 import { PageBody } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -140,6 +140,37 @@ function AdminUsersPage() {
                       ))}
                     </SelectContent>
                   </Select>
+
+                  <div className="flex items-center gap-1" title="Notification channels">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateUser(u.id, { notifyBanner: !u.notifyBanner }, actor, {
+                          action: u.notifyBanner ? "Banner notifications off" : "Banner notifications on",
+                        })
+                      }
+                      className={`inline-flex h-8 items-center gap-1 rounded-md border px-2 text-xs font-medium ${
+                        u.notifyBanner ? "border-brand bg-brand/10 text-brand-deep" : "border-border text-muted-foreground"
+                      }`}
+                      title={u.notifyBanner ? "Banner: on" : "Banner: off"}
+                    >
+                      <Bell className="h-3.5 w-3.5" /> Banner
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateUser(u.id, { notifyEmail: !u.notifyEmail }, actor, {
+                          action: u.notifyEmail ? "Email notifications off" : "Email notifications on",
+                        })
+                      }
+                      className={`inline-flex h-8 items-center gap-1 rounded-md border px-2 text-xs font-medium ${
+                        u.notifyEmail ? "border-brand bg-brand/10 text-brand-deep" : "border-border text-muted-foreground"
+                      }`}
+                      title={u.notifyEmail ? "Email: on" : "Email: off"}
+                    >
+                      <Mail className="h-3.5 w-3.5" /> Email
+                    </button>
+                  </div>
 
                   <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setAccessFor(u.id)}>
                     <Sliders className="mr-1.5 h-3.5 w-3.5" />
