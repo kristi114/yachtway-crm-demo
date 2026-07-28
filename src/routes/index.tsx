@@ -31,6 +31,7 @@ import {
   bookInsights, computeDealerScore, TIER_STYLES,
   type Company, type ScoreTier,
 } from "@/lib/mock-data";
+import { formatDate } from "@/lib/format-date";
 
 
 export const Route = createFileRoute("/")({
@@ -247,7 +248,7 @@ function FintechHome({ name }: { name: string }) {
             const co = o.companyId ? COMPANIES.find((c) => c.id === o.companyId) : undefined;
             const ct = o.contactId ? CONTACTS.find((c) => c.id === o.contactId) : undefined;
             return (
-              <li key={o.id} className="grid grid-cols-1 gap-2 px-4 py-3 text-[13px] md:grid-cols-[1.6fr_1fr_1fr_auto]">
+              <li key={o.id} className="grid grid-cols-1 items-center gap-2 px-4 py-3 text-[13px] md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_120px]">
                 <div className="min-w-0">
                   <Link to="/opportunities/$id" params={{ id: o.id }} className="font-medium hover:underline">
                     {o.name}
@@ -256,16 +257,18 @@ function FintechHome({ name }: { name: string }) {
                     {co?.name ?? (ct ? `${ct.firstName} ${ct.lastName}` : "Unlinked")} · {o.pipeline}
                   </div>
                 </div>
-                <div className="text-xs">
-                  <div className="font-medium text-foreground">{o.stage}</div>
+                <div className="min-w-0 text-xs">
+                  <div className="truncate font-medium text-foreground">{o.stage}</div>
                   <div className="mt-0.5 text-muted-foreground">{o.probability}% probability</div>
                 </div>
-                <div className="text-xs">
+                <div className="min-w-0 text-xs">
                   <div className="font-medium tabular-nums text-foreground">{fmt(o.amountUsd)}</div>
-                  <div className="mt-0.5 text-muted-foreground">Close {o.closeDate}</div>
+                  <div className="mt-0.5 text-muted-foreground">
+                    {o.closeDate ? `Close ${formatDate(o.closeDate)}` : "No close date"}
+                  </div>
                 </div>
                 <div className="flex items-start md:justify-end">
-                  <span className="rounded-sm bg-secondary px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-foreground">
+                  <span className="max-w-full truncate rounded-sm bg-secondary px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-foreground">
                     {o.owner}
                   </span>
                 </div>
