@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type DragEvent } from "react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell,
 } from "recharts";
-import { Plus, LayoutDashboard, X, Trash2 } from "lucide-react";
+import { Plus, LayoutDashboard, X, Trash2, GripVertical, Maximize2, Minimize2, RefreshCw } from "lucide-react";
 
 import { PageBody } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
-  useDashboards, createDashboard, deleteDashboard, addReportToDashboard, removeWidget,
+  useDashboards, createDashboard, deleteDashboard, removeWidget, setWidgetSpan, reorderWidgets,
 } from "@/lib/dashboards";
 import { getReport, runReport, fieldDef, formatCell } from "@/lib/reports";
 
@@ -17,11 +17,23 @@ export const Route = createFileRoute("/admin/dashboards")({
 });
 
 const COLORS = ["#7C6FF0", "#38BDF8", "#F59E0B", "#10B981", "#E1306C", "#0A66C2", "#EF4444", "#8B5CF6"];
+const time = (d: Date) => d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit" });
 
 function AdminDashboardsPage() {
   const dashboards = useDashboards();
   const [activeId, setActiveId] = useState<string>(dashboards[0]?.id ?? "");
   const active = dashboards.find((d) => d.id === activeId) ?? dashboards[0];
+
+  // Bumping the token forces every widget to re-run; lastRefreshed drives the label.
+  const [refreshToken, setRefreshToken] = useState(0);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+
+  function runAll() {
+    setRefreshToken((n) => n + 1);
+    setLastRefreshed(new Date());
+  }
 
   return (
     <PageBody>
@@ -41,6 +53,16 @@ function AdminDashboardsPage() {
           ))}
         </div>
         <div className="ml-auto flex items-center gap-2">
+          {active && active.widgets.length > 0 && (
+            <>
+              {lastRefreshed && (
+                <span className="text-xs text-muted-foreground">Refreshed {time(lastRefreshed)}</span>
+              )}
+              <Button size="sm" variant="outline" onClick={runAll}>
+                <RefreshCw className="h-4 w-4" /> Run all
+              </Button>
+            </>
+          )}
           <Button
             size="sm"
             variant="outline"
@@ -73,7 +95,20 @@ function AdminDashboardsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           {active.widgets.map((w) => (
-            <Widget key={w.id} reportId={w.reportId} onRemove={() => removeWidget(active.id, w.id)} />
+            <Widget
+              key={w.id}
+              reportId={w.reportId}
+              span={w.w ?? 1}
+              refreshToken={refreshToken}
+              dragging={dragId === w.id}
+              over={overId === w.id && dragId !== w.id}
+              onRemove={() => removeWidget(active.id, w.id)}
+              onToggleSpan={() => setWidgetSpan(active.id, w.id, (w.w ?? 1) === 2 ? 1 : 2)}
+              onDragStart={() => setDragId(w.id)}
+              onDragEnd={() => { setDragId(null); setOverId(null); }}
+              onDragOver={(e) => { e.preventDefault(); if (overId !== w.id) setOverId(w.id); }}
+              onDrop={() => { if (dragId) reorderWidgets(active.id, dragId, w.id); setDragId(null); setOverId(null); }}
+            />
           ))}
         </div>
       )}
@@ -93,20 +128,58 @@ function Empty() {
   );
 }
 
-function Widget({ reportId, onRemove }: { reportId: string; onRemove: () => void }) {
+function Widget({
+  reportId, span, refreshToken, dragging, over,
+  onRemove, onToggleSpan, onDragStart, onDragEnd, onDragOver, onDrop,
+}: {
+  reportId: string;
+  span: 1 | 2;
+  refreshToken: number;
+  dragging: boolean;
+  over: boolean;
+  onRemove: () => void;
+  onToggleSpan: () => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  onDragOver: (e: DragEvent) => void;
+  onDrop: () => void;
+}) {
   const def = getReport(reportId);
-  const result = useMemo(() => (def ? runReport(def) : null), [def]);
+  // Re-runs whenever the report changes or Run all bumps the token; `at` is the
+  // per-widget last-refreshed time shown in the footer.
+  const { result, at } = useMemo(
+    () => ({ result: def ? runReport(def) : null, at: new Date() }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [def, refreshToken],
+  );
 
   return (
-    <section className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
-      <header className="flex items-center justify-between border-b border-border bg-secondary/60 px-4 py-2.5">
-        <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-brand-deep">{def?.name ?? "Deleted report"}</h3>
-          {def && result && <p className="text-xs text-muted-foreground">{result.total} records · {def.format}</p>}
+    <section
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      className={`overflow-hidden rounded-lg border bg-surface shadow-sm transition ${span === 2 ? "xl:col-span-2" : ""} ${
+        dragging ? "opacity-40" : ""
+      } ${over ? "border-brand ring-2 ring-brand/30" : "border-border"}`}
+    >
+      <header className="flex items-center justify-between border-b border-border bg-secondary/60 px-3 py-2.5">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing" />
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-semibold text-brand-deep">{def?.name ?? "Deleted report"}</h3>
+            {def && result && <p className="text-xs text-muted-foreground">{result.total} records · {def.format}</p>}
+          </div>
         </div>
-        <button type="button" onClick={onRemove} title="Remove from dashboard" className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-destructive">
-          <X className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={onToggleSpan} title={span === 2 ? "Half width" : "Full width"} className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground">
+            {span === 2 ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
+          <button type="button" onClick={onRemove} title="Remove from dashboard" className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-destructive">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </header>
 
       {!def || !result ? (
@@ -144,15 +217,19 @@ function Widget({ reportId, onRemove }: { reportId: string; onRemove: () => void
       ) : (
         <table className="w-full text-sm">
           <thead className="bg-secondary/30 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
-            <tr>{def.columns.slice(0, 4).map((c) => <th key={c} className="px-4 py-2 font-semibold">{fieldDef(def.objectKey, c)?.label ?? c}</th>)}</tr>
+            <tr>{def.columns.slice(0, span === 2 ? 8 : 4).map((c) => <th key={c} className="px-4 py-2 font-semibold">{fieldDef(def.objectKey, c)?.label ?? c}</th>)}</tr>
           </thead>
           <tbody className="divide-y divide-border">
             {result.rows.slice(0, 6).map((r, i) => (
-              <tr key={i}>{def.columns.slice(0, 4).map((c) => <td key={c} className="px-4 py-2">{formatCell(def.objectKey, c, r[c])}</td>)}</tr>
+              <tr key={i}>{def.columns.slice(0, span === 2 ? 8 : 4).map((c) => <td key={c} className="px-4 py-2">{formatCell(def.objectKey, c, r[c])}</td>)}</tr>
             ))}
           </tbody>
         </table>
       )}
+
+      <footer className="border-t border-border px-3 py-1.5 text-right text-[11px] text-muted-foreground">
+        Refreshed {time(at)}
+      </footer>
     </section>
   );
 }

@@ -8,6 +8,8 @@ import { useSyncExternalStore } from "react";
 export interface DashWidget {
   id: string;
   reportId: string;
+  /** Column span on the grid: 1 (half) or 2 (full width). Defaults to 1. */
+  w?: 1 | 2;
 }
 
 export interface Dashboard {
@@ -87,5 +89,29 @@ export function addReportToDashboard(dashboardId: string, reportId: string): boo
 }
 export function removeWidget(dashboardId: string, widgetId: string) {
   state = state.map((d) => (d.id === dashboardId ? { ...d, widgets: d.widgets.filter((w) => w.id !== widgetId) } : d));
+  emit();
+}
+
+/** Set a widget's column span (1 = half, 2 = full). */
+export function setWidgetSpan(dashboardId: string, widgetId: string, w: 1 | 2) {
+  state = state.map((d) =>
+    d.id === dashboardId ? { ...d, widgets: d.widgets.map((x) => (x.id === widgetId ? { ...x, w } : x)) } : d,
+  );
+  emit();
+}
+
+/** Move `dragId` to the position of `targetId` (drag-to-reorder). */
+export function reorderWidgets(dashboardId: string, dragId: string, targetId: string) {
+  if (dragId === targetId) return;
+  state = state.map((d) => {
+    if (d.id !== dashboardId) return d;
+    const ws = [...d.widgets];
+    const from = ws.findIndex((w) => w.id === dragId);
+    const to = ws.findIndex((w) => w.id === targetId);
+    if (from === -1 || to === -1) return d;
+    const [moved] = ws.splice(from, 1);
+    ws.splice(to, 0, moved);
+    return { ...d, widgets: ws };
+  });
   emit();
 }
