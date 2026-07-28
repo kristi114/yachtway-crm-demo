@@ -9,46 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ServicesRouteImport } from './routes/services'
-import { Route as CallbackRouteImport } from './routes/callback'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TasksIndexRouteImport } from './routes/tasks.index'
-import { Route as ReferralsIndexRouteImport } from './routes/referrals.index'
-import { Route as OpportunitiesIndexRouteImport } from './routes/opportunities.index'
-import { Route as ListingsIndexRouteImport } from './routes/listings.index'
-import { Route as EventsIndexRouteImport } from './routes/events.index'
-import { Route as ContactsIndexRouteImport } from './routes/contacts.index'
-import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
-import { Route as CalendarIndexRouteImport } from './routes/calendar.index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as CallbackRouteImport } from './routes/callback'
+import { Route as ServicesRouteImport } from './routes/services'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as OpportunitiesIdRouteImport } from './routes/opportunities.$id'
-import { Route as ListingsIdRouteImport } from './routes/listings.$id'
-import { Route as ContactsIdRouteImport } from './routes/contacts.$id'
-import { Route as CompaniesIdRouteImport } from './routes/companies.$id'
-import { Route as AdminUsersRouteImport } from './routes/admin.users'
-import { Route as AdminSignaturesRouteImport } from './routes/admin.signatures'
-import { Route as AdminBrandsRouteImport } from './routes/admin.brands'
-import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAccessRouteImport } from './routes/admin.access'
-import { Route as BillingInvoicesIndexRouteImport } from './routes/billing.invoices.index'
+import { Route as AdminAmplitudeRouteImport } from './routes/admin.amplitude'
+import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminBrandsRouteImport } from './routes/admin.brands'
+import { Route as AdminSignaturesRouteImport } from './routes/admin.signatures'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as CalendarIndexRouteImport } from './routes/calendar.index'
+import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
+import { Route as CompaniesIdRouteImport } from './routes/companies.$id'
+import { Route as ContactsIndexRouteImport } from './routes/contacts.index'
+import { Route as ContactsIdRouteImport } from './routes/contacts.$id'
+import { Route as EmailsIndexRouteImport } from './routes/emails.index'
+import { Route as EmailsIdRouteImport } from './routes/emails.$id'
+import { Route as EventsIndexRouteImport } from './routes/events.index'
+import { Route as ListingsIndexRouteImport } from './routes/listings.index'
+import { Route as ListingsIdRouteImport } from './routes/listings.$id'
+import { Route as OpportunitiesIndexRouteImport } from './routes/opportunities.index'
+import { Route as OpportunitiesIdRouteImport } from './routes/opportunities.$id'
+import { Route as ReferralsIndexRouteImport } from './routes/referrals.index'
+import { Route as TasksIndexRouteImport } from './routes/tasks.index'
 import { Route as BillingEstimatesIndexRouteImport } from './routes/billing.estimates.index'
-import { Route as ReferralsNewOppIdRouteImport } from './routes/referrals.new.$oppId'
-import { Route as ReferralsIdEditRouteImport } from './routes/referrals.$id.edit'
-import { Route as BillingShareTokenRouteImport } from './routes/billing.share.$token'
-import { Route as BillingInvoicesNewRouteImport } from './routes/billing.invoices.new'
-import { Route as BillingInvoicesIdRouteImport } from './routes/billing.invoices.$id'
-import { Route as BillingInvoicePdfIdRouteImport } from './routes/billing.invoice-pdf.$id'
 import { Route as BillingEstimatesNewRouteImport } from './routes/billing.estimates.new'
+import { Route as BillingInvoicePdfIdRouteImport } from './routes/billing.invoice-pdf.$id'
+import { Route as BillingInvoicesIndexRouteImport } from './routes/billing.invoices.index'
+import { Route as BillingInvoicesIdRouteImport } from './routes/billing.invoices.$id'
+import { Route as BillingInvoicesNewRouteImport } from './routes/billing.invoices.new'
+import { Route as BillingShareTokenRouteImport } from './routes/billing.share.$token'
+import { Route as ReferralsIdEditRouteImport } from './routes/referrals.$id.edit'
+import { Route as ReferralsNewOppIdRouteImport } from './routes/referrals.new.$oppId'
 
-const ServicesRoute = ServicesRouteImport.update({
-  id: '/services',
-  path: '/services',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CallbackRoute = CallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -56,49 +54,14 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const CallbackRoute = CallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TasksIndexRoute = TasksIndexRouteImport.update({
-  id: '/tasks/',
-  path: '/tasks/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReferralsIndexRoute = ReferralsIndexRouteImport.update({
-  id: '/referrals/',
-  path: '/referrals/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OpportunitiesIndexRoute = OpportunitiesIndexRouteImport.update({
-  id: '/opportunities/',
-  path: '/opportunities/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ListingsIndexRoute = ListingsIndexRouteImport.update({
-  id: '/listings/',
-  path: '/listings/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EventsIndexRoute = EventsIndexRouteImport.update({
-  id: '/events/',
-  path: '/events/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactsIndexRoute = ContactsIndexRouteImport.update({
-  id: '/contacts/',
-  path: '/contacts/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompaniesIndexRoute = CompaniesIndexRouteImport.update({
-  id: '/companies/',
-  path: '/companies/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CalendarIndexRoute = CalendarIndexRouteImport.update({
-  id: '/calendar/',
-  path: '/calendar/',
+const ServicesRoute = ServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -106,39 +69,14 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const OpportunitiesIdRoute = OpportunitiesIdRouteImport.update({
-  id: '/opportunities/$id',
-  path: '/opportunities/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ListingsIdRoute = ListingsIdRouteImport.update({
-  id: '/listings/$id',
-  path: '/listings/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactsIdRoute = ContactsIdRouteImport.update({
-  id: '/contacts/$id',
-  path: '/contacts/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompaniesIdRoute = CompaniesIdRouteImport.update({
-  id: '/companies/$id',
-  path: '/companies/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
+const AdminAccessRoute = AdminAccessRouteImport.update({
+  id: '/access',
+  path: '/access',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSignaturesRoute = AdminSignaturesRouteImport.update({
-  id: '/signatures',
-  path: '/signatures',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminBrandsRoute = AdminBrandsRouteImport.update({
-  id: '/brands',
-  path: '/brands',
+const AdminAmplitudeRoute = AdminAmplitudeRouteImport.update({
+  id: '/amplitude',
+  path: '/amplitude',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAuditRoute = AdminAuditRouteImport.update({
@@ -146,14 +84,89 @@ const AdminAuditRoute = AdminAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAccessRoute = AdminAccessRouteImport.update({
-  id: '/access',
-  path: '/access',
+const AdminBrandsRoute = AdminBrandsRouteImport.update({
+  id: '/brands',
+  path: '/brands',
   getParentRoute: () => AdminRoute,
 } as any)
-const BillingInvoicesIndexRoute = BillingInvoicesIndexRouteImport.update({
-  id: '/billing/invoices/',
-  path: '/billing/invoices/',
+const AdminSignaturesRoute = AdminSignaturesRouteImport.update({
+  id: '/signatures',
+  path: '/signatures',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const CalendarIndexRoute = CalendarIndexRouteImport.update({
+  id: '/calendar/',
+  path: '/calendar/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompaniesIndexRoute = CompaniesIndexRouteImport.update({
+  id: '/companies/',
+  path: '/companies/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompaniesIdRoute = CompaniesIdRouteImport.update({
+  id: '/companies/$id',
+  path: '/companies/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactsIndexRoute = ContactsIndexRouteImport.update({
+  id: '/contacts/',
+  path: '/contacts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactsIdRoute = ContactsIdRouteImport.update({
+  id: '/contacts/$id',
+  path: '/contacts/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailsIndexRoute = EmailsIndexRouteImport.update({
+  id: '/emails/',
+  path: '/emails/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailsIdRoute = EmailsIdRouteImport.update({
+  id: '/emails/$id',
+  path: '/emails/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsIndexRoute = EventsIndexRouteImport.update({
+  id: '/events/',
+  path: '/events/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListingsIndexRoute = ListingsIndexRouteImport.update({
+  id: '/listings/',
+  path: '/listings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListingsIdRoute = ListingsIdRouteImport.update({
+  id: '/listings/$id',
+  path: '/listings/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OpportunitiesIndexRoute = OpportunitiesIndexRouteImport.update({
+  id: '/opportunities/',
+  path: '/opportunities/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OpportunitiesIdRoute = OpportunitiesIdRouteImport.update({
+  id: '/opportunities/$id',
+  path: '/opportunities/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferralsIndexRoute = ReferralsIndexRouteImport.update({
+  id: '/referrals/',
+  path: '/referrals/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksIndexRoute = TasksIndexRouteImport.update({
+  id: '/tasks/',
+  path: '/tasks/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BillingEstimatesIndexRoute = BillingEstimatesIndexRouteImport.update({
@@ -161,29 +174,9 @@ const BillingEstimatesIndexRoute = BillingEstimatesIndexRouteImport.update({
   path: '/billing/estimates/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReferralsNewOppIdRoute = ReferralsNewOppIdRouteImport.update({
-  id: '/referrals/new/$oppId',
-  path: '/referrals/new/$oppId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReferralsIdEditRoute = ReferralsIdEditRouteImport.update({
-  id: '/referrals/$id/edit',
-  path: '/referrals/$id/edit',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BillingShareTokenRoute = BillingShareTokenRouteImport.update({
-  id: '/billing/share/$token',
-  path: '/billing/share/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BillingInvoicesNewRoute = BillingInvoicesNewRouteImport.update({
-  id: '/billing/invoices/new',
-  path: '/billing/invoices/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BillingInvoicesIdRoute = BillingInvoicesIdRouteImport.update({
-  id: '/billing/invoices/$id',
-  path: '/billing/invoices/$id',
+const BillingEstimatesNewRoute = BillingEstimatesNewRouteImport.update({
+  id: '/billing/estimates/new',
+  path: '/billing/estimates/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BillingInvoicePdfIdRoute = BillingInvoicePdfIdRouteImport.update({
@@ -191,9 +184,34 @@ const BillingInvoicePdfIdRoute = BillingInvoicePdfIdRouteImport.update({
   path: '/billing/invoice-pdf/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BillingEstimatesNewRoute = BillingEstimatesNewRouteImport.update({
-  id: '/billing/estimates/new',
-  path: '/billing/estimates/new',
+const BillingInvoicesIndexRoute = BillingInvoicesIndexRouteImport.update({
+  id: '/billing/invoices/',
+  path: '/billing/invoices/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingInvoicesIdRoute = BillingInvoicesIdRouteImport.update({
+  id: '/billing/invoices/$id',
+  path: '/billing/invoices/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingInvoicesNewRoute = BillingInvoicesNewRouteImport.update({
+  id: '/billing/invoices/new',
+  path: '/billing/invoices/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingShareTokenRoute = BillingShareTokenRouteImport.update({
+  id: '/billing/share/$token',
+  path: '/billing/share/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferralsIdEditRoute = ReferralsIdEditRouteImport.update({
+  id: '/referrals/$id/edit',
+  path: '/referrals/$id/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferralsNewOppIdRoute = ReferralsNewOppIdRouteImport.update({
+  id: '/referrals/new/$oppId',
+  path: '/referrals/new/$oppId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -203,18 +221,21 @@ export interface FileRoutesByFullPath {
   '/callback': typeof CallbackRoute
   '/services': typeof ServicesRoute
   '/admin/access': typeof AdminAccessRoute
+  '/admin/amplitude': typeof AdminAmplitudeRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/brands': typeof AdminBrandsRoute
   '/admin/signatures': typeof AdminSignaturesRoute
   '/admin/users': typeof AdminUsersRoute
   '/companies/$id': typeof CompaniesIdRoute
   '/contacts/$id': typeof ContactsIdRoute
+  '/emails/$id': typeof EmailsIdRoute
   '/listings/$id': typeof ListingsIdRoute
   '/opportunities/$id': typeof OpportunitiesIdRoute
   '/admin/': typeof AdminIndexRoute
   '/calendar/': typeof CalendarIndexRoute
   '/companies/': typeof CompaniesIndexRoute
   '/contacts/': typeof ContactsIndexRoute
+  '/emails/': typeof EmailsIndexRoute
   '/events/': typeof EventsIndexRoute
   '/listings/': typeof ListingsIndexRoute
   '/opportunities/': typeof OpportunitiesIndexRoute
@@ -235,18 +256,21 @@ export interface FileRoutesByTo {
   '/callback': typeof CallbackRoute
   '/services': typeof ServicesRoute
   '/admin/access': typeof AdminAccessRoute
+  '/admin/amplitude': typeof AdminAmplitudeRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/brands': typeof AdminBrandsRoute
   '/admin/signatures': typeof AdminSignaturesRoute
   '/admin/users': typeof AdminUsersRoute
   '/companies/$id': typeof CompaniesIdRoute
   '/contacts/$id': typeof ContactsIdRoute
+  '/emails/$id': typeof EmailsIdRoute
   '/listings/$id': typeof ListingsIdRoute
   '/opportunities/$id': typeof OpportunitiesIdRoute
   '/admin': typeof AdminIndexRoute
   '/calendar': typeof CalendarIndexRoute
   '/companies': typeof CompaniesIndexRoute
   '/contacts': typeof ContactsIndexRoute
+  '/emails': typeof EmailsIndexRoute
   '/events': typeof EventsIndexRoute
   '/listings': typeof ListingsIndexRoute
   '/opportunities': typeof OpportunitiesIndexRoute
@@ -269,18 +293,21 @@ export interface FileRoutesById {
   '/callback': typeof CallbackRoute
   '/services': typeof ServicesRoute
   '/admin/access': typeof AdminAccessRoute
+  '/admin/amplitude': typeof AdminAmplitudeRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/brands': typeof AdminBrandsRoute
   '/admin/signatures': typeof AdminSignaturesRoute
   '/admin/users': typeof AdminUsersRoute
   '/companies/$id': typeof CompaniesIdRoute
   '/contacts/$id': typeof ContactsIdRoute
+  '/emails/$id': typeof EmailsIdRoute
   '/listings/$id': typeof ListingsIdRoute
   '/opportunities/$id': typeof OpportunitiesIdRoute
   '/admin/': typeof AdminIndexRoute
   '/calendar/': typeof CalendarIndexRoute
   '/companies/': typeof CompaniesIndexRoute
   '/contacts/': typeof ContactsIndexRoute
+  '/emails/': typeof EmailsIndexRoute
   '/events/': typeof EventsIndexRoute
   '/listings/': typeof ListingsIndexRoute
   '/opportunities/': typeof OpportunitiesIndexRoute
@@ -304,18 +331,21 @@ export interface FileRouteTypes {
     | '/callback'
     | '/services'
     | '/admin/access'
+    | '/admin/amplitude'
     | '/admin/audit'
     | '/admin/brands'
     | '/admin/signatures'
     | '/admin/users'
     | '/companies/$id'
     | '/contacts/$id'
+    | '/emails/$id'
     | '/listings/$id'
     | '/opportunities/$id'
     | '/admin/'
     | '/calendar/'
     | '/companies/'
     | '/contacts/'
+    | '/emails/'
     | '/events/'
     | '/listings/'
     | '/opportunities/'
@@ -336,18 +366,21 @@ export interface FileRouteTypes {
     | '/callback'
     | '/services'
     | '/admin/access'
+    | '/admin/amplitude'
     | '/admin/audit'
     | '/admin/brands'
     | '/admin/signatures'
     | '/admin/users'
     | '/companies/$id'
     | '/contacts/$id'
+    | '/emails/$id'
     | '/listings/$id'
     | '/opportunities/$id'
     | '/admin'
     | '/calendar'
     | '/companies'
     | '/contacts'
+    | '/emails'
     | '/events'
     | '/listings'
     | '/opportunities'
@@ -369,18 +402,21 @@ export interface FileRouteTypes {
     | '/callback'
     | '/services'
     | '/admin/access'
+    | '/admin/amplitude'
     | '/admin/audit'
     | '/admin/brands'
     | '/admin/signatures'
     | '/admin/users'
     | '/companies/$id'
     | '/contacts/$id'
+    | '/emails/$id'
     | '/listings/$id'
     | '/opportunities/$id'
     | '/admin/'
     | '/calendar/'
     | '/companies/'
     | '/contacts/'
+    | '/emails/'
     | '/events/'
     | '/listings/'
     | '/opportunities/'
@@ -404,11 +440,13 @@ export interface RootRouteChildren {
   ServicesRoute: typeof ServicesRoute
   CompaniesIdRoute: typeof CompaniesIdRoute
   ContactsIdRoute: typeof ContactsIdRoute
+  EmailsIdRoute: typeof EmailsIdRoute
   ListingsIdRoute: typeof ListingsIdRoute
   OpportunitiesIdRoute: typeof OpportunitiesIdRoute
   CalendarIndexRoute: typeof CalendarIndexRoute
   CompaniesIndexRoute: typeof CompaniesIndexRoute
   ContactsIndexRoute: typeof ContactsIndexRoute
+  EmailsIndexRoute: typeof EmailsIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
   ListingsIndexRoute: typeof ListingsIndexRoute
   OpportunitiesIndexRoute: typeof OpportunitiesIndexRoute
@@ -427,18 +465,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/services': {
-      id: '/services'
-      path: '/services'
-      fullPath: '/services'
-      preLoaderRoute: typeof ServicesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/callback': {
-      id: '/callback'
-      path: '/callback'
-      fullPath: '/callback'
-      preLoaderRoute: typeof CallbackRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -448,67 +479,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/callback': {
+      id: '/callback'
+      path: '/callback'
+      fullPath: '/callback'
+      preLoaderRoute: typeof CallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tasks/': {
-      id: '/tasks/'
-      path: '/tasks'
-      fullPath: '/tasks/'
-      preLoaderRoute: typeof TasksIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/referrals/': {
-      id: '/referrals/'
-      path: '/referrals'
-      fullPath: '/referrals/'
-      preLoaderRoute: typeof ReferralsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/opportunities/': {
-      id: '/opportunities/'
-      path: '/opportunities'
-      fullPath: '/opportunities/'
-      preLoaderRoute: typeof OpportunitiesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/listings/': {
-      id: '/listings/'
-      path: '/listings'
-      fullPath: '/listings/'
-      preLoaderRoute: typeof ListingsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/events/': {
-      id: '/events/'
-      path: '/events'
-      fullPath: '/events/'
-      preLoaderRoute: typeof EventsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contacts/': {
-      id: '/contacts/'
-      path: '/contacts'
-      fullPath: '/contacts/'
-      preLoaderRoute: typeof ContactsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/companies/': {
-      id: '/companies/'
-      path: '/companies'
-      fullPath: '/companies/'
-      preLoaderRoute: typeof CompaniesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/calendar/': {
-      id: '/calendar/'
-      path: '/calendar'
-      fullPath: '/calendar/'
-      preLoaderRoute: typeof CalendarIndexRouteImport
+    '/services': {
+      id: '/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -518,53 +500,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/opportunities/$id': {
-      id: '/opportunities/$id'
-      path: '/opportunities/$id'
-      fullPath: '/opportunities/$id'
-      preLoaderRoute: typeof OpportunitiesIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/listings/$id': {
-      id: '/listings/$id'
-      path: '/listings/$id'
-      fullPath: '/listings/$id'
-      preLoaderRoute: typeof ListingsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contacts/$id': {
-      id: '/contacts/$id'
-      path: '/contacts/$id'
-      fullPath: '/contacts/$id'
-      preLoaderRoute: typeof ContactsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/companies/$id': {
-      id: '/companies/$id'
-      path: '/companies/$id'
-      fullPath: '/companies/$id'
-      preLoaderRoute: typeof CompaniesIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
+    '/admin/access': {
+      id: '/admin/access'
+      path: '/access'
+      fullPath: '/admin/access'
+      preLoaderRoute: typeof AdminAccessRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/signatures': {
-      id: '/admin/signatures'
-      path: '/signatures'
-      fullPath: '/admin/signatures'
-      preLoaderRoute: typeof AdminSignaturesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/brands': {
-      id: '/admin/brands'
-      path: '/brands'
-      fullPath: '/admin/brands'
-      preLoaderRoute: typeof AdminBrandsRouteImport
+    '/admin/amplitude': {
+      id: '/admin/amplitude'
+      path: '/amplitude'
+      fullPath: '/admin/amplitude'
+      preLoaderRoute: typeof AdminAmplitudeRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/audit': {
@@ -574,18 +521,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAuditRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/access': {
-      id: '/admin/access'
-      path: '/access'
-      fullPath: '/admin/access'
-      preLoaderRoute: typeof AdminAccessRouteImport
+    '/admin/brands': {
+      id: '/admin/brands'
+      path: '/brands'
+      fullPath: '/admin/brands'
+      preLoaderRoute: typeof AdminBrandsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/billing/invoices/': {
-      id: '/billing/invoices/'
-      path: '/billing/invoices'
-      fullPath: '/billing/invoices/'
-      preLoaderRoute: typeof BillingInvoicesIndexRouteImport
+    '/admin/signatures': {
+      id: '/admin/signatures'
+      path: '/signatures'
+      fullPath: '/admin/signatures'
+      preLoaderRoute: typeof AdminSignaturesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/calendar/': {
+      id: '/calendar/'
+      path: '/calendar'
+      fullPath: '/calendar/'
+      preLoaderRoute: typeof CalendarIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/companies/': {
+      id: '/companies/'
+      path: '/companies'
+      fullPath: '/companies/'
+      preLoaderRoute: typeof CompaniesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/companies/$id': {
+      id: '/companies/$id'
+      path: '/companies/$id'
+      fullPath: '/companies/$id'
+      preLoaderRoute: typeof CompaniesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contacts/': {
+      id: '/contacts/'
+      path: '/contacts'
+      fullPath: '/contacts/'
+      preLoaderRoute: typeof ContactsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contacts/$id': {
+      id: '/contacts/$id'
+      path: '/contacts/$id'
+      fullPath: '/contacts/$id'
+      preLoaderRoute: typeof ContactsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/emails/': {
+      id: '/emails/'
+      path: '/emails'
+      fullPath: '/emails/'
+      preLoaderRoute: typeof EmailsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/emails/$id': {
+      id: '/emails/$id'
+      path: '/emails/$id'
+      fullPath: '/emails/$id'
+      preLoaderRoute: typeof EmailsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/': {
+      id: '/events/'
+      path: '/events'
+      fullPath: '/events/'
+      preLoaderRoute: typeof EventsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/listings/': {
+      id: '/listings/'
+      path: '/listings'
+      fullPath: '/listings/'
+      preLoaderRoute: typeof ListingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/listings/$id': {
+      id: '/listings/$id'
+      path: '/listings/$id'
+      fullPath: '/listings/$id'
+      preLoaderRoute: typeof ListingsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/opportunities/': {
+      id: '/opportunities/'
+      path: '/opportunities'
+      fullPath: '/opportunities/'
+      preLoaderRoute: typeof OpportunitiesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/opportunities/$id': {
+      id: '/opportunities/$id'
+      path: '/opportunities/$id'
+      fullPath: '/opportunities/$id'
+      preLoaderRoute: typeof OpportunitiesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/referrals/': {
+      id: '/referrals/'
+      path: '/referrals'
+      fullPath: '/referrals/'
+      preLoaderRoute: typeof ReferralsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks/': {
+      id: '/tasks/'
+      path: '/tasks'
+      fullPath: '/tasks/'
+      preLoaderRoute: typeof TasksIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/billing/estimates/': {
@@ -595,39 +647,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillingEstimatesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/referrals/new/$oppId': {
-      id: '/referrals/new/$oppId'
-      path: '/referrals/new/$oppId'
-      fullPath: '/referrals/new/$oppId'
-      preLoaderRoute: typeof ReferralsNewOppIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/referrals/$id/edit': {
-      id: '/referrals/$id/edit'
-      path: '/referrals/$id/edit'
-      fullPath: '/referrals/$id/edit'
-      preLoaderRoute: typeof ReferralsIdEditRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/billing/share/$token': {
-      id: '/billing/share/$token'
-      path: '/billing/share/$token'
-      fullPath: '/billing/share/$token'
-      preLoaderRoute: typeof BillingShareTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/billing/invoices/new': {
-      id: '/billing/invoices/new'
-      path: '/billing/invoices/new'
-      fullPath: '/billing/invoices/new'
-      preLoaderRoute: typeof BillingInvoicesNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/billing/invoices/$id': {
-      id: '/billing/invoices/$id'
-      path: '/billing/invoices/$id'
-      fullPath: '/billing/invoices/$id'
-      preLoaderRoute: typeof BillingInvoicesIdRouteImport
+    '/billing/estimates/new': {
+      id: '/billing/estimates/new'
+      path: '/billing/estimates/new'
+      fullPath: '/billing/estimates/new'
+      preLoaderRoute: typeof BillingEstimatesNewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/billing/invoice-pdf/$id': {
@@ -637,11 +661,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillingInvoicePdfIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/billing/estimates/new': {
-      id: '/billing/estimates/new'
-      path: '/billing/estimates/new'
-      fullPath: '/billing/estimates/new'
-      preLoaderRoute: typeof BillingEstimatesNewRouteImport
+    '/billing/invoices/': {
+      id: '/billing/invoices/'
+      path: '/billing/invoices'
+      fullPath: '/billing/invoices/'
+      preLoaderRoute: typeof BillingInvoicesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing/invoices/$id': {
+      id: '/billing/invoices/$id'
+      path: '/billing/invoices/$id'
+      fullPath: '/billing/invoices/$id'
+      preLoaderRoute: typeof BillingInvoicesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing/invoices/new': {
+      id: '/billing/invoices/new'
+      path: '/billing/invoices/new'
+      fullPath: '/billing/invoices/new'
+      preLoaderRoute: typeof BillingInvoicesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing/share/$token': {
+      id: '/billing/share/$token'
+      path: '/billing/share/$token'
+      fullPath: '/billing/share/$token'
+      preLoaderRoute: typeof BillingShareTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/referrals/$id/edit': {
+      id: '/referrals/$id/edit'
+      path: '/referrals/$id/edit'
+      fullPath: '/referrals/$id/edit'
+      preLoaderRoute: typeof ReferralsIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/referrals/new/$oppId': {
+      id: '/referrals/new/$oppId'
+      path: '/referrals/new/$oppId'
+      fullPath: '/referrals/new/$oppId'
+      preLoaderRoute: typeof ReferralsNewOppIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -649,6 +708,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAccessRoute: typeof AdminAccessRoute
+  AdminAmplitudeRoute: typeof AdminAmplitudeRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminBrandsRoute: typeof AdminBrandsRoute
   AdminSignaturesRoute: typeof AdminSignaturesRoute
@@ -658,6 +718,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAccessRoute: AdminAccessRoute,
+  AdminAmplitudeRoute: AdminAmplitudeRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminBrandsRoute: AdminBrandsRoute,
   AdminSignaturesRoute: AdminSignaturesRoute,
@@ -674,11 +735,13 @@ const rootRouteChildren: RootRouteChildren = {
   ServicesRoute: ServicesRoute,
   CompaniesIdRoute: CompaniesIdRoute,
   ContactsIdRoute: ContactsIdRoute,
+  EmailsIdRoute: EmailsIdRoute,
   ListingsIdRoute: ListingsIdRoute,
   OpportunitiesIdRoute: OpportunitiesIdRoute,
   CalendarIndexRoute: CalendarIndexRoute,
   CompaniesIndexRoute: CompaniesIndexRoute,
   ContactsIndexRoute: ContactsIndexRoute,
+  EmailsIndexRoute: EmailsIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
   ListingsIndexRoute: ListingsIndexRoute,
   OpportunitiesIndexRoute: OpportunitiesIndexRoute,
@@ -697,3 +760,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

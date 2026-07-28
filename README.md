@@ -91,5 +91,10 @@ Point the frontend at it with `VITE_API_URL=http://localhost:4000`.
 ## Independence notes
 
 - Fresh git repository — no external remote.
+- **No Lovable packages.** Every `@lovable.dev/*` dependency has been removed. `vite.config.ts` now uses the standard TanStack Start + Vite plugin chain directly (`@tanstack/react-start/plugin/vite`, `@vitejs/plugin-react`, `@tailwindcss/vite`, `vite-tsconfig-paths`), and the dev server is set to `localhost:3000`.
 - No runtime dependency on any hosting platform (the error-reporting hook in `src/lib/yachtway-crm-error-reporting.ts` just logs to console; wire your own service there).
-- One build-time dependency remains: `@lovable.dev/vite-tanstack-config` in `vite.config.ts`, a published preset that bundles the TanStack Start + Vite + Tailwind + nitro setup. It's a convenience, not a data/host tie. To go fully package-free, replace it in `vite.config.ts` with explicit `@tanstack/react-start`, `@vitejs/plugin-react`, `@tailwindcss/vite`, and `vite-tsconfig-paths` plugins (see the comment at the top of that file for the exact list it provides).
+- Lockfiles were removed so the first `pnpm install` (or `npm install`) resolves cleanly against the Lovable-free `package.json`.
+
+### Build tooling
+
+The frontend is a standard [TanStack Start](https://tanstack.com/start) app built with Vite. Key config lives in `vite.config.ts`. TanStack Start discovers `src/router.tsx`, `src/server.ts` (SSR error wrapper) and `src/start.ts` (start instance + request middleware) by convention. `pnpm build` produces a Node server build you can host anywhere.
