@@ -1,5 +1,5 @@
 import { formatDate } from "@/lib/format-date";
-import logo from "@/assets/yachtway-black.png.asset.json";
+import { YachtWayLogo } from "@/components/icons/yachtway-logo";
 import { docTotal, paymentMethodLabel, studioPassSavings, type BillingDoc } from "@/lib/billing";
 import { formatMoney } from "@/lib/currency";
 import { getCompany } from "@/lib/mock-data";
@@ -44,7 +44,7 @@ export function InvoiceDocument({ doc }: { doc: BillingDoc }) {
       {/* Header band */}
       <header className="flex items-start justify-between gap-8 border-b border-doc-line px-10 pb-7 pt-9">
         <div className="space-y-3">
-          <img src={logo.url} alt="YachtWay" className="h-7 w-auto" />
+          <YachtWayLogo className="h-7 w-auto text-brand-deep" />
           <div className="text-[11px] leading-[1.6] text-doc-muted">
             <div className="font-semibold text-doc-ink">{ISSUER.legal}</div>
             {ISSUER.lines.map((l) => (

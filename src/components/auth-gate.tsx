@@ -3,7 +3,7 @@ import { AuthKitProvider, useAuth as useWorkOsAuth } from "@workos-inc/authkit-r
 import { AuthProvider, type SessionOverride } from "@/lib/auth";
 import { setAccessTokenProvider } from "@/lib/api/config";
 import { WORKOS_CLIENT_ID, WORKOS_ENABLED, resolveRedirectUri, roleFromWorkOs } from "@/lib/workos";
-import logoDark from "@/assets/yachtway-black.png.asset.json";
+import { YachtWayLogo } from "@/components/icons/yachtway-logo";
 
 /**
  * Auth boundary for the whole CRM.
@@ -46,7 +46,7 @@ function WorkOsSession({ children }: { children: ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 text-center shadow-sm">
-          <img src={logoDark.url} alt="YachtWay" className="mx-auto h-7 w-auto dark:invert" />
+          <YachtWayLogo className="mx-auto h-7 w-auto" />
           <h1 className="mt-6 text-lg font-semibold text-foreground">Sign in to YachtWay CRM</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Use your YachtWay account. Your permissions come from your role in WorkOS.

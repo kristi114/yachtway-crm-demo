@@ -5,7 +5,7 @@ import { Users, Building2, LayoutDashboard, Briefcase, Landmark, Wallet, Message
 import { BoatIcon } from "@/components/icons/boat-icon";
 import { DealerIcon } from "@/components/icons/dealer-icon";
 
-import logoDark from "@/assets/yachtway-black.png.asset.json";
+import { YachtWayLogo } from "@/components/icons/yachtway-logo";
 
 import { useAuth, ROLE_LABELS, canSeeFinTech, isPartnerRole, type Role } from "@/lib/auth";
 import { SessionMenu } from "@/components/session-menu";
@@ -173,7 +173,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Top bar - solid dark */}
       <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border bg-topbar px-4 text-topbar-foreground">
         <Link to="/" className="flex shrink-0 items-center gap-2">
-          <img src={logoDark.url} alt="YachtWay" className="h-6 w-auto dark:invert" />
+          <YachtWayLogo className="h-6 w-auto" />
         </Link>
 
         <button
