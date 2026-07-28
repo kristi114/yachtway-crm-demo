@@ -65,6 +65,10 @@ export const COMPANY_SECTIONS: readonly FieldSection[] = [
       { key: "totalNumberOfBrokers", label: "Total Brokers", type: "number", sensitivity: "company.general" },
       { key: "listingsAllTime", label: "Total Listings (all-time)", type: "number", sensitivity: "company.general", help: "Derived / computed - read-only" },
       { key: "totalNumberOfOffices", label: "Total Offices", type: "number", sensitivity: "company.general" },
+      { key: "listingViews30d", label: "Listing Views 30d", type: "number", sensitivity: "company.general", help: "Derived / computed - read-only" },
+      { key: "lastBrokerSignin", label: "Last Broker Sign-in", type: "number", sensitivity: "company.general", help: "Days since last broker sign-in" },
+      { key: "lastAdminmgrSignin", label: "Last Mgr/Admin Sign-in", type: "number", sensitivity: "company.general", help: "Days since last manager/admin sign-in" },
+      { key: "authorizedBrands", label: "Authorized Brands", type: "multi_option", sensitivity: "company.general" },
       { key: "activeCompanyStatus", label: "Active Customer Status", type: "single_option", sensitivity: "company.general" },
       { key: "companyStatus", label: "Company Status", type: "single_option", sensitivity: "company.general" },
       { key: "activeCustomerDate", label: "Active Customer Date", type: "date", sensitivity: "company.general" },
@@ -523,6 +527,8 @@ export const OPPORTUNITY_SECTIONS: readonly FieldSection[] = [
   {
     id: "opp_applicant_financials", title: "Applicant & Financials", sensitivity: "opportunity.general",
     fields: [
+      { key: "prequalStatus", label: "Prequalification Status", type: "single_option", sensitivity: "opportunity.general", help: "Sensitive" },
+      { key: "selfReportedRange", label: "Self Reported Credit Score", type: "single_option", sensitivity: "opportunity.general", options: ["740 and up", "700 to 739", "660 to 699", "Below 660"], help: "Sensitive" },
       { key: "amountFromLender", label: "Amount From Lender", type: "money", sensitivity: "opportunity.general", help: "Sensitive" },
       { key: "approvedConditions", label: "Approved Conditions", type: "multi_option", sensitivity: "opportunity.general", help: "Sensitive" },
       { key: "approvedConditionsNotes", label: "Approved Conditions Notes", type: "textarea", sensitivity: "opportunity.general", help: "Sensitive" },

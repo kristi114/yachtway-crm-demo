@@ -30,6 +30,8 @@ import { StudioToursPanel } from "@/components/studio-tours-panel";
 import { getStudioTour } from "@/lib/studio-tours";
 // Single source of truth for pipeline stages (mirrors the Field Catalog picklist).
 import { PIPELINE_STAGES } from "@/components/create-opportunity-dialog";
+import { DetailSections } from "@/components/field-renderer";
+import { OPPORTUNITY_SECTIONS } from "@/lib/field-schema";
 import { EditOpportunityDialog } from "@/components/edit-opportunity-dialog";
 import { MergeRecordDialog } from "@/components/merge-record-dialog";
 
@@ -347,6 +349,14 @@ function OpportunityDetail() {
               </div>
             )}
           </aside>
+        </div>
+        <div className="mt-6 space-y-3">
+          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-brand-deep">All fields</h2>
+          <DetailSections
+            sections={OPPORTUNITY_SECTIONS}
+            record={opp as unknown as Record<string, unknown>}
+            onEditField={(key, value) => updateOpportunity(opp.id, { [key]: value })}
+          />
         </div>
         <div className="mt-6">
           <OpportunityBillingPanel opportunityId={opp.id} />

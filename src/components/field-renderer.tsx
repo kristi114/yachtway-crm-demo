@@ -286,7 +286,13 @@ export function SectionCard({
   const isSensitive = section.sensitivity !== "contact.general" && section.sensitivity !== "company.general";
   const allowed = can(section.sensitivity);
 
-  const populated = section.fields.filter((f) => !isEmpty(f, record[f.key]));
+  // Respect per-field pipeline scoping: a field annotated with `pipelines` only
+  // appears when the record's pipeline is in that list (used to place e.g. the
+  // Dealer field in different sections for different pipelines).
+  const recordPipeline = record.pipeline;
+  const inPipeline = (f: FieldSection["fields"][number]) =>
+    !f.pipelines || (typeof recordPipeline === "string" && f.pipelines.includes(recordPipeline));
+  const populated = section.fields.filter((f) => inPipeline(f) && !isEmpty(f, record[f.key]));
   // Hide entire section when nothing is populated and the user has access.
   // (Restricted sections still show the lock message.)
   if (allowed && populated.length === 0 && !extra) return null;
