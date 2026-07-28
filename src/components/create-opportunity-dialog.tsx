@@ -20,15 +20,15 @@ export type PipelineName = Opportunity["pipeline"];
 export const PIPELINE_STAGES: Record<PipelineName, string[]> = {
   "SaaS Sales": ["Qualification", "Discovery", "Proposal Sent", "Negotiation", "Closed Won"],
   "Dealer Signups": ["Discovery", "Demo", "Proposal Sent", "Contract", "Onboarded"],
-  // Catalog · EasyFund
+  // EasyFund (catalog-derived, YachtWay-adjusted stage order)
   "EasyFund": [
-    "Pre-Qual Complete", "Unresponsive", "Still Shopping", "Partial Application",
-    "Application Complete", "In Review", "Approved", "Loan Closed", "Closed",
+    "Pre-Qual Complete", "Still Shopping", "Partial Application", "Application Complete",
+    "Underwriting", "Approved", "Loan Closed", "Closed",
   ],
-  // Catalog · MasterCover
-  "MasterCover": ["New Lead", "Contacted", "Still Shopping", "Application Complete", "Closed"],
-  // Catalog · Studio
-  "Studio": ["Service Requested", "Studio Booked", "Shoot Complete", "Content Delivered", "Closed"],
+  // MasterCover (catalog-derived, YachtWay-adjusted stage order)
+  "MasterCover": ["New Lead", "Contacted", "Still Shopping", "Application Complete", "Quote Sent", "Bound", "Closed"],
+  // Studio (catalog-derived, YachtWay-adjusted stage order)
+  "Studio": ["Service Requested", "Studio Booked", "Shoot Complete", "In Production", "Content Delivered", "Closed"],
   // Catalog · EasyClose
   "EasyClose": ["Service Requested", "Deliverables In Progress", "Delivered", "Closed"],
   "Referral Partners": ["Intro", "Discovery", "Contract", "Active"],

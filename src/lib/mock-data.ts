@@ -788,7 +788,7 @@ export const OPPORTUNITIES: Opportunity[] = [
     owner: "Gianmarco", companyId: "cmp_003", contactId: "cnt_004", listingId: null,
     probability: 55, stageEnteredAt: "2026-07-08", lostReason: null, closeReason: "" },
   { id: "opp_003", name: "Whitfield - EasyFund 425k", pipeline: "EasyFund",
-    stage: "In Review", amountUsd: 425_000, closeDate: "2026-07-30",
+    stage: "Underwriting", amountUsd: 425_000, closeDate: "2026-07-30",
     owner: "Debbie", companyId: null, contactId: "cnt_003", listingId: null,
     probability: 60, stageEnteredAt: "2026-07-10", lostReason: null, closeReason: "" },
   { id: "opp_004", name: "Petrova - Azimut Grande 27M", pipeline: "EasyFund",
