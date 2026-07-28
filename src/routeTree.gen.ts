@@ -39,6 +39,7 @@ import { Route as ListingsIdRouteImport } from './routes/listings.$id'
 import { Route as OpportunitiesIndexRouteImport } from './routes/opportunities.index'
 import { Route as OpportunitiesIdRouteImport } from './routes/opportunities.$id'
 import { Route as ReferralsIndexRouteImport } from './routes/referrals.index'
+import { Route as SettingsNotificationsRouteImport } from './routes/settings.notifications'
 import { Route as TasksIndexRouteImport } from './routes/tasks.index'
 import { Route as BillingEstimatesIndexRouteImport } from './routes/billing.estimates.index'
 import { Route as BillingEstimatesNewRouteImport } from './routes/billing.estimates.new'
@@ -201,6 +202,11 @@ const ReferralsIndexRoute = ReferralsIndexRouteImport.update({
   path: '/referrals/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsNotificationsRoute = SettingsNotificationsRouteImport.update({
+  id: '/settings/notifications',
+  path: '/settings/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TasksIndexRoute = TasksIndexRouteImport.update({
   id: '/tasks/',
   path: '/tasks/',
@@ -279,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/emails/$id': typeof EmailsIdRoute
   '/listings/$id': typeof ListingsIdRoute
   '/opportunities/$id': typeof OpportunitiesIdRoute
+  '/settings/notifications': typeof SettingsNotificationsRoute
   '/admin/': typeof AdminIndexRoute
   '/calendar/': typeof CalendarIndexRoute
   '/companies/': typeof CompaniesIndexRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/emails/$id': typeof EmailsIdRoute
   '/listings/$id': typeof ListingsIdRoute
   '/opportunities/$id': typeof OpportunitiesIdRoute
+  '/settings/notifications': typeof SettingsNotificationsRoute
   '/admin': typeof AdminIndexRoute
   '/calendar': typeof CalendarIndexRoute
   '/companies': typeof CompaniesIndexRoute
@@ -365,6 +373,7 @@ export interface FileRoutesById {
   '/emails/$id': typeof EmailsIdRoute
   '/listings/$id': typeof ListingsIdRoute
   '/opportunities/$id': typeof OpportunitiesIdRoute
+  '/settings/notifications': typeof SettingsNotificationsRoute
   '/admin/': typeof AdminIndexRoute
   '/calendar/': typeof CalendarIndexRoute
   '/companies/': typeof CompaniesIndexRoute
@@ -410,6 +419,7 @@ export interface FileRouteTypes {
     | '/emails/$id'
     | '/listings/$id'
     | '/opportunities/$id'
+    | '/settings/notifications'
     | '/admin/'
     | '/calendar/'
     | '/companies/'
@@ -452,6 +462,7 @@ export interface FileRouteTypes {
     | '/emails/$id'
     | '/listings/$id'
     | '/opportunities/$id'
+    | '/settings/notifications'
     | '/admin'
     | '/calendar'
     | '/companies'
@@ -495,6 +506,7 @@ export interface FileRouteTypes {
     | '/emails/$id'
     | '/listings/$id'
     | '/opportunities/$id'
+    | '/settings/notifications'
     | '/admin/'
     | '/calendar/'
     | '/companies/'
@@ -530,6 +542,7 @@ export interface RootRouteChildren {
   EmailsIdRoute: typeof EmailsIdRoute
   ListingsIdRoute: typeof ListingsIdRoute
   OpportunitiesIdRoute: typeof OpportunitiesIdRoute
+  SettingsNotificationsRoute: typeof SettingsNotificationsRoute
   CalendarIndexRoute: typeof CalendarIndexRoute
   CompaniesIndexRoute: typeof CompaniesIndexRoute
   ContactsIndexRoute: typeof ContactsIndexRoute
@@ -763,6 +776,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReferralsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/notifications': {
+      id: '/settings/notifications'
+      path: '/settings/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof SettingsNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tasks/': {
       id: '/tasks/'
       path: '/tasks'
@@ -884,6 +904,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailsIdRoute: EmailsIdRoute,
   ListingsIdRoute: ListingsIdRoute,
   OpportunitiesIdRoute: OpportunitiesIdRoute,
+  SettingsNotificationsRoute: SettingsNotificationsRoute,
   CalendarIndexRoute: CalendarIndexRoute,
   CompaniesIndexRoute: CompaniesIndexRoute,
   ContactsIndexRoute: ContactsIndexRoute,

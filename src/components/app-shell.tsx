@@ -1,7 +1,7 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GlobalSearch, GlobalSearchTrigger } from "@/components/global-search";
-import { Users, Building2, LayoutDashboard, Briefcase, Landmark, Wallet, MessageSquare, ShieldCheck, Search, ChevronDown, Lock, CheckSquare, Calendar, CalendarDays, Grid3x3, FileText, FileCheck2, FilePlus2, Receipt, PanelLeftClose, PanelLeftOpen, HandCoins, Mail, Banknote, Umbrella } from "lucide-react";
+import { Users, Building2, LayoutDashboard, Briefcase, Landmark, Wallet, MessageSquare, ShieldCheck, Search, ChevronDown, Lock, CheckSquare, Calendar, CalendarDays, Grid3x3, FileText, FileCheck2, FilePlus2, Receipt, PanelLeftClose, PanelLeftOpen, HandCoins, Mail, Banknote, Umbrella, Bell } from "lucide-react";
 import { BoatIcon } from "@/components/icons/boat-icon";
 import { DealerIcon } from "@/components/icons/dealer-icon";
 
@@ -239,6 +239,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              <Link
+                to="/settings/notifications"
+                title="Notification settings"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/60 text-topbar-foreground/80 transition-colors hover:border-border hover:bg-background hover:text-brand"
+              >
+                <Bell className="h-4 w-4" />
+              </Link>
 
               <button
                 type="button"
