@@ -119,27 +119,3 @@ export function insuranceDashboard(): DashboardConfig {
   };
 }
 
-/* ------------------------------------------------------------------ */
-/* VATO — independent (vessel valuation & titling)                     */
-/* ------------------------------------------------------------------ */
-
-export function vatoDashboard(): DashboardConfig {
-  const rows: FintechRow[] = [
-    { id: "vt_1", ...who(0), amount: 78_000, submittedOn: daysAgo(1), status: "Requested", stage: "Valuation Requested", vessel: VESSELS[0], tab: "in_progress" },
-    { id: "vt_2", ...who(3), amount: 162_000, submittedOn: daysAgo(2), status: "In Progress", stage: "Inspection", vessel: VESSELS[3], tab: "in_progress" },
-    { id: "vt_3", ...who(7), amount: 505_000, submittedOn: daysAgo(4), status: "In Progress", stage: "Titling Check", vessel: VESSELS[7], tab: "in_progress" },
-    { id: "vt_4", ...who(2), amount: 410_000, submittedOn: daysAgo(8), status: "Completed", stage: "Completed", vessel: VESSELS[2], tab: "completed" },
-    { id: "vt_5", ...who(5), amount: 1_150_000, submittedOn: daysAgo(13), status: "Completed", stage: "Completed", vessel: VESSELS[5], tab: "completed" },
-  ];
-  return {
-    key: "vato",
-    title: "VATO",
-    subtitle: "Vessel valuation & titling checks.",
-    amountLabel: "Valuation",
-    tabs: [
-      { key: "in_progress", label: "In Progress", icon: Clock },
-      { key: "completed", label: "Completed", icon: CheckCircle2 },
-    ],
-    rows,
-  };
-}
