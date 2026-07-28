@@ -1,9 +1,11 @@
 /**
  * Mock social-media analytics for the Marketing → Social statistics dashboard.
  *
- * Shapes mirror what a real aggregator (Meta / LinkedIn / YouTube / TikTok /
- * Pinterest / GBP / Threads / Bluesky) would return per channel per period, so
- * the page can be pointed at live connectors later without UI changes.
+ * Data is organised as ACCOUNTS (e.g. "YachtWay", "YachtWay Hub") → CHANNELS
+ * (Meta/LinkedIn/…) → metrics. The page selects one or more accounts and the
+ * helpers here aggregate across them. Shapes mirror what a real aggregator
+ * would return per account per channel per period, so the page can point at
+ * live connectors later without UI changes.
  */
 
 export type ChannelId =
@@ -28,6 +30,19 @@ export const CHANNELS: ChannelMeta[] = [
   { id: "bluesky", name: "Bluesky", color: "#0085FF" },
 ];
 
+export interface AccountMeta {
+  id: string;
+  name: string;
+  /** Relative size vs the flagship account — used to scale the mock metrics. */
+  scale: number;
+}
+
+export const ACCOUNTS: AccountMeta[] = [
+  { id: "yachtway", name: "YachtWay", scale: 1 },
+  { id: "hub", name: "YachtWay Hub", scale: 0.18 },
+  { id: "charter", name: "YachtWay Charter", scale: 0.35 },
+];
+
 export interface ChannelStats {
   id: ChannelId;
   posts: number;
@@ -38,15 +53,14 @@ export interface ChannelStats {
   reach: number;
   linkClicks: number;
   followers: number;
-  /** Period-over-period % change for the headline engagement metric. */
   engagementTrendPct: number;
   impressionsTrendPct: number;
   reachTrendPct: number;
   postsTrendPct: number;
 }
 
-/** Per-channel stats for the selected period (Jul 21–27 2026 in the mock). */
-export const CHANNEL_STATS: Record<ChannelId, ChannelStats> = {
+/** Flagship (YachtWay) per-channel stats; other accounts scale from these. */
+const BASE_CHANNEL_STATS: Record<ChannelId, ChannelStats> = {
   facebook:  { id: "facebook",  posts: 19, likes: 423,  comments: 0,   shares: 3,    impressions: 12_020,  reach: 7_860,  linkClicks: 0, followers: 210, engagementTrendPct: -46.62, impressionsTrendPct: -27.89, reachTrendPct: -29.09, postsTrendPct: -24 },
   instagram: { id: "instagram", posts: 7,  likes: 6_270, comments: 117, shares: 1_110, impressions: 193_310, reach: 62_350, linkClicks: 0, followers: 198, engagementTrendPct: -21.7, impressionsTrendPct: -19.31, reachTrendPct: -35.47, postsTrendPct: 40 },
   linkedin:  { id: "linkedin",  posts: 0,  likes: 4,    comments: 0,   shares: 0,    impressions: 113,     reach: 85,     linkClicks: 0, followers: 65,  engagementTrendPct: 0, impressionsTrendPct: 232.35, reachTrendPct: 466.67, postsTrendPct: 0 },
@@ -58,7 +72,6 @@ export const CHANNEL_STATS: Record<ChannelId, ChannelStats> = {
   bluesky:   { id: "bluesky",   posts: 0,  likes: 0,    comments: 0,   shares: 0,    impressions: 0,       reach: 0,      linkClicks: 0, followers: 0,   engagementTrendPct: 0, impressionsTrendPct: 0, reachTrendPct: 0, postsTrendPct: 0 },
 };
 
-/** Daily performance series (7 days, Tue → Mon). */
 export interface DayPoint {
   day: string;
   facebookPosts: number;
@@ -68,7 +81,7 @@ export interface DayPoint {
   comments: number;
 }
 
-export const DAILY: DayPoint[] = [
+const BASE_DAILY: DayPoint[] = [
   { day: "Tue", facebookPosts: 1, instagramPosts: 1, impressions: 34_100, likes: 620, comments: 22 },
   { day: "Wed", facebookPosts: 1, instagramPosts: 0, impressions: 24_900, likes: 210, comments: 8 },
   { day: "Thu", facebookPosts: 1, instagramPosts: 1, impressions: 26_800, likes: 340, comments: 12 },
@@ -85,18 +98,21 @@ export interface TopPost {
   comments: number;
   shares: number;
   channel: ChannelId;
+  accountId: string;
 }
 
-export const TOP_POSTS: TopPost[] = [
-  { id: "tp1", caption: "While the world fights for a berth in Port Hercule this weekend, the people who know better are docking in Italy. Cala del Forte si…", likes: 25_140, comments: 106, shares: 0, channel: "instagram" },
-  { id: "tp2", caption: "They say diamonds are a girl's best friend. We think a superyacht glistening off Monaco is every bit as inspiring as a rock on a fing…", likes: 9_210, comments: 77, shares: 0, channel: "instagram" },
-  { id: "tp3", caption: "Bravo Eugenia. 109 meters of gigayacht at anchor on the Côte d'Azur. Built by Oceanco. Designed by none other than the award …", likes: 6_270, comments: 53, shares: 0, channel: "instagram" },
-  { id: "tp4", caption: "Are you ready for Monaco race weekend? The Grand Prix is here, and Port Hercule is the most valuable water on earth. Only 142 …", likes: 5_890, comments: 49, shares: 0, channel: "instagram" },
-  { id: "tp5", caption: "The Monaco Grand Prix is over, and the track has its champion. But the better contest is the one anchored just outside Port Herc…", likes: 4_280, comments: 37, shares: 0, channel: "instagram" },
+const BASE_TOP_POSTS: TopPost[] = [
+  { id: "tp1", caption: "While the world fights for a berth in Port Hercule this weekend, the people who know better are docking in Italy. Cala del Forte si…", likes: 25_140, comments: 106, shares: 0, channel: "instagram", accountId: "yachtway" },
+  { id: "tp2", caption: "They say diamonds are a girl's best friend. We think a superyacht glistening off Monaco is every bit as inspiring as a rock on a fing…", likes: 9_210, comments: 77, shares: 0, channel: "instagram", accountId: "yachtway" },
+  { id: "tp3", caption: "Bravo Eugenia. 109 meters of gigayacht at anchor on the Côte d'Azur. Built by Oceanco. Designed by none other than the award …", likes: 6_270, comments: 53, shares: 0, channel: "instagram", accountId: "yachtway" },
+  { id: "tp4", caption: "Are you ready for Monaco race weekend? The Grand Prix is here, and Port Hercule is the most valuable water on earth. Only 142 …", likes: 5_890, comments: 49, shares: 0, channel: "instagram", accountId: "charter" },
+  { id: "tp5", caption: "The Monaco Grand Prix is over, and the track has its champion. But the better contest is the one anchored just outside Port Herc…", likes: 4_280, comments: 37, shares: 0, channel: "instagram", accountId: "hub" },
+  { id: "tp6", caption: "Charter season is open. Here's where the fleet is heading this summer — and the three berths still worth chasing.", likes: 3_110, comments: 24, shares: 0, channel: "facebook", accountId: "hub" },
+  { id: "tp7", caption: "Behind the scenes on a 40m refit: the yard, the timeline, and the one decision every owner gets wrong.", likes: 2_540, comments: 19, shares: 0, channel: "facebook", accountId: "charter" },
 ];
 
 export interface AgeBand { label: string; value: number; }
-export const AGE_BANDS: AgeBand[] = [
+const BASE_AGE_BANDS: AgeBand[] = [
   { label: "13-17 Years Old", value: 2_010 },
   { label: "18-24 Years Old", value: 11_320 },
   { label: "25-34 Years Old", value: 19_240 },
@@ -106,11 +122,71 @@ export const AGE_BANDS: AgeBand[] = [
   { label: "65+ Years Old", value: 3_040 },
 ];
 
-export const GENDER = { malePct: 59.3, male: 44_480, femalePct: 40.7, female: 30_520 };
+const BASE_GENDER = { malePct: 59.3, male: 44_480, femalePct: 40.7, female: 30_520 };
 
-/* -------- Aggregates -------- */
-export function totals() {
-  const list = Object.values(CHANNEL_STATS);
+/* ------------------------------------------------------------------ */
+/* Aggregation across selected accounts                                 */
+/* ------------------------------------------------------------------ */
+
+function scaleSum(ids: string[]): number {
+  return ACCOUNTS.filter((a) => ids.includes(a.id)).reduce((s, a) => s + a.scale, 0);
+}
+const r = (n: number, f: number) => Math.round(n * f);
+
+/** Per-channel stats aggregated across the selected accounts. */
+export function channelStatsFor(accountIds: string[]): Record<ChannelId, ChannelStats> {
+  const f = scaleSum(accountIds);
+  const out = {} as Record<ChannelId, ChannelStats>;
+  for (const c of CHANNELS) {
+    const b = BASE_CHANNEL_STATS[c.id];
+    out[c.id] = {
+      ...b,
+      posts: r(b.posts, f),
+      likes: r(b.likes, f),
+      comments: r(b.comments, f),
+      shares: r(b.shares, f),
+      impressions: r(b.impressions, f),
+      reach: r(b.reach, f),
+      linkClicks: r(b.linkClicks, f),
+      followers: r(b.followers, f),
+    };
+  }
+  return out;
+}
+
+export function dailyFor(accountIds: string[]): DayPoint[] {
+  const f = scaleSum(accountIds);
+  return BASE_DAILY.map((d) => ({
+    day: d.day,
+    facebookPosts: r(d.facebookPosts, f),
+    instagramPosts: r(d.instagramPosts, f),
+    impressions: r(d.impressions, f),
+    likes: r(d.likes, f),
+    comments: r(d.comments, f),
+  }));
+}
+
+export function topPostsFor(accountIds: string[]): TopPost[] {
+  return BASE_TOP_POSTS
+    .filter((p) => accountIds.includes(p.accountId))
+    .sort((a, b) => b.likes - a.likes)
+    .slice(0, 5);
+}
+
+export function demographyFor(accountIds: string[]) {
+  const f = scaleSum(accountIds);
+  return {
+    ageBands: BASE_AGE_BANDS.map((a) => ({ ...a, value: r(a.value, f) })),
+    gender: {
+      ...BASE_GENDER,
+      male: r(BASE_GENDER.male, f),
+      female: r(BASE_GENDER.female, f),
+    },
+  };
+}
+
+export function totalsFor(stats: Record<ChannelId, ChannelStats>) {
+  const list = Object.values(stats);
   return {
     posts: list.reduce((s, c) => s + c.posts, 0),
     likes: list.reduce((s, c) => s + c.likes, 0),
@@ -121,13 +197,13 @@ export function totals() {
   };
 }
 
+/* -------- Formatting helpers -------- */
 export function compact(n: number): string {
   if (n === 0) return "0";
   if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
   if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(n >= 100_000 ? 2 : 1)}K`;
   return String(n);
 }
-
 export function channelName(id: ChannelId): string {
   return CHANNELS.find((c) => c.id === id)?.name ?? id;
 }

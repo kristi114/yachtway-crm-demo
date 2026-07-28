@@ -1,17 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell,
 } from "recharts";
-import { Send, ThumbsUp, Users, MousePointerClick, MessageCircle, TrendingUp } from "lucide-react";
+import { Send, ThumbsUp, Users, MousePointerClick, MessageCircle, TrendingUp, Check } from "lucide-react";
 
 import { guarded } from "@/components/require-access";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader, PageBody } from "@/components/page-header";
 import {
-  CHANNELS, CHANNEL_STATS, DAILY, TOP_POSTS, AGE_BANDS, GENDER,
-  totals, compact, channelColor, type ChannelId,
+  CHANNELS, ACCOUNTS, channelStatsFor, dailyFor, topPostsFor, demographyFor,
+  totalsFor, compact, channelColor, type ChannelId, type ChannelStats,
 } from "@/lib/social-stats";
 
 export const Route = createFileRoute("/marketing/statistics")({
@@ -44,7 +44,7 @@ function Card({ title, children, subtitle }: { title: string; subtitle?: string;
   );
 }
 
-const KPIS = (t: ReturnType<typeof totals>) => [
+const KPIS = (t: ReturnType<typeof totalsFor>) => [
   { label: "Number of posts", value: String(t.posts), icon: Send },
   { label: "Total likes", value: compact(t.likes), icon: ThumbsUp },
   { label: "Total followers", value: String(t.followers), icon: Users },
@@ -53,18 +53,67 @@ const KPIS = (t: ReturnType<typeof totals>) => [
 ];
 
 function SocialStatisticsPage() {
-  const t = useMemo(() => totals(), []);
-  const rows = CHANNELS.map((c) => ({ ...c, s: CHANNEL_STATS[c.id] }));
+  // Default: all accounts selected.
+  const [accounts, setAccounts] = useState<string[]>(ACCOUNTS.map((a) => a.id));
+  const allOn = accounts.length === ACCOUNTS.length;
+
+  function toggleAccount(id: string) {
+    setAccounts((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      // Never allow an empty selection — fall back to all.
+      return next.length === 0 ? ACCOUNTS.map((a) => a.id) : next;
+    });
+  }
+
+  const stats = useMemo(() => channelStatsFor(accounts), [accounts]);
+  const daily = useMemo(() => dailyFor(accounts), [accounts]);
+  const topPosts = useMemo(() => topPostsFor(accounts), [accounts]);
+  const demo = useMemo(() => demographyFor(accounts), [accounts]);
+  const t = useMemo(() => totalsFor(stats), [stats]);
+  const rows = CHANNELS.map((c) => ({ ...c, s: stats[c.id] }));
+
+  const selectedLabel = allOn
+    ? "all accounts"
+    : ACCOUNTS.filter((a) => accounts.includes(a.id)).map((a) => a.name).join(", ");
 
   return (
     <AppShell>
       <PageHeader
         eyebrow="Marketing"
         title="Social statistics"
-        subtitle="Jul 21, 2026 – Jul 27, 2026 vs previous 7 days · all connected channels"
+        subtitle={`Jul 21, 2026 – Jul 27, 2026 vs previous 7 days · ${selectedLabel}`}
       />
       <PageBody>
         <div className="space-y-6">
+          {/* Account filter */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Accounts</span>
+            <button
+              type="button"
+              onClick={() => setAccounts(ACCOUNTS.map((a) => a.id))}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                allOn ? "border-brand bg-brand text-brand-foreground" : "border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {allOn && <Check className="h-3.5 w-3.5" />} All
+            </button>
+            {ACCOUNTS.map((a) => {
+              const on = !allOn && accounts.includes(a.id);
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => toggleAccount(a.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    on ? "border-brand bg-brand/10 text-brand-deep" : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {on && <Check className="h-3.5 w-3.5" />} {a.name}
+                </button>
+              );
+            })}
+          </div>
+
           {/* KPI row */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
             {KPIS(t).map((k) => (
@@ -81,7 +130,7 @@ function SocialStatisticsPage() {
           <Card title="Social post performance">
             <div className="h-[360px] px-2 py-4">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={DAILY} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                <ComposedChart data={daily} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                   <XAxis dataKey="day" tick={{ fontSize: 12 }} />
                   <YAxis yAxisId="left" tick={{ fontSize: 12 }} label={{ value: "Number of Posts", angle: -90, position: "insideLeft", style: { fontSize: 11 } }} />
@@ -153,7 +202,7 @@ function SocialStatisticsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {TOP_POSTS.map((p) => (
+                  {topPosts.map((p) => (
                     <tr key={p.id}>
                       <td className="max-w-[520px] truncate px-4 py-2.5">{p.caption}</td>
                       <td className="px-4 py-2.5 tabular-nums">{compact(p.likes)}</td>
@@ -174,7 +223,7 @@ function SocialStatisticsPage() {
                 <div className="h-40 w-40">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={[{ name: "Male", value: GENDER.male }, { name: "Female", value: GENDER.female }]} innerRadius={45} outerRadius={70} dataKey="value" stroke="none">
+                      <Pie data={[{ name: "Male", value: demo.gender.male }, { name: "Female", value: demo.gender.female }]} innerRadius={45} outerRadius={70} dataKey="value" stroke="none">
                         <Cell fill="#7C6FF0" />
                         <Cell fill="#38BDF8" />
                       </Pie>
@@ -183,12 +232,12 @@ function SocialStatisticsPage() {
                   </ResponsiveContainer>
                 </div>
                 <div className="space-y-1 text-sm">
-                  <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: "#7C6FF0" }} /> Male · {GENDER.malePct}% · {compact(GENDER.male)}</div>
-                  <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: "#38BDF8" }} /> Female · {GENDER.femalePct}% · {compact(GENDER.female)}</div>
+                  <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: "#7C6FF0" }} /> Male · {demo.gender.malePct}% · {compact(demo.gender.male)}</div>
+                  <div className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: "#38BDF8" }} /> Female · {demo.gender.femalePct}% · {compact(demo.gender.female)}</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {AGE_BANDS.map((a) => (
+                {demo.ageBands.map((a) => (
                   <div key={a.label} className="rounded-md border border-border bg-secondary/40 px-3 py-2">
                     <div className="text-xs text-muted-foreground">{a.label}</div>
                     <div className="text-sm font-semibold tabular-nums">{compact(a.value)}</div>
@@ -204,7 +253,7 @@ function SocialStatisticsPage() {
 }
 
 /* ---------- Reusable per-channel table ---------- */
-type Row = { id: ChannelId; name: string; color: string; s: typeof CHANNEL_STATS[ChannelId] };
+type Row = { id: ChannelId; name: string; color: string; s: ChannelStats };
 
 function ChannelTable({
   title, rows, value, trend, valueHeader, extraCols = [],
