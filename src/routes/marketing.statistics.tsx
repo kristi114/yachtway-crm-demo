@@ -98,6 +98,9 @@ function SocialStatisticsPage() {
 
   function toggleAccount(id: string) {
     setAccounts((prev) => {
+      // From the "All" state, clicking one account drills into just that one
+      // (rather than removing it and leaving the others selected).
+      if (prev.length === ACCOUNTS.length) return [id];
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
       // Never allow an empty selection — fall back to all.
       return next.length === 0 ? ACCOUNTS.map((a) => a.id) : next;
