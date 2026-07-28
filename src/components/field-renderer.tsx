@@ -148,7 +148,23 @@ function FieldRow({
         )}
       </div>
 
-      {isOption ? (
+      {field.type === "checkbox" && onEditField ? (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={raw === true}
+          onClick={() => onEditField(field.key, !(raw === true))}
+          className={`inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+            raw === true ? "bg-brand" : "bg-muted"
+          }`}
+        >
+          <span
+            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+              raw === true ? "translate-x-5" : "translate-x-0.5"
+            }`}
+          />
+        </button>
+      ) : isOption ? (
         <OptionControl field={field} raw={raw} onEditField={onEditField} />
       ) : href ? (
         <a
@@ -292,7 +308,11 @@ export function SectionCard({
   const recordPipeline = record.pipeline;
   const inPipeline = (f: FieldSection["fields"][number]) =>
     !f.pipelines || (typeof recordPipeline === "string" && f.pipelines.includes(recordPipeline));
-  const populated = section.fields.filter((f) => inPipeline(f) && !isEmpty(f, record[f.key]));
+  // In edit mode, keep checkboxes visible even when unchecked so they can be
+  // toggled on (otherwise an unchecked box counts as "empty" and is hidden).
+  const populated = section.fields.filter(
+    (f) => inPipeline(f) && (!isEmpty(f, record[f.key]) || (!!onEditField && f.type === "checkbox")),
+  );
   // Hide entire section when nothing is populated and the user has access.
   // (Restricted sections still show the lock message.)
   if (allowed && populated.length === 0 && !extra) return null;

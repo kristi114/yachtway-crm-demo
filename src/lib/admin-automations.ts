@@ -323,6 +323,26 @@ function seed(): Flow[] {
       updatedAt: now,
     },
     {
+      id: "flw_paid_seat",
+      name: "Paid seat activated → notify owner",
+      description: "When a contact's Paid Seat On Platform is switched on, email the account owner and banner their dashboard.",
+      status: "active",
+      trigger: { type: "field_changed", objectKey: "contact", field: "paidSeatOnPlatform" },
+      steps: [
+        {
+          id: stepId(),
+          kind: "branch",
+          condition: { match: "all", clauses: [{ id: clauseId(), field: "paidSeatOnPlatform", op: "eq", value: "true" }] },
+          yes: [
+            { id: stepId(), kind: "action", action: "send_email", config: { template: "Paid seat activated", to: "Record owner" } },
+            { id: stepId(), kind: "action", action: "notify", config: { to: "Record owner", message: "A contact you own now has a paid seat on the platform." } },
+          ],
+          no: [],
+        },
+      ],
+      updatedAt: now,
+    },
+    {
       id: "flw_won",
       name: "Opportunity won → invoice",
       description: "When an opp is marked Closed Won, create a draft invoice and notify billing.",

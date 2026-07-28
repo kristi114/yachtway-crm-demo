@@ -20,6 +20,7 @@ import { ContactEmailsPanel } from "@/components/email-builder/contact-emails-pa
 import { emailsForContact } from "@/lib/email-recipients";
 import { CONTACT_SECTIONS, LOAN_APPLICATION_FIELDS } from "@/lib/field-schema";
 import { getContact, getCompany, getLoanApplication, listingsForBroker, getBrand, updateContact } from "@/lib/mock-data";
+import { runContactSaveAutomations } from "@/lib/automations-runtime";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -84,8 +85,14 @@ function ContactDetail() {
   const contactName = `${contact.firstName} ${contact.lastName}`;
 
   const handleSave = (values: Partial<typeof contact>) => {
+    const next = { ...contact, ...values };
     updateContact(contact.id, values);
-    setContact({ ...contact, ...values });
+    setContact(next);
+    // Fire record-change automations (e.g. paid-seat activation notifies owner).
+    runContactSaveAutomations(
+      contact as unknown as Record<string, unknown> & { id: string },
+      next as unknown as Record<string, unknown> & { id: string },
+    );
   };
 
   return (
