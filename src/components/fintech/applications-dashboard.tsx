@@ -30,12 +30,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { isClosedStatus, type Deal, type DashboardConfig } from "@/lib/fintech-dashboards";
+import { formatDate } from "@/lib/format-date";
 
 type SortKey = "applicant" | "amount" | "submittedOn" | "status" | "stage" | "vessel" | "closedDate";
-
-/** Explicit date-format hint appended to date labels so dd.mm.yyyy is never
- *  misread across regions (e.g. US vs EU day/month order). Matches fmtDate(). */
-const DATE_FMT = "dd.mm.yyyy";
 
 function statusClass(status: string): string {
   switch (status) {
@@ -69,10 +66,7 @@ function stageDot(stage: string): string {
   return "bg-amber-500";
 }
 
-function fmtDate(iso: string): string {
-  const d = new Date(iso);
-  return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
-}
+const fmtDate = formatDate;
 
 function SortableHead({ label, col, sort, onSort, hint }: { label: string; col: SortKey; sort: { key: SortKey; dir: "asc" | "desc" }; onSort: (c: SortKey) => void; hint?: boolean }) {
   const active = sort.key === col;
@@ -138,7 +132,7 @@ function EditDealDialog({
           </div>
           {showClosed && (
             <div className="space-y-1.5">
-              <Label>{config.closedDateLabel} ({DATE_FMT})</Label>
+              <Label>{config.closedDateLabel}</Label>
               <Input type="date" value={closedDate} onChange={(e) => setClosedDate(e.target.value)} />
             </div>
           )}
@@ -255,8 +249,8 @@ export function ApplicationsDashboard({
             <TableRow>
               <SortableHead label="Applicant" col="applicant" sort={sort} onSort={onSort} />
               <SortableHead label={config.amountLabel} col="amount" sort={sort} onSort={onSort} hint />
-              <SortableHead label={`Submitted On (${DATE_FMT})`} col="submittedOn" sort={sort} onSort={onSort} />
-              {showClosed && <SortableHead label={`${config.closedDateLabel} (${DATE_FMT})`} col="closedDate" sort={sort} onSort={onSort} />}
+              <SortableHead label="Submitted On" col="submittedOn" sort={sort} onSort={onSort} />
+              {showClosed && <SortableHead label={config.closedDateLabel} col="closedDate" sort={sort} onSort={onSort} />}
               <SortableHead label="Status" col="status" sort={sort} onSort={onSort} />
               <SortableHead label="Stage" col="stage" sort={sort} onSort={onSort} />
               <SortableHead label="Vessel Make & Model" col="vessel" sort={sort} onSort={onSort} />

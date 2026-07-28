@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { ArrowUp, ArrowDown, ArrowUpDown, Filter, X, Plus } from "lucide-react";
@@ -76,7 +77,7 @@ function fmtDate(iso: string): string {
   if (!iso) return "never";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "never";
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return formatDate(d);
 }
 function fmtAgo(iso: string): string {
   if (!iso) return "never";

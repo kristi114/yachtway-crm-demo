@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import logo from "@/assets/yachtway-black.png.asset.json";
 import { docTotal, paymentMethodLabel, studioPassSavings, type BillingDoc } from "@/lib/billing";
 import { formatMoney } from "@/lib/currency";
@@ -25,11 +26,7 @@ const ISSUER = {
 
 function fmtDate(iso?: string | null) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  return formatDate(iso);
 }
 
 export function InvoiceDocument({ doc }: { doc: BillingDoc }) {

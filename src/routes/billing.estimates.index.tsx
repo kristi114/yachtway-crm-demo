@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { guarded } from "@/components/require-access";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { FileCheck2, Plus } from "lucide-react";
@@ -92,7 +93,7 @@ function EstimatesPage() {
                       )}
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">
-                      {new Date(d.issued_at).toLocaleDateString()}
+                      {formatDate(d.issued_at)}
                     </td>
                     <td className="px-3 py-2 text-right font-semibold tabular-nums">
                       {formatMoney(docTotal(d), d.currency)}

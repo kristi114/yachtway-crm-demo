@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/format-date";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Mail, Users, Info, ChevronDown, ChevronRight, Search } from "lucide-react";
@@ -223,10 +224,7 @@ function SentReportPage() {
   }
 
   const recipients = email.recipientCount ?? email.to.length;
-  const sentAt = new Date(email.sentAt).toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  const sentAt = formatDateTime(email.sentAt);
 
   return (
     <AppShell>

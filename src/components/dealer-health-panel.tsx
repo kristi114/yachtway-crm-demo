@@ -4,7 +4,7 @@ function formatDate(iso: string | undefined | null) {
   if (!iso) return undefined;
   const d = new Date(iso + "T00:00:00");
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 import { Link } from "@tanstack/react-router";
 import { Activity, Eye, Clock, LogIn, Video, Radio, DollarSign, TrendingUp, TrendingDown, Flame, Snowflake, Users, Camera, Sparkles, FileText, EyeOff, ListChecks, Anchor, Truck } from "lucide-react";

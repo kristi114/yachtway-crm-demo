@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { CheckCircle2, XCircle, Anchor, CreditCard } from "lucide-react";
@@ -85,12 +86,12 @@ function SharedDoc({ doc, token }: { doc: BillingDoc; token: string }) {
           <div className="grid grid-cols-2 gap-4 px-6 py-4 text-sm">
             <div>
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Issued</div>
-              <div>{new Date(doc.issued_at).toLocaleDateString()}</div>
+              <div>{formatDate(doc.issued_at)}</div>
             </div>
             {doc.due_at ? (
               <div>
                 <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Due</div>
-                <div>{new Date(doc.due_at).toLocaleDateString()}</div>
+                <div>{formatDate(doc.due_at)}</div>
               </div>
             ) : doc.kind === "invoice" ? (
               <div>
@@ -163,7 +164,7 @@ function SharedDoc({ doc, token }: { doc: BillingDoc; token: string }) {
                   <div className="font-semibold text-brand-deep">
                     You {doc.status} this estimate
                     {doc.client_response_at &&
-                      ` on ${new Date(doc.client_response_at).toLocaleDateString()}`}
+                      ` on ${formatDate(doc.client_response_at)}`}
                     .
                   </div>
                   {doc.client_response_note && (

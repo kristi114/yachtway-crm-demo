@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { guarded } from "@/components/require-access";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -88,7 +89,7 @@ function InvoiceDetailPage() {
         subtitle={
           <span className="flex items-center gap-2">
             <Badge className={STATUS_STYLES[doc.status]}>{doc.status}</Badge>
-            <span>Issued {new Date(doc.issued_at).toLocaleDateString()}</span>
+            <span>Issued {formatDate(doc.issued_at)}</span>
           </span>
         }
         actions={
@@ -217,11 +218,11 @@ function InvoiceDetailPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Issued</span>
-                  <span>{new Date(doc.issued_at).toLocaleDateString()}</span>
+                  <span>{formatDate(doc.issued_at)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Due</span>
-                  <span>{doc.due_at ? new Date(doc.due_at).toLocaleDateString() : "Due upon receipt"}</span>
+                  <span>{doc.due_at ? formatDate(doc.due_at) : "Due upon receipt"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Currency</span>

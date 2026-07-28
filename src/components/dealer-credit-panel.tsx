@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { useMemo, useState, type FormEvent } from "react";
 import { CreditCard, Plus, Trash2, AlertTriangle, User, Calendar } from "lucide-react";
 import {
@@ -86,7 +87,7 @@ export function DealerCreditPanel({ companyId, companyName, currency }: Props) {
                 </div>
                 <div className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
                   <Calendar className="h-3 w-3" />
-                  {new Date(e.createdAt).toLocaleDateString()}
+                  {formatDate(e.createdAt)}
                 </div>
               </div>
               <div className="min-w-0 flex-1 space-y-1">

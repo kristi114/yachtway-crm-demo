@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   StickyNote, CheckSquare, Calendar, Briefcase, Plus, Mail,
@@ -638,7 +639,7 @@ function CommsRow({ entry: c }: { entry: CommsLogEntry }) {
         <span>Logged by {c.author}</span>
         {c.follow_up_at && (
           <span className="rounded-sm bg-warning/15 px-1.5 py-0.5 font-medium text-warning">
-            Follow up {new Date(c.follow_up_at).toLocaleDateString()}
+            Follow up {formatDate(c.follow_up_at)}
           </span>
         )}
         {isChat && c.chat_url && (

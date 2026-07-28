@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Video, VideoOff, ExternalLink, Anchor, Camera, EyeOff, FileText, ListChecks } from "lucide-react";
 import { BoatIcon } from "@/components/icons/boat-icon";
@@ -89,7 +90,7 @@ function ListingDetail() {
               <Field label="Length" value={`${l.lengthFt} ft`} />
               <Field label="Price" value={l.priceHidden ? "Hidden" : fmtMoney(l.priceUsd, company?.currency)} />
               <Field label="Hull ID" value={l.hullId} mono />
-              <Field label="Listed" value={new Date(l.listedAt).toLocaleDateString()} />
+              <Field label="Listed" value={formatDate(l.listedAt)} />
               <Field label="Photos" value={`${l.photoCount}`} />
               <Field label="Photo setting" value={l.photoSetting.replace("_", " ")} />
               <Field label="Media quality" value={l.mediaQuality} />

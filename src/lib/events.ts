@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { useSyncExternalStore } from "react";
 
 /**
@@ -298,8 +299,7 @@ export function isUpcoming(e: DealerEvent, today = new Date()): boolean {
 }
 
 export function formatEventDates(e: DealerEvent): string {
-  const fmt = (d: string) =>
-    d ? new Date(`${d}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";
+  const fmt = (d: string) => (d ? formatDate(`${d}T00:00:00`) : "");
   const start = fmt(e.eventStartDate);
   const end = e.eventEndDate && e.eventEndDate !== e.eventStartDate ? fmt(e.eventEndDate) : "";
   return end ? `${start} - ${end}` : start;

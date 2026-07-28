@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { useMemo } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Mail, Plus, Code2, LayoutTemplate, Trash2 } from "lucide-react";
@@ -18,7 +19,7 @@ function relTime(iso: string): string {
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.round(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
-  return new Date(iso).toLocaleDateString();
+  return formatDate(iso);
 }
 
 function ModeBadge({ mode }: { mode: EmailTemplate["mode"] }) {

@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/format-date";
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { Mail, ChevronRight } from "lucide-react";
@@ -13,13 +14,7 @@ const STATUS_STYLES: Record<RecipientStatus, string> = {
 };
 
 function when(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return formatDateTime(iso);
 }
 
 export function ContactEmailsPanel({ contactId }: { contactId: string }) {

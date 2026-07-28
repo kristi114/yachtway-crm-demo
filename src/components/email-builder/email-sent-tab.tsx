@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/format-date";
 import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Mail, Plus } from "lucide-react";
@@ -16,13 +17,7 @@ import { newTemplateId } from "@/lib/email-templates";
 import { useSentLog, type SentEmail } from "@/lib/email-send";
 
 function when(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return formatDateTime(iso);
 }
 
 function recipients(s: SentEmail): string {

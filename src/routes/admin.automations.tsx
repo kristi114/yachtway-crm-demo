@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus, Zap, Pencil, Trash2, Play, Pause, Workflow } from "lucide-react";
@@ -101,7 +102,7 @@ function AdminAutomationsPage() {
               <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
                 <span>{countSteps(f.steps)} steps</span>
                 <span>·</span>
-                <span>Updated {new Date(f.updatedAt).toLocaleDateString()}</span>
+                <span>Updated {formatDate(f.updatedAt)}</span>
               </div>
 
               <div className="mt-4 flex items-center gap-2 border-t border-border pt-3">

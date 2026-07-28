@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { guarded } from "@/components/require-access";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { FileText, Plus } from "lucide-react";
@@ -74,10 +75,10 @@ function InvoicesPage() {
                       </Link>
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">
-                      {new Date(d.issued_at).toLocaleDateString()}
+                      {formatDate(d.issued_at)}
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">
-                      {d.due_at ? new Date(d.due_at).toLocaleDateString() : "Due upon receipt"}
+                      {d.due_at ? formatDate(d.due_at) : "Due upon receipt"}
                     </td>
                     <td className="px-3 py-2 text-right font-semibold tabular-nums">
                       {formatMoney(docTotal(d), d.currency)}

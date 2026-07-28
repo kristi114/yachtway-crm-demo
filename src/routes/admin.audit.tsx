@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { History, ArrowRight } from "lucide-react";
@@ -18,7 +19,7 @@ function when(iso: string) {
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
   if (mins < 60 * 24) return `${Math.round(mins / 60)}h ago`;
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return formatDate(d);
 }
 
 function AdminAuditPage() {

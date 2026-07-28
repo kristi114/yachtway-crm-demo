@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/format-date";
 import { Link } from "@tanstack/react-router";
 import { Receipt } from "lucide-react";
 
@@ -69,7 +70,7 @@ export function OpportunityBillingPanel({ opportunityId }: { opportunityId: stri
                 </td>
                 <td className="px-3 py-2 capitalize text-muted-foreground">{d.kind}</td>
                 <td className="px-3 py-2 text-muted-foreground">
-                  {new Date(d.issued_at).toLocaleDateString()}
+                  {formatDate(d.issued_at)}
                 </td>
                 <td className="px-3 py-2 text-muted-foreground">
                   {d.payment_method ? paymentMethodLabel(d.payment_method) : "—"}
