@@ -2,7 +2,10 @@ import { useState, type ReactNode } from "react";
 import { ChevronRight, HelpCircle, Lock } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import type { FieldDef, FieldSection } from "@/lib/field-schema";
+import { FIELD_OPTIONS, dynamicOptions } from "@/lib/field-options";
 import { Badge } from "@/components/ui/badge";
+
+type EditField = (key: string, value: unknown) => void;
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type MockRecord = Record<string, unknown>;
@@ -49,15 +52,73 @@ function formatValue(field: FieldDef, raw: unknown, record: MockRecord): string 
   }
 }
 
+/** Editable / display control for single- & multi-option fields, sourced from
+ *  the catalog options plus any value already on the record (dynamicOptions). */
+function OptionControl({
+  field, raw, onEditField,
+}: {
+  field: FieldDef;
+  raw: unknown;
+  onEditField?: EditField;
+}) {
+  const declared = FIELD_OPTIONS[field.key];
+  if (field.type === "multi_option") {
+    const cur = Array.isArray(raw) ? (raw as string[]) : raw ? [String(raw)] : [];
+    const all = dynamicOptions(declared, ...cur);
+    if (!onEditField) {
+      return cur.length ? (
+        <div className="flex flex-wrap gap-1">
+          {cur.map((v) => <Badge key={v} variant="secondary" className="text-[11px]">{v}</Badge>)}
+        </div>
+      ) : <div className="text-base font-semibold text-foreground">-</div>;
+    }
+    return (
+      <div className="flex flex-wrap gap-1">
+        {all.map((o) => {
+          const on = cur.includes(o);
+          return (
+            <button
+              key={o}
+              type="button"
+              onClick={() => onEditField(field.key, on ? cur.filter((x) => x !== o) : [...cur, o])}
+              className={`rounded-full border px-2 py-0.5 text-[11px] transition-colors ${on ? "border-brand bg-brand/10 text-brand" : "border-border text-muted-foreground hover:bg-accent"}`}
+            >
+              {o}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+  // single_option
+  const val = raw == null ? "" : String(raw);
+  const all = dynamicOptions(declared, val);
+  if (!onEditField) {
+    return val ? <Badge variant="secondary">{val}</Badge> : <div className="text-base font-semibold text-foreground">-</div>;
+  }
+  return (
+    <select
+      value={val}
+      onChange={(e) => onEditField(field.key, e.target.value)}
+      className="native-select w-full rounded-md border border-input bg-transparent px-2 py-1.5 text-sm font-medium"
+    >
+      {val === "" && <option value="">Select…</option>}
+      {all.map((o) => <option key={o} value={o}>{o}</option>)}
+    </select>
+  );
+}
+
 function FieldRow({
-  field, record, onClick,
+  field, record, onClick, onEditField,
 }: {
   field: FieldDef;
   record: MockRecord;
   onClick?: () => void;
+  onEditField?: EditField;
 }) {
   const raw = record[field.key];
   const value = formatValue(field, raw, record);
+  const isOption = field.type === "single_option" || field.type === "multi_option";
   const rawUrl = field.type === "url" && typeof raw === "string" && raw.trim() !== "" ? raw : null;
   const href = rawUrl ? (rawUrl.startsWith("http://") || rawUrl.startsWith("https://") ? rawUrl : `https://${rawUrl}`) : null;
 
@@ -87,7 +148,9 @@ function FieldRow({
         )}
       </div>
 
-      {href ? (
+      {isOption ? (
+        <OptionControl field={field} raw={raw} onEditField={onEditField} />
+      ) : href ? (
         <a
           href={href}
           target="_blank"
@@ -206,12 +269,14 @@ export function SectionCard({
   section,
   record,
   fieldActions,
+  onEditField,
   defaultOpen = false,
   extra,
 }: {
   section: FieldSection;
   record: MockRecord;
   fieldActions?: Record<string, () => void>;
+  onEditField?: EditField;
   defaultOpen?: boolean;
   /** Custom content rendered at the bottom of the section body. */
   extra?: ReactNode;
@@ -256,7 +321,7 @@ export function SectionCard({
           {populated.length > 0 && (
             <div className="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {populated.map((f) => (
-                <FieldRow key={f.key} field={f} record={record} onClick={fieldActions?.[f.key]} />
+                <FieldRow key={f.key} field={f} record={record} onClick={fieldActions?.[f.key]} onEditField={onEditField} />
               ))}
             </div>
           )}
@@ -282,6 +347,7 @@ export function DetailSections({
   sections,
   record,
   fieldActions,
+  onEditField,
   sectionExtras,
   only,
   exclude,
@@ -289,6 +355,7 @@ export function DetailSections({
   sections: readonly FieldSection[];
   record: MockRecord;
   fieldActions?: Record<string, () => void>;
+  onEditField?: EditField;
   /** Extra content rendered inside a section, keyed by lowercase section title. */
   sectionExtras?: Record<string, ReactNode>;
   /** Render only these section titles (lowercase). */
@@ -349,6 +416,7 @@ export function DetailSections({
           section={s}
           record={record}
           fieldActions={fieldActions}
+          onEditField={onEditField}
           extra={sectionExtras?.[normalizeTitle(s.title)]}
           // First subsection ("Overview") is expanded, everything else collapsed.
           defaultOpen={i === 0}

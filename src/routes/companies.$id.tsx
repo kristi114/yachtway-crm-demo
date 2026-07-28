@@ -356,6 +356,7 @@ function CompanyDetail() {
               sections={COMPANY_SECTIONS}
               record={companyRecord}
               exclude={["accounting", "listings performance", "studio & 3d tours", "easyfund", "platform adoption"]}
+              onEditField={(key, value) => handleSave({ [key]: value } as Partial<typeof company>)}
 
               fieldActions={{
                 ...(listings.length > 0 ? { activeListings: () => setActiveTab("inventory") } : {}),

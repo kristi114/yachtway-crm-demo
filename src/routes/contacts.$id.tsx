@@ -213,6 +213,7 @@ function ContactDetail() {
               sections={CONTACT_SECTIONS}
               record={contact as unknown as Record<string, unknown>}
               exclude={["listings performance"]}
+              onEditField={(key, value) => handleSave({ [key]: value } as Partial<typeof contact>)}
             />
 
           </div>
