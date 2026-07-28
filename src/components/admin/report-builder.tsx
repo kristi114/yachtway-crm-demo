@@ -2,12 +2,14 @@ import { useMemo, useState } from "react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell,
 } from "recharts";
-import { ArrowLeft, Plus, X, Download, Save, Play, Clock, Send as SendIcon } from "lucide-react";
+import { ArrowLeft, Plus, X, Download, Save, Play, Clock, Send as SendIcon, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { RecordFilterBar } from "@/components/record-filter-bar";
+import { useDashboards, createDashboard, addReportToDashboard } from "@/lib/dashboards";
 import type { ObjectKey } from "@/lib/admin-config";
 import {
   getReport, saveReport, runReport, exportReportCsv, deliverReport, fieldsFor, fieldDef, isNumeric, formatCell,
@@ -34,6 +36,22 @@ export function ReportBuilder({ reportId, onClose }: { reportId: string; onClose
   const fields = useMemo(() => fieldsFor(def.objectKey), [def.objectKey]);
   const numericFields = fields.filter(isNumeric);
   const result = useMemo(() => runReport(def, search), [def, search]);
+  const dashboards = useDashboards();
+
+  function pinTo(dashboardId: string, dashboardName: string) {
+    saveReport(def); setDirty(false);
+    const ok = addReportToDashboard(dashboardId, def.id);
+    if (ok) toast.success(`Added to “${dashboardName}”.`);
+    else toast(`Already on “${dashboardName}”.`);
+  }
+  function pinToNew() {
+    const name = window.prompt("New dashboard name");
+    if (!name) return;
+    saveReport(def); setDirty(false);
+    const d = createDashboard(name);
+    addReportToDashboard(d.id, def.id);
+    toast.success(`Added to “${d.name}”.`);
+  }
 
   function patch(p: Partial<ReportDef>) {
     setDef((d) => ({ ...d, ...p }));
@@ -72,6 +90,20 @@ export function ReportBuilder({ reportId, onClose }: { reportId: string; onClose
         <Input value={def.name} onChange={(e) => patch({ name: e.target.value })} className="h-9 max-w-xs font-semibold" />
         <Input value={def.folder} onChange={(e) => patch({ folder: e.target.value })} className="h-9 max-w-[160px]" placeholder="Folder" />
         <div className="ml-auto flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm"><LayoutDashboard className="h-4 w-4" /> Add to dashboard</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Pin to dashboard</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {dashboards.map((d) => (
+                <DropdownMenuItem key={d.id} onClick={() => pinTo(d.id, d.name)}>{d.name}</DropdownMenuItem>
+              ))}
+              {dashboards.length > 0 && <DropdownMenuSeparator />}
+              <DropdownMenuItem onClick={pinToNew}><Plus className="h-4 w-4" /> New dashboard…</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" size="sm" onClick={() => exportReportCsv(def, result)}><Download className="h-4 w-4" /> Export CSV</Button>
           <Button size="sm" onClick={() => { saveReport(def); setDirty(false); }}>
             <Save className="h-4 w-4" /> {dirty ? "Save" : "Saved"}

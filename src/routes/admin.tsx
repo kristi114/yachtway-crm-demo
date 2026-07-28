@@ -22,6 +22,7 @@ const TABS = [
   { to: "/admin/objects", label: "Object manager", exact: false },
   { to: "/admin/automations", label: "Automations", exact: false },
   { to: "/admin/reports", label: "Reports", exact: false },
+  { to: "/admin/dashboards", label: "Dashboards", exact: false },
   { to: "/admin/users", label: "Users & roles", exact: false },
   { to: "/admin/access", label: "Access", exact: false },
   { to: "/admin/brands", label: "Brands", exact: false },
