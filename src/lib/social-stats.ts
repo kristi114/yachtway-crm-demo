@@ -9,8 +9,7 @@
  */
 
 export type ChannelId =
-  | "facebook" | "instagram" | "linkedin" | "tiktok"
-  | "pinterest" | "youtube" | "gbp" | "threads" | "bluesky";
+  | "facebook" | "instagram" | "linkedin" | "tiktok" | "youtube";
 
 export interface ChannelMeta {
   id: ChannelId;
@@ -23,11 +22,7 @@ export const CHANNELS: ChannelMeta[] = [
   { id: "instagram", name: "Instagram", color: "#E1306C" },
   { id: "linkedin", name: "LinkedIn", color: "#0A66C2" },
   { id: "tiktok", name: "TikTok", color: "#111111" },
-  { id: "pinterest", name: "Pinterest", color: "#E60023" },
   { id: "youtube", name: "YouTube", color: "#FF0000" },
-  { id: "gbp", name: "GBP", color: "#4285F4" },
-  { id: "threads", name: "Threads", color: "#000000" },
-  { id: "bluesky", name: "Bluesky", color: "#0085FF" },
 ];
 
 export interface AccountMeta {
@@ -65,11 +60,7 @@ const BASE_CHANNEL_STATS: Record<ChannelId, ChannelStats> = {
   instagram: { id: "instagram", posts: 7,  likes: 6_270, comments: 117, shares: 1_110, impressions: 193_310, reach: 62_350, linkClicks: 0, followers: 198, engagementTrendPct: -21.7, impressionsTrendPct: -19.31, reachTrendPct: -35.47, postsTrendPct: 40 },
   linkedin:  { id: "linkedin",  posts: 0,  likes: 4,    comments: 0,   shares: 0,    impressions: 113,     reach: 85,     linkClicks: 0, followers: 65,  engagementTrendPct: 0, impressionsTrendPct: 232.35, reachTrendPct: 466.67, postsTrendPct: 0 },
   tiktok:    { id: "tiktok",    posts: 0,  likes: 0,    comments: 0,   shares: 0,    impressions: 0,       reach: 0,      linkClicks: 0, followers: 0,   engagementTrendPct: 0, impressionsTrendPct: 0, reachTrendPct: 0, postsTrendPct: 0 },
-  pinterest: { id: "pinterest", posts: 0,  likes: 0,    comments: 0,   shares: 0,    impressions: 0,       reach: 0,      linkClicks: 0, followers: 0,   engagementTrendPct: 0, impressionsTrendPct: 0, reachTrendPct: 0, postsTrendPct: 0 },
   youtube:   { id: "youtube",   posts: 0,  likes: 0,    comments: 0,   shares: 0,    impressions: 0,       reach: 0,      linkClicks: 0, followers: 0,   engagementTrendPct: 0, impressionsTrendPct: 0, reachTrendPct: 0, postsTrendPct: 0 },
-  gbp:       { id: "gbp",       posts: 0,  likes: 0,    comments: 0,   shares: 0,    impressions: 0,       reach: 0,      linkClicks: 0, followers: 0,   engagementTrendPct: 0, impressionsTrendPct: 0, reachTrendPct: 0, postsTrendPct: 0 },
-  threads:   { id: "threads",   posts: 0,  likes: 0,    comments: 0,   shares: 0,    impressions: 0,       reach: 0,      linkClicks: 0, followers: 0,   engagementTrendPct: 0, impressionsTrendPct: 0, reachTrendPct: 0, postsTrendPct: 0 },
-  bluesky:   { id: "bluesky",   posts: 0,  likes: 0,    comments: 0,   shares: 0,    impressions: 0,       reach: 0,      linkClicks: 0, followers: 0,   engagementTrendPct: 0, impressionsTrendPct: 0, reachTrendPct: 0, postsTrendPct: 0 },
 };
 
 export interface DayPoint {
