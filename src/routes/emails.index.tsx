@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { Mail, Plus, Code2, LayoutTemplate, Trash2 } from "lucide-react";
 
 import { guarded } from "@/components/require-access";
@@ -49,7 +50,11 @@ function ModeBadge({ mode }: { mode: EmailTemplate["mode"] }) {
 }
 
 function EmailsPage() {
-  const templates = useEmailTemplatesStore();
+  const store = useEmailTemplatesStore();
+  const templates = useMemo(
+    () => [...store].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+    [store],
+  );
   const navigate = useNavigate();
 
   return (

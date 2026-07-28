@@ -196,7 +196,16 @@ export function deleteEmailTemplate(id: string) {
   emit();
 }
 
-/** Reactive hook — re-renders on any template change. */
+/**
+ * Stable snapshot for useSyncExternalStore. MUST return the same reference
+ * between mutations — returning a freshly-sorted array here would make React
+ * throw ("getSnapshot should be cached"). Sorting is done by the consumer
+ * (or via listEmailTemplates()).
+ */
+const snapshot = () => state;
+
+/** Reactive hook — re-renders on any template change. Returns unsorted state;
+ *  sort in the component (see emails.index.tsx). */
 export function useEmailTemplatesStore(): EmailTemplate[] {
-  return useSyncExternalStore(subscribe, listEmailTemplates, listEmailTemplates);
+  return useSyncExternalStore(subscribe, snapshot, snapshot);
 }
