@@ -13,6 +13,14 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 type MockRecord = Record<string, unknown>;
 
+// Raw relationship/system id fields that are hidden by default on read-only
+// detail views (the human-readable lookup versions - Owner, Primary Contact,
+// Parent Company - are shown instead). Revealed via the "Show hidden fields"
+// toggle. Kept in sync with HIDDEN_ON_CREATE in create-record-dialog.tsx.
+export const HIDDEN_ID_FIELDS = new Set<string>([
+  "id", "ownerId", "parentCompanyId", "primaryContactId", "easysignPrimaryContactId", "createdById",
+]);
+
 // A field is considered "empty" (nothing to show on the profile) when the
 // raw value is null, undefined, empty string, empty array, false boolean,
 // or numeric zero. Detail pages only render fields that carry real data -
@@ -306,6 +314,7 @@ export function SectionCard({
   onEditField,
   defaultOpen = false,
   extra,
+  showHidden = false,
 }: {
   section: FieldSection;
   record: MockRecord;
@@ -314,6 +323,8 @@ export function SectionCard({
   defaultOpen?: boolean;
   /** Custom content rendered at the bottom of the section body. */
   extra?: ReactNode;
+  /** Reveal raw id fields (Company Id, Owner Id, etc.) that are hidden by default. */
+  showHidden?: boolean;
 }) {
   const { can } = useAuth();
   const [open, setOpen] = useState(defaultOpen);
@@ -329,7 +340,10 @@ export function SectionCard({
   // In edit mode, keep checkboxes visible even when unchecked so they can be
   // toggled on (otherwise an unchecked box counts as "empty" and is hidden).
   const populated = section.fields.filter(
-    (f) => inPipeline(f) && (!isEmpty(f, record[f.key]) || (!!onEditField && f.type === "checkbox")),
+    (f) =>
+      inPipeline(f) &&
+      (showHidden || !HIDDEN_ID_FIELDS.has(f.key)) &&
+      (!isEmpty(f, record[f.key]) || (!!onEditField && f.type === "checkbox")),
   );
   // Hide entire section when nothing is populated and the user has access.
   // (Restricted sections still show the lock message.)
@@ -465,6 +479,9 @@ export function DetailSections({
   );
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  const [showHidden, setShowHidden] = useState(false);
+  // Only offer the toggle when some visible section actually carries a hidden id.
+  const hasHiddenFields = ranked.some((s) => s.fields.some((f) => HIDDEN_ID_FIELDS.has(f.key)));
 
   const orderedIds = useReorder ? applyOrder(ranked.map((s) => s.id), savedOrder) : ranked.map((s) => s.id);
   const display = orderedIds
@@ -496,6 +513,7 @@ export function DetailSections({
             fieldActions={fieldActions}
             onEditField={onEditField}
             extra={sectionExtras?.[normalizeTitle(s.title)]}
+            showHidden={showHidden}
             // First subsection ("Overview") is expanded, everything else collapsed.
             defaultOpen={i === 0}
           />
@@ -523,6 +541,18 @@ export function DetailSections({
           </div>
         );
       })}
+
+      {hasHiddenFields && (
+        <label className="flex cursor-pointer items-center gap-2 pl-6 pt-1 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={showHidden}
+            onChange={(e) => setShowHidden(e.target.checked)}
+            className="h-3.5 w-3.5 rounded border-border"
+          />
+          Show hidden fields (record & relationship IDs)
+        </label>
+      )}
     </div>
   );
 }
