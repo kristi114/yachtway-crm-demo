@@ -315,6 +315,7 @@ export function SectionCard({
   defaultOpen = false,
   extra,
   showHidden = false,
+  renderWhenEmpty = false,
 }: {
   section: FieldSection;
   record: MockRecord;
@@ -325,6 +326,8 @@ export function SectionCard({
   extra?: ReactNode;
   /** Reveal raw id fields (Company Id, Owner Id, etc.) that are hidden by default. */
   showHidden?: boolean;
+  /** Keep the card (with an empty-state note) even when no field has a value. */
+  renderWhenEmpty?: boolean;
 }) {
   const { can } = useAuth();
   const [open, setOpen] = useState(defaultOpen);
@@ -345,9 +348,10 @@ export function SectionCard({
       (showHidden || !HIDDEN_ID_FIELDS.has(f.key)) &&
       (!isEmpty(f, record[f.key]) || (!!onEditField && f.type === "checkbox")),
   );
-  // Hide entire section when nothing is populated and the user has access.
-  // (Restricted sections still show the lock message.)
-  if (allowed && populated.length === 0 && !extra) return null;
+  // Hide empty subsections (a split group with no data), but keep top-level
+  // sections that the caller marked renderWhenEmpty so every catalog section is
+  // visible on the detail page. Restricted sections still show the lock message.
+  if (allowed && populated.length === 0 && !extra && !renderWhenEmpty) return null;
 
   return (
     <section className="overflow-hidden rounded-sm border border-border bg-surface shadow-sm">
@@ -376,13 +380,15 @@ export function SectionCard({
 
       {open && (allowed ? (
         <div>
-          {populated.length > 0 && (
+          {populated.length > 0 ? (
             <div className="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {populated.map((f) => (
                 <FieldRow key={f.key} field={f} record={record} onClick={fieldActions?.[f.key]} onEditField={onEditField} />
               ))}
             </div>
-          )}
+          ) : !extra ? (
+            <div className="px-4 py-6 text-sm text-muted-foreground">No values set yet.</div>
+          ) : null}
           {extra}
         </div>
       ) : (
@@ -429,7 +435,6 @@ export function DetailSections({
 }) {
   const { can, user } = useAuth();
   const canBilling = can("billing");
-  const expanded = sections.flatMap((s) => (s.showWhen && !s.showWhen(record) ? [] : autoSplit(s)));
 
   // Merge duplicate section titles (e.g. two source sections both producing
   // "Studio & 3D tours") so each title appears only once with combined fields.
@@ -438,6 +443,24 @@ export function DetailSections({
   function normalizeTitle(title: string) {
     return title.toLowerCase().replace(/\s+/g, " ").trim();
   }
+
+  // A top-level section "has data" when at least one non-hidden, in-pipeline
+  // field carries a value. Sections with data are split into subsections (empty
+  // subsections drop out); sections with no data are kept whole and rendered as
+  // an empty card so every catalog section stays visible on the page.
+  const recordPipeline = record.pipeline;
+  const fieldInPipeline = (f: FieldDef) =>
+    !f.pipelines || (typeof recordPipeline === "string" && f.pipelines.includes(recordPipeline));
+  const sectionHasData = (s: FieldSection) =>
+    s.fields.some((f) => fieldInPipeline(f) && !HIDDEN_ID_FIELDS.has(f.key) && !isEmpty(f, record[f.key]));
+
+  const forceEmptyTitles = new Set<string>();
+  const expanded = sections.flatMap((s) => {
+    if (s.showWhen && !s.showWhen(record)) return [];
+    if (sectionHasData(s)) return autoSplit(s);
+    forceEmptyTitles.add(normalizeTitle(s.title));
+    return [s];
+  });
 
   const merged = Array.from(
     expanded.reduce((map, s) => {
@@ -514,6 +537,7 @@ export function DetailSections({
             onEditField={onEditField}
             extra={sectionExtras?.[normalizeTitle(s.title)]}
             showHidden={showHidden}
+            renderWhenEmpty={forceEmptyTitles.has(normalizeTitle(s.title))}
             // First subsection ("Overview") is expanded, everything else collapsed.
             defaultOpen={i === 0}
           />
