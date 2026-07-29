@@ -32,6 +32,7 @@ import { getStudioTour } from "@/lib/studio-tours";
 import { PIPELINE_STAGES } from "@/components/create-opportunity-dialog";
 import { DetailSections } from "@/components/field-renderer";
 import { OPPORTUNITY_SECTIONS } from "@/lib/field-schema";
+import { formatDate } from "@/lib/format-date";
 import { EditOpportunityDialog } from "@/components/edit-opportunity-dialog";
 import { MergeRecordDialog } from "@/components/merge-record-dialog";
 
@@ -106,7 +107,7 @@ function OpportunityDetail() {
           </>
         }
         title={opp.name}
-        subtitle={`${fmtMoney(opp.amountUsd, currency)} · ${opp.probability}% · Close ${opp.closeDate} · Owner ${opp.owner}`}
+        subtitle={`${fmtMoney(opp.amountUsd, currency)} · ${opp.probability}% · Close ${formatDate(opp.closeDate)} · Owner ${opp.owner}`}
         actions={
           <>
             <Button size="sm" variant="outline" asChild>
@@ -241,7 +242,7 @@ function OpportunityDetail() {
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Close date</dt>
-                  <dd className="font-medium text-foreground">{opp.closeDate}</dd>
+                  <dd className="font-medium text-foreground">{formatDate(opp.closeDate)}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Owner</dt>

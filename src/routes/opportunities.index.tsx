@@ -12,6 +12,7 @@ import { OPPORTUNITIES, getCompany, getContact, updateOpportunity, type Opportun
 import { OPPORTUNITY_SECTIONS } from "@/lib/field-schema";
 import { RecordFilterBar } from "@/components/record-filter-bar";
 import { applyClauses, filterableFields, type FilterClause } from "@/lib/record-filter";
+import { formatDate } from "@/lib/format-date";
 import { useAuth, useMoney } from "@/lib/auth";
 import {
   CreateOpportunityDialog,
@@ -265,7 +266,7 @@ function OpportunitiesPage() {
                                     <span className="font-semibold tabular-nums text-foreground">{fmtMoney(o.amountUsd, co?.currency)}</span>
                                   </div>
                                   <div className="mt-1 flex items-center justify-between text-[13px] text-muted-foreground">
-                                    <span>Close: {o.closeDate}</span>
+                                    <span>Close: {formatDate(o.closeDate)}</span>
                                     <span
                                       className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${
                                         o.probability >= 70

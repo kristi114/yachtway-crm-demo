@@ -1,4 +1,4 @@
-import { formatDate } from "@/lib/format-date";
+import { formatDate, formatDateTime } from "@/lib/format-date";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   StickyNote, CheckSquare, Calendar, Briefcase, Plus, Mail,
@@ -208,7 +208,7 @@ export function ActivityPanel({
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="text-base tabular-nums font-semibold">{fmtMoney(o.amountUsd, o.companyId ? getCompany(o.companyId)?.currency : undefined)}</div>
-                  <div className="text-sm text-muted-foreground">Close {o.closeDate}</div>
+                  <div className="text-sm text-muted-foreground">Close {formatDate(o.closeDate)}</div>
                 </div>
               </div>
             </div>
@@ -288,7 +288,7 @@ export function ActivityPanel({
                     {n.visibility && <VisibilityBadge visibility={n.visibility} />}
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span className="text-muted-foreground">{n.createdAt}</span>
+                    <span className="text-muted-foreground">{formatDate(n.createdAt)}</span>
                     {editable && (
                       <button
                         type="button"
@@ -325,7 +325,7 @@ export function ActivityPanel({
                   ? <ArrowDownLeft className="h-4 w-4 text-brand" />
                   : <ArrowUpRight className="h-4 w-4 text-muted-foreground" />}
                 <span className="text-base font-semibold text-brand-deep truncate">{e.subject}</span>
-                <span className="ml-auto text-sm text-muted-foreground">{e.sentAt}</span>
+                <span className="ml-auto text-sm text-muted-foreground">{formatDateTime(e.sentAt)}</span>
               </div>
               <div className="mt-1 truncate text-sm text-muted-foreground">
                 {e.direction === "inbound" ? "From " : "To "}
@@ -364,7 +364,7 @@ export function ActivityPanel({
                       {t.title}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {t.assignee} · Due {t.dueDate}
+                      {t.assignee} · Due {formatDate(t.dueDate)}
                       {t.notes ? ` · ${t.notes}` : ""}
                     </div>
                   </div>
@@ -492,7 +492,7 @@ function EditNoteDialog({
 
         <div className="space-y-4">
           <div className="rounded-sm border border-border bg-secondary/40 px-3 py-2 text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{draft.author}</span> · {draft.createdAt}
+            <span className="font-medium text-foreground">{draft.author}</span> · {formatDateTime(draft.createdAt)}
           </div>
 
           <div>

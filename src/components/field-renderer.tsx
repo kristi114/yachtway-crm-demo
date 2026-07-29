@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import type { FieldDef, FieldSection } from "@/lib/field-schema";
 import { FIELD_OPTIONS, dynamicOptions } from "@/lib/field-options";
 import { loadSectionOrder, saveSectionOrder, applyOrder } from "@/lib/section-layout";
+import { formatDate } from "@/lib/format-date";
 import { Badge } from "@/components/ui/badge";
 
 type EditField = (key: string, value: unknown) => void;
@@ -41,7 +42,7 @@ function formatValue(field: FieldDef, raw: unknown, record: MockRecord): string 
     case "number":
       return `${new Intl.NumberFormat("en-US").format(Number(raw))}${field.unit ? ` ${field.unit}` : ""}`;
     case "date":
-      return String(raw);
+      return formatDate(String(raw));
     case "checkbox":
       return raw ? "Yes" : "No";
     case "multi_option":

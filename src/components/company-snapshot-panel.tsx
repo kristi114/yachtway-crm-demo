@@ -15,6 +15,7 @@ import {
 import { commsFor } from "@/lib/comms-log";
 import { studioToursForCompany } from "@/lib/studio-tours";
 import { useAuth } from "@/lib/auth";
+import { formatDate } from "@/lib/format-date";
 
 function formatDaysAgo(iso: string): string {
   if (!iso) return "Never";
@@ -169,14 +170,14 @@ export function CompanySnapshotPanel({
           label="Last YachtWay Login"
           value={formatDaysAgo(company.lastLogin)}
           tone={toneForDays(company.lastLogin)}
-          hint={company.lastLogin || "Never signed in"}
+          hint={company.lastLogin ? formatDate(company.lastLogin) : "Never signed in"}
         />
         <Stat
           icon={CalendarCheck}
           label="Onboarding Complete Date"
           value={onboardingCompleteDate ? formatDaysAgo(onboardingCompleteDate) : "Not completed"}
           tone={onboardingCompleteDate ? "text-emerald-600 dark:text-emerald-400" : "text-foreground/60"}
-          hint={onboardingCompleteDate || "Onboarding still pending"}
+          hint={onboardingCompleteDate ? formatDate(onboardingCompleteDate) : "Onboarding still pending"}
         />
         <Stat
           icon={MessageSquare}
