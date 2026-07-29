@@ -22,7 +22,10 @@ export function getTasksSnapshot(): Task[] {
 export function tasksFor(type: RelatedType, id: string): Task[] {
   const added = store.filter((t) => t.relatedType === type && t.relatedId === id);
   const seeded = TASKS.filter((t) => t.relatedType === type && t.relatedId === id);
-  return [...added, ...seeded];
+  // Newest on top (most recent due date first).
+  return [...added, ...seeded].sort((a, b) =>
+    a.dueDate < b.dueDate ? 1 : a.dueDate > b.dueDate ? -1 : 0,
+  );
 }
 
 export function addTask(entry: Omit<Task, "id">): Task {

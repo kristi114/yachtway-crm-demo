@@ -1358,17 +1358,22 @@ export function listingsForBroker(contactId: string) {
   return LISTINGS.filter((l) => l.brokerContactId === contactId);
 }
 export function activitiesFor(type: RelatedType, id: string) {
+  // All roll-ups are ordered newest-first (descending by their primary date).
+  const desc = (a: string, b: string) => (a < b ? 1 : a > b ? -1 : 0);
   return {
-    notes: NOTES.filter((n) => n.relatedType === type && n.relatedId === id),
-    tasks: TASKS.filter((t) => t.relatedType === type && t.relatedId === id),
-    events: EVENTS.filter((e) => e.relatedType === type && e.relatedId === id),
+    notes: NOTES.filter((n) => n.relatedType === type && n.relatedId === id)
+      .sort((a, b) => desc(a.createdAt, b.createdAt)),
+    tasks: TASKS.filter((t) => t.relatedType === type && t.relatedId === id)
+      .sort((a, b) => desc(a.dueDate, b.dueDate)),
+    events: EVENTS.filter((e) => e.relatedType === type && e.relatedId === id)
+      .sort((a, b) => desc(a.startAt, b.startAt)),
     opportunities: OPPORTUNITIES.filter((o) =>
       (type === "company" && o.companyId === id) ||
       (type === "contact" && o.contactId === id) ||
       (type === "listing" && o.listingId === id),
-    ),
+    ).sort((a, b) => desc(a.stageEnteredAt ?? a.closeDate, b.stageEnteredAt ?? b.closeDate)),
     emails: EMAILS.filter((e) => e.relatedType === type && e.relatedId === id)
-      .sort((a, b) => (a.sentAt < b.sentAt ? 1 : -1)),
+      .sort((a, b) => desc(a.sentAt, b.sentAt)),
   };
 }
 

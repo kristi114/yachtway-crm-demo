@@ -169,5 +169,9 @@ export function emailsForCompany(companyId: string): CompanyEmailRow[] {
       }
     }
   }
-  return out; // listSentEmails() is already newest-first
+  // Newest on top by send time (listSentEmails() is already newest-first, but
+  // sort explicitly so grouping by contact can't disturb the order).
+  return out.sort((a, b) =>
+    a.send.sentAt < b.send.sentAt ? 1 : a.send.sentAt > b.send.sentAt ? -1 : 0,
+  );
 }
