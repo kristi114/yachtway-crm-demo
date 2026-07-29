@@ -52,8 +52,22 @@ function ListingsList() {
         `${l.brand?.name} ${l.model} ${l.company?.name} ${l.hullId}`
           .toLowerCase().includes(needle),
       );
-    // Field-schema-driven advanced filters (any listing field).
-    list = applyClauses(list as unknown as Record<string, unknown>[], clauses, filterFields) as unknown as typeof list;
+    // Field-schema-driven advanced filters. Evaluate against a record where
+    // lookup fields (company/brand/broker objects) are resolved to their name
+    // strings so text operators match what's displayed.
+    if (clauses.length > 0) {
+      list = list.filter((l) => {
+        const rec: Record<string, unknown> = {
+          ...(l as unknown as Record<string, unknown>),
+          company: l.company?.name ?? "",
+          make: l.brand?.name ?? "",
+          brand: l.brand?.name ?? "",
+          model: l.model ?? "",
+          listingBroker: l.broker ? `${l.broker.firstName} ${l.broker.lastName}` : "",
+        };
+        return applyClauses([rec], clauses, filterFields).length > 0;
+      });
+    }
     return list.sort((a, b) =>
       heatSort === "desc"
         ? b.heat.score - a.heat.score
