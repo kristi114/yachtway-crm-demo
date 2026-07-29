@@ -93,6 +93,22 @@ export interface BillingDoc {
   /** Set on an invoice created from an accepted estimate. */
   converted_from_estimate_id?: string;
   converted_at?: string;
+  /** Optional discount applied to the line-item subtotal. */
+  discount?: Discount;
+}
+
+export type DiscountType = "amount" | "percent";
+export interface Discount {
+  type: DiscountType;
+  /** Flat currency amount, or a percentage 0–100 when type = "percent". */
+  value: number;
+}
+
+/** Discount amount in currency, given a subtotal. */
+export function discountAmount(subtotal: number, discount?: Discount): number {
+  if (!discount || !(discount.value > 0)) return 0;
+  const raw = discount.type === "percent" ? subtotal * (discount.value / 100) : discount.value;
+  return Math.min(Math.max(0, raw), subtotal); // never below zero
 }
 
 const STORAGE_KEY = "yw:billing:v1";
@@ -214,8 +230,15 @@ export function getDoc(id: string): BillingDoc | undefined {
   return state.find((d) => d.id === id);
 }
 
-export function docTotal(doc: BillingDoc): number {
+/** Line-item subtotal, before any discount. */
+export function docSubtotal(doc: BillingDoc): number {
   return doc.line_items.reduce((s, li) => s + li.quantity * li.unit_price, 0);
+}
+
+/** Net total: subtotal minus discount. */
+export function docTotal(doc: BillingDoc): number {
+  const sub = docSubtotal(doc);
+  return sub - discountAmount(sub, doc.discount);
 }
 
 function nextNumber(kind: DocKind): string {

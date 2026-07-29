@@ -1,6 +1,6 @@
 import { formatDate } from "@/lib/format-date";
 import { YachtWayLogo } from "@/components/icons/yachtway-logo";
-import { docTotal, paymentMethodLabel, studioPassSavings, type BillingDoc } from "@/lib/billing";
+import { docTotal, docSubtotal, paymentMethodLabel, studioPassSavings, type BillingDoc } from "@/lib/billing";
 import { formatMoney } from "@/lib/currency";
 import { getCompany } from "@/lib/mock-data";
 import { isStudioPassActive } from "@/lib/studio-pass";
@@ -31,6 +31,8 @@ function fmtDate(iso?: string | null) {
 
 export function InvoiceDocument({ doc }: { doc: BillingDoc }) {
   const total = docTotal(doc);
+  const subtotal = docSubtotal(doc);
+  const discAmt = subtotal - total;
   const savings = studioPassSavings(doc.line_items);
   const company = getCompany(doc.companyId);
   const isEstimate = doc.kind === "estimate";
@@ -190,8 +192,16 @@ export function InvoiceDocument({ doc }: { doc: BillingDoc }) {
           <div className="w-full max-w-[280px] space-y-2 text-[12.5px]">
             <div className="flex justify-between text-doc-muted">
               <span>Subtotal</span>
-              <span className="tabular-nums">{formatMoney(total, doc.currency)}</span>
+              <span className="tabular-nums">{formatMoney(subtotal, doc.currency)}</span>
             </div>
+            {discAmt > 0 && (
+              <div className="flex justify-between text-doc-muted">
+                <span>
+                  Discount{doc.discount?.type === "percent" ? ` (${doc.discount.value}%)` : ""}
+                </span>
+                <span className="tabular-nums">-{formatMoney(discAmt, doc.currency)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-doc-muted">
               <span>Tax</span>
               <span className="tabular-nums">{formatMoney(0, doc.currency)}</span>

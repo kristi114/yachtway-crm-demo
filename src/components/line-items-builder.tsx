@@ -10,6 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { formatMoney, type CurrencyCode } from "@/lib/currency";
+import { discountAmount, type Discount } from "@/lib/billing";
 import type { LineItem } from "@/lib/billing";
 import {
   defaultVariableValues, getProduct, priceProduct, unitLabelFor,
@@ -254,6 +255,8 @@ export function LineItemsBuilder({
   vessels,
   studioPassActive = false,
   shootLocation,
+  discount,
+  onDiscountChange,
 }: {
   lines: LineDraft[];
   onChange: (next: LineDraft[]) => void;
@@ -265,9 +268,15 @@ export function LineItemsBuilder({
   studioPassActive?: boolean;
   /** Studio shoot location - drives whether travel fees are applicable. */
   shootLocation?: string;
+  /** When provided, shows an editable discount + Subtotal/Discount/Total breakdown. */
+  discount?: Discount;
+  onDiscountChange?: (d: Discount | undefined) => void;
 }) {
 
   const total = useMemo(() => draftsTotal(lines), [lines]);
+  const showDiscount = Boolean(onDiscountChange);
+  const discAmt = discountAmount(total, discount);
+  const netTotal = total - discAmt;
 
   const passOnDoc = lines.some((l) => l.productId === STUDIO_PASS_PRODUCT_ID);
   /** Member rates are only unlockable with an active pass, or by selling one here. */
@@ -631,12 +640,60 @@ export function LineItemsBuilder({
             </span>
           </div>
         )}
-        <div className="flex items-center justify-end gap-2">
-          <span className="text-muted-foreground">Total</span>
-          <span className="text-lg font-semibold tabular-nums text-brand-deep">
-            {formatMoney(total, currency)}
-          </span>
-        </div>
+        {showDiscount ? (
+          <>
+            <div className="flex items-center justify-end gap-2">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="tabular-nums">{formatMoney(total, currency)}</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <span className="text-muted-foreground">Discount</span>
+              <div className="inline-flex rounded-md border border-border p-0.5">
+                {(["amount", "percent"] as const).map((t) => {
+                  const on = (discount?.type ?? "amount") === t;
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => onDiscountChange?.({ type: t, value: discount?.value ?? 0 })}
+                      className={`rounded px-2 py-0.5 text-xs font-medium ${on ? "bg-brand text-brand-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                    >
+                      {t === "amount" ? "Amount" : "%"}
+                    </button>
+                  );
+                })}
+              </div>
+              <input
+                type="number"
+                min={0}
+                step={discount?.type === "percent" ? 1 : 0.01}
+                value={discount?.value ? String(discount.value) : ""}
+                onChange={(e) => {
+                  const v = Math.max(0, Number(e.target.value) || 0);
+                  onDiscountChange?.(v > 0 ? { type: discount?.type ?? "amount", value: v } : undefined);
+                }}
+                placeholder="0"
+                className="native-select h-8 w-24 rounded-md border border-border bg-surface px-2 text-right text-sm"
+              />
+              <span className="w-24 text-right tabular-nums text-destructive">
+                {discAmt > 0 ? `-${formatMoney(discAmt, currency)}` : formatMoney(0, currency)}
+              </span>
+            </div>
+            <div className="flex items-center justify-end gap-2 border-t border-border pt-2">
+              <span className="text-muted-foreground">Total</span>
+              <span className="text-lg font-semibold tabular-nums text-brand-deep">
+                {formatMoney(netTotal, currency)}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-end gap-2">
+            <span className="text-muted-foreground">Total</span>
+            <span className="text-lg font-semibold tabular-nums text-brand-deep">
+              {formatMoney(total, currency)}
+            </span>
+          </div>
+        )}
       </div>
     </section>
   );

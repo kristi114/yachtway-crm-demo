@@ -13,7 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { COMPANIES, contactsForCompany, OPPORTUNITIES, getOpportunity } from "@/lib/mock-data";
-import { addDoc, sendDoc, type DocKind, type BillingDoc } from "@/lib/billing";
+import { addDoc, sendDoc, type DocKind, type BillingDoc, type Discount } from "@/lib/billing";
 import { formatMoney, type CurrencyCode } from "@/lib/currency";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
@@ -59,6 +59,7 @@ export function NewBillingDocForm({
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
   const [dueAt, setDueAt] = useState("");
   const [notes, setNotes] = useState("");
+  const [discount, setDiscount] = useState<Discount | undefined>(undefined);
   const [opportunityId, setOpportunityId] = useState(initialOpp?.id ?? "");
   const [shootLocation, setShootLocation] = useState("south_florida");
   const [items, setItems] = useState<LineDraft[]>(
@@ -99,6 +100,7 @@ export function NewBillingDocForm({
       issued_at: new Date().toISOString(),
       due_at: dueAt ? new Date(dueAt).toISOString() : null,
       line_items: cleaned,
+      discount,
       notes: notes.trim() || undefined,
       created_by_name: user.name,
       recipient_email: recipientContact?.email,
@@ -111,7 +113,7 @@ export function NewBillingDocForm({
       opportunityName: linkedOpp?.name,
       shootLocation,
     };
-  }, [company, items, kind, currency, dueAt, notes, user.name, recipientContact, ccEmails, linkedOpp, shootLocation]);
+  }, [company, items, kind, currency, dueAt, notes, discount, user.name, recipientContact, ccEmails, linkedOpp, shootLocation]);
 
   const total = useMemo(() => draftsTotal(items), [items]);
   const vessels: VesselOption[] = useMemo(
@@ -144,6 +146,7 @@ export function NewBillingDocForm({
       status,
       due_at: dueAt ? new Date(dueAt).toISOString() : null,
       line_items: cleaned,
+      discount,
       notes: notes.trim() || undefined,
       created_by_name: user.name,
       opportunityId: linkedOpp?.id,
@@ -308,6 +311,8 @@ export function NewBillingDocForm({
             vessels={vessels}
             studioPassActive={studioPass?.status === "active"}
             shootLocation={shootLocation}
+            discount={discount}
+            onDiscountChange={setDiscount}
           />
 
 
