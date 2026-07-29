@@ -231,6 +231,24 @@ function SectionBlock({
             // Read-only when explicitly listed, or when the catalog notes mark
             // the field read-only (system identifiers, derived/computed values).
             const isReadOnly = readOnlyKeys.has(f.key) || /read-only/i.test(f.help ?? "");
+            // Boolean fields render as a single inline row: checkbox next to the
+            // label (no stacked label, no "Enabled" text).
+            if (f.type === "checkbox") {
+              return (
+                <label key={f.key} className="flex items-center gap-2 py-1 text-[11px] font-medium text-muted-foreground" title={f.key}>
+                  <input
+                    type="checkbox"
+                    id={f.key}
+                    checked={Boolean(values[f.key])}
+                    disabled={isReadOnly}
+                    onChange={(e) => onChange(f.key, e.target.checked)}
+                    className="h-4 w-4 accent-[hsl(var(--brand))]"
+                  />
+                  {f.label}
+                  {requiredKeys.has(f.key) && <span className="text-destructive">*</span>}
+                </label>
+              );
+            }
             return (
             <div key={f.key} className="space-y-1">
               <Label htmlFor={f.key} className="text-[11px] font-medium text-muted-foreground" title={f.key}>
