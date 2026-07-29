@@ -3,6 +3,7 @@ import { ChevronRight, HelpCircle, Lock, GripVertical } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import type { FieldDef, FieldSection } from "@/lib/field-schema";
 import { FIELD_OPTIONS, dynamicOptions } from "@/lib/field-options";
+import { statusOptionsForCompanyType, companyStatusRequired, type CompanyType } from "@/lib/mock-data";
 import { loadSectionOrder, saveSectionOrder, applyOrder } from "@/lib/section-layout";
 import { formatDate } from "@/lib/format-date";
 import { Badge } from "@/components/ui/badge";
@@ -57,13 +58,17 @@ function formatValue(field: FieldDef, raw: unknown, record: MockRecord): string 
 /** Editable / display control for single- & multi-option fields, sourced from
  *  the catalog options plus any value already on the record (dynamicOptions). */
 function OptionControl({
-  field, raw, onEditField,
+  field, raw, onEditField, optionsOverride, allowEmpty,
 }: {
   field: FieldDef;
   raw: unknown;
   onEditField?: EditField;
+  /** Replace the catalog option list (e.g. status limited by company type). */
+  optionsOverride?: string[];
+  /** Allow clearing a single_option to no value. */
+  allowEmpty?: boolean;
 }) {
-  const declared = FIELD_OPTIONS[field.key];
+  const declared = optionsOverride ?? FIELD_OPTIONS[field.key];
   if (field.type === "multi_option") {
     const cur = Array.isArray(raw) ? (raw as string[]) : raw ? [String(raw)] : [];
     const all = dynamicOptions(declared, ...cur);
@@ -94,7 +99,11 @@ function OptionControl({
   }
   // single_option
   const val = raw == null ? "" : String(raw);
-  const all = dynamicOptions(declared, val);
+  // With an override, show exactly those options (plus the current value if it
+  // is somehow off-list); otherwise fall back to catalog + present values.
+  const all = optionsOverride
+    ? dynamicOptions(optionsOverride, val)
+    : dynamicOptions(declared, val);
   if (!onEditField) {
     return val ? <Badge variant="secondary">{val}</Badge> : <div className="text-base font-semibold text-foreground">-</div>;
   }
@@ -104,7 +113,7 @@ function OptionControl({
       onChange={(e) => onEditField(field.key, e.target.value)}
       className="native-select w-full rounded-md border border-input bg-transparent px-2 py-1.5 text-sm font-medium"
     >
-      {val === "" && <option value="">Select…</option>}
+      {(val === "" || allowEmpty) && <option value="">{allowEmpty ? "— None —" : "Select…"}</option>}
       {all.map((o) => <option key={o} value={o}>{o}</option>)}
     </select>
   );
@@ -121,6 +130,12 @@ function FieldRow({
   const raw = record[field.key];
   const value = formatValue(field, raw, record);
   const isOption = field.type === "single_option" || field.type === "multi_option";
+  // Company status options depend on the company type (yacht lifecycle vs
+  // partner Lead/Partner), and status is nullable for non-yacht types.
+  const companyType = typeof record.companyType === "string" ? (record.companyType as CompanyType) : undefined;
+  const isCompanyStatusField = field.key === "companyStatus" || field.key === "status";
+  const statusOverride = isCompanyStatusField && companyType ? statusOptionsForCompanyType(companyType) : undefined;
+  const statusAllowEmpty = isCompanyStatusField && companyType ? !companyStatusRequired(companyType) : undefined;
   const rawUrl = field.type === "url" && typeof raw === "string" && raw.trim() !== "" ? raw : null;
   const href = rawUrl ? (rawUrl.startsWith("http://") || rawUrl.startsWith("https://") ? rawUrl : `https://${rawUrl}`) : null;
 
@@ -167,7 +182,7 @@ function FieldRow({
           />
         </button>
       ) : isOption ? (
-        <OptionControl field={field} raw={raw} onEditField={onEditField} />
+        <OptionControl field={field} raw={raw} onEditField={onEditField} optionsOverride={statusOverride} allowEmpty={statusAllowEmpty} />
       ) : href ? (
         <a
           href={href}

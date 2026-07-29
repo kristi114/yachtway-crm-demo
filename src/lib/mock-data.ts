@@ -1426,6 +1426,23 @@ export function isServiceAvailableForCompany(company: Company, k: ServiceKey): b
   return isServiceAvailable(k) && availableServicesForCompany(company).includes(k);
 }
 
+/** Company types that use the full lifecycle status set (and require a status). */
+const LIFECYCLE_STATUS_TYPES: CompanyType[] = ["Dealer", "Brokerage", "Shipyard"];
+
+/** Available Status options for a company type. Yacht-industry accounts run the
+ *  full lifecycle; partner-style accounts (lenders, insurers, marinas, …) are
+ *  just Lead or Partner. */
+export function statusOptionsForCompanyType(t: CompanyType): string[] {
+  return LIFECYCLE_STATUS_TYPES.includes(t)
+    ? ["Lead", "MQL", "SQL", "Active Customer", "Past Customer"]
+    : ["Lead", "Partner"];
+}
+
+/** Status is required for yacht-industry accounts, nullable for the rest. */
+export function companyStatusRequired(t: CompanyType): boolean {
+  return LIFECYCLE_STATUS_TYPES.includes(t);
+}
+
 /** The listing platform itself - every paying account starts here. */
 export const LISTING_PLATFORM_SERVICE: ServiceKey = "saas";
 
