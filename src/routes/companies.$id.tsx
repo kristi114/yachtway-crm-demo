@@ -55,6 +55,7 @@ import {
   officesForCompany, removeOffice, type Office,
   setPrimaryContact,
   subscribeMockData,
+  type Brand,
 } from "@/lib/mock-data";
 import { BrandsPickerDialog } from "@/components/brands-picker-dialog";
 import { AddContactDialog } from "@/components/add-contact-dialog";
@@ -440,41 +441,10 @@ function CompanyDetail() {
                     {brands.length ? "Manage brands" : "Add brands"}
                   </Button>
                 </header>
-                <div className="flex flex-wrap gap-3 p-5">
-                  {brands.map((b) => {
-                    const slug = b.brand.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-                    const href = `https://yachtway.com/brand/${slug}`;
-                    return (
-                      <a
-                        key={b.brandId}
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex w-36 flex-col items-stretch gap-1.5 rounded-lg transition-transform hover:-translate-y-0.5"
-                        title={`Open ${b.brand.name} on YachtWay`}
-                      >
-                        <div className="relative flex h-20 items-center justify-center rounded-lg border border-border bg-secondary/30 px-3 shadow-sm transition-shadow group-hover:shadow-md">
-                          <span
-                            className="text-center text-sm font-semibold italic tracking-tight text-brand-deep"
-                            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-                          >
-                            {b.brand.name}
-                          </span>
-                          {b.exclusive && (
-                            <span className="absolute right-1.5 top-1.5 rounded-sm bg-brand px-1 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-brand-foreground shadow-sm">
-                              Exclusive
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-center gap-1.5">
-                          <span className="text-xs font-medium text-foreground group-hover:text-brand">
-                            {b.brand.name}
-                          </span>
-                          <CheckCircle2 className="h-3 w-3 fill-brand text-brand-foreground" />
-                        </div>
-                      </a>
-                    );
-                  })}
+                <div className="flex flex-wrap gap-4 p-5">
+                  {brands.map((b) => (
+                    <BrandTile key={b.brandId} brand={b.brand} exclusive={b.exclusive} />
+                  ))}
                   {brands.length === 0 ? (
                     <p className="w-full text-[13px] text-muted-foreground">
                       No brands linked yet. Brands come from the managed catalogue - use
@@ -1241,6 +1211,52 @@ function initialsOf(name: string) {
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+/**
+ * Authorized-dealer brand card. Shows the brand logo when available; falls back
+ * to the styled brand name if there's no logo (or it fails to load).
+ */
+function BrandTile({ brand, exclusive }: { brand: Brand; exclusive: boolean }) {
+  const [imgOk, setImgOk] = useState(Boolean(brand.logoUrl));
+  const slug = brand.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const showLogo = Boolean(brand.logoUrl) && imgOk;
+  return (
+    <a
+      href={`https://yachtway.com/brand/${slug}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex w-44 flex-col items-stretch gap-2 rounded-lg transition-transform hover:-translate-y-0.5"
+      title={`Open ${brand.name} on YachtWay`}
+    >
+      <div className="relative flex h-28 items-center justify-center overflow-hidden rounded-lg border border-border bg-secondary/30 p-4 shadow-sm transition-shadow group-hover:shadow-md">
+        {showLogo ? (
+          <img
+            src={brand.logoUrl}
+            alt={brand.name}
+            className="max-h-full max-w-full object-contain"
+            onError={() => setImgOk(false)}
+          />
+        ) : (
+          <span
+            className="text-center text-lg font-semibold italic tracking-tight text-brand-deep"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            {brand.name}
+          </span>
+        )}
+        {exclusive && (
+          <span className="absolute right-1.5 top-1.5 rounded-sm bg-brand px-1 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-brand-foreground shadow-sm">
+            Exclusive
+          </span>
+        )}
+      </div>
+      <div className="flex items-center justify-center gap-1.5">
+        <span className="text-xs font-medium text-foreground group-hover:text-brand">{brand.name}</span>
+        <CheckCircle2 className="h-3 w-3 fill-brand text-brand-foreground" />
+      </div>
+    </a>
+  );
 }
 
 function AccountManagerPicker({

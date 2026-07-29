@@ -95,6 +95,12 @@ export function companyInitials(name: string): string {
 
 export function companyLogoUrl(company: Company): string | undefined {
   if (company.logoUrl) return company.logoUrl;
+  // Dealer logo from the catalog field (dealer_logo_url), when it's a real
+  // image URL (ignore the catalog's backfilled placeholder text).
+  const dealerLogo = company.dealerLogoUrl;
+  if (typeof dealerLogo === "string" && /^(https?:|data:)/.test(dealerLogo.trim())) {
+    return dealerLogo.trim();
+  }
   const initials = companyInitials(company.name);
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials || "C")}&background=ece7f6&color=260754&size=128&rounded=false&bold=true&length=2`;
 }
@@ -176,6 +182,8 @@ export interface Brand {
   tier: "Luxury" | "Premium" | "Mainstream";
   /** Managed-entity flag - inactive brands stay on records but leave pickers. */
   active?: boolean;
+  /** Brand logo image; shown on brand cards. Falls back to the name if absent. */
+  logoUrl?: string;
 }
 export interface BrandRepresentation {
   companyId: string;   // Dealer or Brokerage
@@ -315,8 +323,8 @@ export const BRANDS: Brand[] = [
   { id: "brd_princess",   name: "Princess",     manufacturerCountry: "UK",     tier: "Luxury" },
   { id: "brd_riviera",    name: "Riviera",      manufacturerCountry: "Australia", tier: "Premium" },
   { id: "brd_pershing",   name: "Pershing",     manufacturerCountry: "Italy",  tier: "Luxury" },
-  { id: "brd_sea_ray",    name: "Sea Ray",      manufacturerCountry: "USA",    tier: "Mainstream" },
-  { id: "brd_whaler",     name: "Boston Whaler",manufacturerCountry: "USA",    tier: "Premium" },
+  { id: "brd_sea_ray",    name: "Sea Ray",      manufacturerCountry: "USA",    tier: "Mainstream", logoUrl: "https://logo.clearbit.com/searay.com" },
+  { id: "brd_whaler",     name: "Boston Whaler",manufacturerCountry: "USA",    tier: "Premium",    logoUrl: "https://logo.clearbit.com/bostonwhaler.com" },
 ];
 
 export const COMPANIES: Company[] = [
@@ -445,6 +453,7 @@ export const COMPANIES: Company[] = [
   {
     id: "cmp_006", vertical: "Main", name: "Coastline Brokerage",
     companyType: "Brokerage", status: "Member", logoUrl: null, parentCompanyId: null,
+    dealerLogoUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23ece7f6'/%3E%3Cg stroke='%23260754' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='32' cy='17' r='4'/%3E%3Cpath d='M32 21v27M20 30h24M16 38c0 9 7 14 16 14s16-5 16-14'/%3E%3C/g%3E%3C/svg%3E",
     website: "https://coastlinebrokerage.com", yachtwayDealerPage: "https://YachtWay.com/dealer/coastline-brokerage", phone: "+1 619 555 0122",
     billingCity: "San Diego", billingState: "CA", billingCountry: "USA",
     yachtwayDbAccountId: "acc_cst_881", sfAccountId: "",
