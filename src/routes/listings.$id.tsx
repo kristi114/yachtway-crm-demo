@@ -54,13 +54,12 @@ function ListingDetail() {
     <AppShell>
       <PageHeader
         eyebrow="Listing"
-        title={`${brand?.name ?? ""} ${l.model}`}
+        title={`${l.year} ${brand?.name ?? ""} ${l.model}`}
         subtitle={
-          <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-            <span>{l.year} · {l.lengthFt}ft · Hull {l.hullId}</span>
+          <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-base">
             {company && (
               <span className="inline-flex items-center gap-1 text-muted-foreground">
-                · Dealer:{" "}
+                Dealer:{" "}
                 <Link to="/companies/$id" params={{ id: company.id }} className="font-medium text-brand hover:underline">
                   {company.name}
                 </Link>
@@ -68,7 +67,7 @@ function ListingDetail() {
             )}
             {broker && (
               <span className="inline-flex items-center gap-1 text-muted-foreground">
-                · Broker:{" "}
+                Broker:{" "}
                 <Link to="/contacts/$id" params={{ id: broker.id }} className="font-medium text-brand hover:underline">
                   {broker.firstName} {broker.lastName}
                 </Link>
