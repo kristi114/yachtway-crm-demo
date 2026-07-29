@@ -62,6 +62,29 @@ Bluesky/GBP shown in the Marketing statistics page) feed the per-channel
 metrics on the Marketing → Social statistics dashboard, which runs on mock data
 until these are connected.
 
+## Notion content calendar → listing links (added — mock)
+
+Marketing → Content calendar and the **Content posts** panel on each listing
+surface the SMM team's Notion "Content calendar → Tasks" database, linking each
+post to a CRM listing by resolving the post's **Listing URL** property to a
+listing's public URL (`resolveListingId` in `src/lib/content-posts.ts`). Today
+that store is a **seeded snapshot** of the real Notion data.
+
+**To make real:**
+- **Notion connector** (OAuth) with the Content calendar database id
+  (`2006d212-272c-805e-a980-c885a15a453c`) / Tasks data source
+  (`collection://2006d212-272c-81e2-a854-000bedc6393e`).
+- Backend job (scheduled) pulls posts (Task name, Type, Channels, Status, Due,
+  Dealer, **Listing** URL, Final Material) into the CRM and resolves the Listing
+  URL to a listing id; store the mapping so both directions render.
+- Channels map to accounts: `*Main` → YachtWay, `*Hub` → YachtWay Hub (matches
+  the Social statistics accounts).
+- SMM action item: paste the listing's public URL into the post's **Listing**
+  field (it was empty on sampled posts) so the link resolves; otherwise fall
+  back to Dealer + Type matching.
+- Optional write-back (hybrid): CRM writes the resolved listing/dealer back to
+  the Notion post.
+
 ## Scheduled report delivery (added — mock)
 
 Admin → Reports lets a report define a delivery **schedule** (daily / weekly /

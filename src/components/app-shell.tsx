@@ -84,6 +84,7 @@ const NAV: NavGroup[] = [
     items: [
       { to: "/emails", label: "Emails", icon: Mail, gate: "emails" },
       { to: "/marketing/statistics", label: "Social statistics", icon: BarChart3, gate: "emails", hiddenForRoles: ["lender_partner", "insurance_partner"] },
+      { to: "/marketing/content", label: "Content calendar", icon: CalendarDays, gate: "emails", hiddenForRoles: ["lender_partner", "insurance_partner"] },
       { to: "/buyers", label: "Buyers", icon: Users, gate: "contact.general", hiddenForRoles: ["lender_partner", "insurance_partner"] },
     ],
   },

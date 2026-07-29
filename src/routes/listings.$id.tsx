@@ -12,6 +12,7 @@ import {
 } from "@/lib/mock-data";
 import { computeListingHeat, HEAT_STYLES } from "@/components/dealer-health-panel";
 import { DetailSections } from "@/components/field-renderer";
+import { ContentPostsPanel } from "@/components/content-posts-panel";
 import { LISTING_SECTIONS } from "@/lib/field-schema";
 
 export const Route = createFileRoute("/listings/$id")({
@@ -206,6 +207,11 @@ function ListingDetail() {
             badText={l.priceHidden ? "Price is hidden - buyers bounce" : `${l.featuresTotal - l.featuresFilled} feature fields empty`}
           />
         </section>
+
+        {/* Content calendar posts linked to this listing (via Notion) */}
+        <div className="mt-6">
+          <ContentPostsPanel listingId={l.id} />
+        </div>
 
         {/* Full catalog fields (auto-grouped, empties hidden) */}
         <div className="mt-6">
