@@ -58,17 +58,13 @@ function EstimatesPage() {
                 {docs.map((d) => (
                   <tr key={d.id} className="border-t border-border hover:bg-secondary/30">
                     <td className="px-3 py-2 font-semibold text-brand-deep">
-                      {d.share_token ? (
-                        <Link
-                          to="/billing/share/$token"
-                          params={{ token: d.share_token }}
-                          className="text-brand hover:underline"
-                        >
-                          {d.number}
-                        </Link>
-                      ) : (
-                        d.number
-                      )}
+                      <Link
+                        to="/billing/estimates/$id"
+                        params={{ id: d.id }}
+                        className="text-brand hover:underline"
+                      >
+                        {d.number}
+                      </Link>
                     </td>
                     <td className="px-3 py-2">
                       <Link
