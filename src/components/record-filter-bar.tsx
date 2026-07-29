@@ -1,4 +1,4 @@
-import { Plus, X, SlidersHorizontal } from "lucide-react";
+import { Search, X, SlidersHorizontal } from "lucide-react";
 
 import type { FieldDef } from "@/lib/field-schema";
 import { FIELD_OPTIONS, dynamicOptions } from "@/lib/field-options";
@@ -52,7 +52,7 @@ export function RecordFilterBar({
     <div className="mb-3 space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative w-72">
-          <SlidersHorizontal className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
@@ -65,7 +65,7 @@ export function RecordFilterBar({
           onClick={addClause}
           className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
-          <Plus className="h-4 w-4" /> Add filter
+          <SlidersHorizontal className="h-4 w-4" /> Add filter
         </button>
         {clauses.length > 0 && (
           <button
