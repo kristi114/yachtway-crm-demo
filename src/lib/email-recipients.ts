@@ -1,5 +1,41 @@
 import { CONTACTS } from "@/lib/mock-data";
 import { listSentEmails, type SentEmail } from "@/lib/email-send";
+import type { CommsLogEntry } from "@/lib/comms-log";
+
+/** Strip HTML to a short plain-text snippet for the interaction timeline. */
+function htmlSnippet(html?: string): string {
+  if (!html) return "";
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 160);
+}
+
+/**
+ * Transactional (Gmail) emails sent to a contact, shaped as comms-log entries
+ * so they render in the interaction timeline alongside calls, chats and notes.
+ * Only kind === "transactional" sends addressed directly to the contact are
+ * included - system (SES) and marketing (Mailgun) email stay in the Emails tab.
+ */
+export function transactionalCommsForContact(contactId: string): CommsLogEntry[] {
+  const c = CONTACTS.find((x) => x.id === contactId);
+  if (!c?.email) return [];
+  const email = c.email.toLowerCase();
+  return listSentEmails()
+    .filter((s) => s.kind === "transactional" && s.to.some((t) => t.toLowerCase() === email))
+    .map((s) => ({
+      id: `cm_email_${s.id}`,
+      relatedType: "contact" as const,
+      relatedId: contactId,
+      channel: "Email" as const,
+      direction: "outbound" as const,
+      author: "You",
+      contactName: `${c.firstName} ${c.lastName}`.trim(),
+      subject: s.subject,
+      body: htmlSnippet(s.html) || (s.templateName ? `Sent "${s.templateName}"` : "Sent via Gmail"),
+      occurred_at: s.sentAt,
+      createdAt: s.sentAt,
+      email_kind: "transactional" as const,
+      email_provider: "gmail" as const,
+    }));
+}
 
 /**
  * Expand a send into individual recipient rows for the per-send report.
@@ -35,7 +71,11 @@ export function buildRecipientRows(s: SentEmail): {
   // Base identities. Explicit multi-address sends use the real addresses; a
   // campaign to a group address is expanded from CRM contacts.
   let base: { id: string; name: string; email: string; contactId?: string }[];
-  const explicit = s.to.length > 1 && (!s.recipientCount || s.recipientCount === s.to.length);
+  // "Explicit" = the send lists its real recipient addresses (a 1:1 email or a
+  // small multi-address send), so each address maps to the matching CRM contact.
+  // Campaigns to a group address (recipientCount >> listed addresses) fall through
+  // to pool expansion below.
+  const explicit = s.to.length >= 1 && (!s.recipientCount || s.recipientCount === s.to.length);
   if (explicit) {
     base = s.to.map((e, i) => {
       // Link the address to a CRM contact when one matches.

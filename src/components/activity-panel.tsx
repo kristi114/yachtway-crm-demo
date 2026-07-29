@@ -19,6 +19,8 @@ import {
   type CommsChannel, type CommsFilter, type CommsLogEntry,
 } from "@/lib/comms-log";
 import { tasksFor, subscribeTasks, getTasksSnapshot, updateTaskStatus } from "@/lib/tasks-log";
+import { transactionalCommsForContact } from "@/lib/email-recipients";
+import { useSentLog } from "@/lib/email-send";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LogCommsDialog } from "@/components/log-comms-dialog";
@@ -102,8 +104,15 @@ export function ActivityPanel({
   // Subscribe to in-memory stores so newly added items appear immediately.
   useSyncExternalStore(subscribeComms, getCommsSnapshot, getCommsSnapshot);
   useSyncExternalStore(subscribeTasks, getTasksSnapshot, getTasksSnapshot);
-  const comms = commsFor(type, id);
-  const { notes, events, opportunities, emails } = activitiesFor(type, id);
+  useSentLog(); // re-render when sends change (transactional email flows into the timeline)
+  // Transactional (Gmail) emails sent to this contact surface in the interaction
+  // timeline alongside logged calls/chats. System (SES) and marketing (Mailgun)
+  // email is intentionally excluded here - it lives in the Emails tab.
+  const commsBase = commsFor(type, id);
+  const comms = type === "contact"
+    ? [...commsBase, ...transactionalCommsForContact(id)].sort((a, b) => (a.occurred_at < b.occurred_at ? 1 : -1))
+    : commsBase;
+  const { notes, events, opportunities } = activitiesFor(type, id);
   const tasks = tasksFor(type, id);
   // Notes count includes internal notes logged via the Comms dialog.
   const noteCommsCount = comms.filter((c) => c.channel === "Note").length;
@@ -313,27 +322,6 @@ export function ActivityPanel({
               );
             })
           )}
-        </div>
-      </Section>
-
-      <Section title="Emails" icon={Mail} count={emails.length}>
-        <div className="divide-y divide-border">
-          {emails.length === 0 ? <Empty label="emails" /> : emails.map((e) => (
-            <div key={e.id} className="px-4 py-3 text-sm">
-              <div className="flex items-center gap-2 text-sm">
-                {e.direction === "inbound"
-                  ? <ArrowDownLeft className="h-4 w-4 text-brand" />
-                  : <ArrowUpRight className="h-4 w-4 text-muted-foreground" />}
-                <span className="text-base font-semibold text-brand-deep truncate">{e.subject}</span>
-                <span className="ml-auto text-sm text-muted-foreground">{formatDateTime(e.sentAt)}</span>
-              </div>
-              <div className="mt-1 truncate text-sm text-muted-foreground">
-                {e.direction === "inbound" ? "From " : "To "}
-                {e.direction === "inbound" ? e.from : e.to}
-              </div>
-              <p className="mt-1.5 line-clamp-2 text-sm text-foreground/80">{e.snippet}</p>
-            </div>
-          ))}
         </div>
       </Section>
 
@@ -585,6 +573,11 @@ function CommsRow({ entry: c }: { entry: CommsLogEntry }) {
           {isChat && c.chat_provider ? `${c.chat_provider} chat` : c.channel}
         </span>
         {DirIcon && <DirIcon className={`h-3.5 w-3.5 ${c.direction === "inbound" ? "text-brand" : "text-muted-foreground"}`} />}
+        {c.channel === "Email" && (
+          <span className="rounded-full bg-brand/10 px-1.5 py-0.5 text-xs font-medium text-brand-deep">
+            {c.email_provider === "gmail" || !c.email_provider ? "Gmail" : c.email_provider} · transactional
+          </span>
+        )}
         {c.channel === "Note" && c.visibility && <VisibilityBadge visibility={c.visibility} />}
         {c.contactName && <span className="text-muted-foreground">· {c.contactName}</span>}
         {isChat && c.chat_matched_by && (

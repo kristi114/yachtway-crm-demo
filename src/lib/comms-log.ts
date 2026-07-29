@@ -1,4 +1,5 @@
 import type { NoteVisibility, RelatedType } from "@/lib/mock-data";
+import type { EmailKind, ProviderId } from "@/lib/email-providers";
 
 export type CommsChannel = "Email" | "Call" | "SMS" | "WhatsApp" | "Meeting" | "Note" | "Chat";
 export type CommsDirection = "inbound" | "outbound";
@@ -29,6 +30,13 @@ export interface CommsLogEntry {
   visibility?: NoteVisibility;
   /** Flags this interaction as an EasyFund (financing) opportunity → notifies Fintech. */
   easyfund?: boolean;
+  /**
+   * Email-only routing metadata. Comms only ever carries transactional (Gmail)
+   * 1:1 email; system (SES) and marketing (Mailgun) email live in the Emails
+   * tab, not the interaction timeline. Defaults to transactional/gmail.
+   */
+  email_kind?: EmailKind;
+  email_provider?: ProviderId;
   createdAt: string;
   /** Chat-only metadata (Crisp today, others later). */
   chat_provider?: "Crisp";
@@ -102,19 +110,6 @@ const seed: CommsLogEntry[] = [
       { from: "bot", author: "Crisp Bot", text: "Thanks - routing you to a human.", at: iso(60 * 28 - 1) },
       { from: "agent", author: "Ben (Support)", text: "Confirmed on our side. Fix rolling out this week, I'll ping you.", at: iso(60 * 28 - 6) },
     ],
-  },
-  {
-    id: "cm_seed_email_001",
-    relatedType: "contact",
-    relatedId: "cnt_001",
-    channel: "Email",
-    direction: "outbound",
-    author: "You",
-    contactName: "Marco Delgado",
-    subject: "Q3 renewal - DocuSign ready",
-    body: "Hi Marco, sent over the renewal for signature. Let me know if anything looks off.",
-    occurred_at: iso(60 * 6),
-    createdAt: iso(60 * 6),
   },
   {
     id: "cm_seed_call_001",

@@ -54,7 +54,9 @@ export interface SentEmail {
   providerName?: string;
 }
 
-const STORAGE_KEY = "yw:email-sent-log:v1";
+// v2: reseeded with a system (SES) + transactional (Gmail) + marketing (Mailgun)
+// mix so the contact Emails tab demonstrates all three providers.
+const STORAGE_KEY = "yw:email-sent-log:v2";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -151,7 +153,7 @@ function seed(): SentEmail[] {
     },
     {
       id: "snt_seed_3",
-      to: ["marco.delgado@example.com"],
+      to: ["marco.delgado@rivierayachtsmiami.com"],
       from: "YachtWay <noreply@yachtway.com>",
       subject: "Welcome aboard, Marco!",
       templateName: "Welcome — new account",
@@ -168,6 +170,26 @@ function seed(): SentEmail[] {
       html: seedHtml(
         "Welcome aboard, Marco 🚤",
         "Your YachtWay account is ready. Manage listings, brokers and buyers from one place.",
+      ),
+    },
+    {
+      id: "snt_seed_4",
+      to: ["marco.delgado@rivierayachtsmiami.com"],
+      from: "Mavil <mavil@yachtway.com>",
+      subject: "Q3 renewal - DocuSign ready",
+      sentAt: daysAgo(0, 6),
+      status: "sent",
+      mock: true,
+      kind: "transactional",
+      provider: "gmail",
+      providerName: "Gmail",
+      recipientCount: 1,
+      delivered: 1,
+      opened: 1,
+      html: seedHtml(
+        "Your Q3 renewal is ready to sign",
+        "Hi Marco, I've sent over the SaaS renewal for signature via DocuSign. Let me know if anything looks off.",
+        "Review & sign",
       ),
     },
   ];
