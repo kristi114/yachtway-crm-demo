@@ -100,8 +100,8 @@ const TABS: { label: string; vertical?: Vertical; type?: CompanyType }[] = [
   { label: "Shipyards", vertical: "Main", type: "Shipyard" },
   { label: "Dealers", vertical: "Main", type: "Dealer" },
   { label: "Brokerages", vertical: "Main", type: "Brokerage" },
-  { label: "Banks", vertical: "FinTech", type: "Bank" },
   { label: "Lenders", vertical: "FinTech", type: "Lender" },
+  { label: "Insurance", vertical: "FinTech", type: "Insurance Firm" },
 ];
 
 function statusBadge(s: string) {

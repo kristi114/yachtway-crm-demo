@@ -62,7 +62,7 @@ const NAV: NavGroup[] = [
   {
     label: "Fintech",
     items: [
-      { to: "/companies", label: "Banks & Lenders", icon: Landmark, gate: "company.general", search: { vertical: "FinTech" } },
+      { to: "/companies", label: "Lenders & Insurance", icon: Landmark, gate: "company.general", search: { vertical: "FinTech" } },
       { to: "/contacts", label: "Loan Brokers", icon: DealerIcon, gate: "contact.general", search: { vertical: "FinTech", type: "Bank Contact" } },
       { to: "/contacts", label: "Applicants", icon: Wallet, gate: "easyfund", search: { vertical: "FinTech", type: "Loan Applicant" } },
       { to: "/lender", label: "Lender dashboard", icon: Banknote, gate: "easyfund" },

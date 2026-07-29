@@ -13,18 +13,17 @@ import type { CurrencyCode } from "./currency";
 export type Vertical = "Main" | "FinTech";
 
 // -------- Companies --------
-// Yacht:  Shipyard, Dealer, Brokerage
-// Fintech: Bank, Lender
-// Cross:   Insurance, Service Yard
-
+// Company types match the Field Catalog company_type picklist (no "Bank").
 export type CompanyType =
-  | "Shipyard"
   | "Dealer"
   | "Brokerage"
-  | "Bank"
+  | "Shipyard"
   | "Lender"
-  | "Insurance"
-  | "Service Yard";
+  | "Insurance Firm"
+  | "Marina"
+  | "Other"
+  | "Naval Designer / Architect"
+  | "Documentation Company";
 
 export type CompanyStatus = "Member" | "Customer" | "Partner" | "Lead" | "Prospect";
 
@@ -495,7 +494,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: "cmp_007", vertical: "FinTech", name: "Harborline Bank",
-    companyType: "Bank", status: "Customer", logoUrl: null, parentCompanyId: null,
+    companyType: "Lender", status: "Customer", logoUrl: null, parentCompanyId: null,
     website: "https://harborlinebank.com", yachtwayDealerPage: "https://YachtWay.com/lender/harborline-bank", phone: "+1 305 555 0088",
     billingCity: "Miami", billingState: "FL", billingCountry: "USA",
     yachtwayDbAccountId: "acc_hrb_bank", sfAccountId: "0015g00000ABc90",
@@ -1407,7 +1406,7 @@ export function isServiceAvailable(k: ServiceKey): boolean {
  * Which services are *available* to each company type (single source of truth
  * for every Services-adoption view). Unavailable services render as blank
  * cells and never count toward a company's adoption total. Types not listed
- * (Bank, Insurance, Service Yard) fall back to all launched services.
+ * (Insurance Firm, Marina, Other, …) fall back to all launched services.
  */
 export const SERVICES_BY_COMPANY_TYPE: Partial<Record<CompanyType, ServiceKey[]>> = {
   Lender: ["drive", "vato", "easyfund", "mastercover"],

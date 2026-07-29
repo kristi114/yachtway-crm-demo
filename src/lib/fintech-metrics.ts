@@ -74,7 +74,7 @@ export type BankToolKey = (typeof BANK_TOOLS)[number]["key"];
 
 export function bankPartners(): Company[] {
   return COMPANIES.filter(
-    (c) => c.companyType === "Bank" || c.companyType === "Lender" || c.companyType === "Insurance",
+    (c) => c.companyType === "Lender" || c.companyType === "Insurance Firm",
   );
 }
 

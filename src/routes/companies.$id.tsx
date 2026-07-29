@@ -772,7 +772,7 @@ function CompanyDetail() {
               <section className="overflow-hidden rounded-sm border border-border bg-surface shadow-sm">
                 <header className="border-b border-border bg-secondary/60 px-4 py-2.5">
                   <h3 className="text-[13px] font-semibold uppercase tracking-wide text-brand-deep">
-                    {company.companyType === "Bank" || company.companyType === "Lender"
+                    {company.companyType === "Lender" || company.companyType === "Insurance Firm"
                       ? "Team contacts" : "Brokers & contacts"} ({contacts.length})
                   </h3>
                 </header>

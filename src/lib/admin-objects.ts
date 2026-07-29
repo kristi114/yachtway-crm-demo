@@ -110,7 +110,7 @@ function seedFields(): CrmField[] {
   return [
     // Company
     f("company", "Name", "name", "text", { required: true }),
-    f("company", "Company Type", "company_type", "picklist", { options: ["Shipyard", "Dealer", "Brokerage", "Bank", "Lender", "Insurance", "Service Yard"] }),
+    f("company", "Company Type", "company_type", "picklist", { options: ["Dealer", "Brokerage", "Shipyard", "Lender", "Insurance Firm", "Marina", "Other", "Naval Designer / Architect", "Documentation Company"] }),
     f("company", "Status", "status", "picklist", { options: ["Lead", "MQL", "SQL", "Active Customer", "Past Customer"] }),
     f("company", "Website", "website", "url"),
     f("company", "Annual Revenue", "annual_revenue", "currency"),
