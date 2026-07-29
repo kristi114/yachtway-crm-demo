@@ -146,11 +146,16 @@ function evalClause(record: Record<string, unknown>, clause: FilterClause, field
   }
 }
 
-/** Apply all clauses (AND) to a record set. Unknown fields are ignored. */
+/** Apply all clauses (AND) to a record set. Unknown fields are ignored.
+ *
+ * `resolve` lets a caller override fields before evaluation — used to turn
+ * relationship lookups (company/contact/owner objects or ids) into the name
+ * strings shown in the UI so text operators match what the user sees. */
 export function applyClauses<T extends Record<string, unknown>>(
   records: T[],
   clauses: FilterClause[],
   fields: FieldDef[],
+  resolve?: (record: T) => Record<string, unknown>,
 ): T[] {
   const byKey = new Map(fields.map((f) => [f.key, f]));
   const active = clauses.filter((c) => {
@@ -161,5 +166,8 @@ export function applyClauses<T extends Record<string, unknown>>(
     return spec.noValue || c.value.trim() !== "";
   });
   if (active.length === 0) return records;
-  return records.filter((r) => active.every((c) => evalClause(r, c, byKey.get(c.field)!)));
+  return records.filter((r) => {
+    const rec = resolve ? { ...r, ...resolve(r) } : r;
+    return active.every((c) => evalClause(rec, c, byKey.get(c.field)!));
+  });
 }

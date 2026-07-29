@@ -16,9 +16,10 @@ import { applyClauses, filterableFields, type FilterClause } from "@/lib/record-
 import { studioToursForCompany, useStudioTours } from "@/lib/studio-tours";
 import { Video } from "lucide-react";
 import {
-  COMPANIES, contactsForCompany, addCompany, subscribeMockData, getMockDataVersion,
+  COMPANIES, contactsForCompany, addCompany, subscribeMockData, getMockDataVersion, getContact,
   type Vertical, type CompanyType, type CompanyStatus, type Company,
 } from "@/lib/mock-data";
+import { readAdminConfig } from "@/lib/admin-config";
 import type { CurrencyCode } from "@/lib/currency";
 import { useAuth } from "@/lib/auth";
 import { useApiCompanyOverlay } from "@/lib/api/overlays";
@@ -225,8 +226,19 @@ function CompaniesList() {
           .filter(Boolean).join(" ").toLowerCase().includes(needle),
       );
     }
-    // Field-schema-driven advanced filters (any company field).
-    list = applyClauses(list as unknown as Record<string, unknown>[], clauses, filterFields) as unknown as typeof list;
+    // Field-schema-driven advanced filters. Relationship lookups resolve to
+    // their name strings so text operators match what's displayed.
+    list = applyClauses(list as unknown as Record<string, unknown>[], clauses, filterFields, (c) => {
+      const ownerId = c.ownerUserId as string | null | undefined;
+      const parentId = c.parentCompanyId as string | null | undefined;
+      const pcId = c.primaryContactId as string | null | undefined;
+      const pc = pcId ? getContact(pcId) : undefined;
+      return {
+        owner: ownerId ? readAdminConfig().users.find((u) => u.id === ownerId)?.name ?? "" : "",
+        parentCompany: parentId ? COMPANIES.find((x) => x.id === parentId)?.name ?? "" : "",
+        primaryContact: pc ? `${pc.firstName} ${pc.lastName}` : "",
+      };
+    }) as unknown as typeof list;
     const enriched = list.map((c) => {
       const tours = studioToursForCompany(c.id);
       const active = tours.filter((t) => t.status !== "expired");

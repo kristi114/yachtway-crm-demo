@@ -71,7 +71,10 @@ function ContactsList() {
       );
     }
     // Field-schema-driven advanced filters (any field, type-aware operators).
-    list = applyClauses(list as unknown as Record<string, unknown>[], clauses, filterFields) as unknown as typeof list;
+    list = applyClauses(list as unknown as Record<string, unknown>[], clauses, filterFields, (c) => ({
+      // Resolve the contact's company lookup to its name for text filters.
+      company: c.companyId ? COMPANIES.find((co) => co.id === c.companyId)?.name ?? "" : "",
+    })) as unknown as typeof list;
     return list.map((c) => {
       // API overlay: prefer canonical fields when apps/api has this contact.
       const api = apiContactsById.get(c.id);

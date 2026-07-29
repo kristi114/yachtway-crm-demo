@@ -68,7 +68,14 @@ function OpportunitiesPage() {
         [o.name, o.owner, o.stage, o.pipeline].join(" ").toLowerCase().includes(needle),
       );
     }
-    return applyClauses(list as unknown as Record<string, unknown>[], clauses, filterFields) as unknown as Opportunity[];
+    return applyClauses(list as unknown as Record<string, unknown>[], clauses, filterFields, (o) => {
+      const co = o.companyId ? getCompany(o.companyId as string) : null;
+      const ct = o.contactId ? getContact(o.contactId as string) : null;
+      return {
+        company: co?.name ?? "",
+        contact: ct ? `${ct.firstName} ${ct.lastName}` : "",
+      };
+    }) as unknown as Opportunity[];
   }, [opps, q, clauses, filterFields]);
 
   const grouped = useMemo(() => {
