@@ -29,7 +29,7 @@ import { EngagementPanel } from "@/components/engagement-panel";
 import { BrokerRosterPanel } from "@/components/broker-roster-panel";
 import { DealerHealthPanel, computeListingHeat, HEAT_STYLES } from "@/components/dealer-health-panel";
 import { RecommendationsPanel } from "@/components/recommendations-panel";
-import { EditCompanyDialog } from "@/components/edit-company-dialog";
+import { CreateRecordDialog } from "@/components/create-record-dialog";
 import { LogCommsDialog } from "@/components/log-comms-dialog";
 import { DealerCreditPanel } from "@/components/dealer-credit-panel";
 import { ServicesAdoptionPanel } from "@/components/services-adoption-panel";
@@ -245,12 +245,29 @@ function CompanyDetail() {
           </>
         }
       />
-      <EditCompanyDialog
+      <CreateRecordDialog
         open={editOpen}
         onOpenChange={setEditOpen}
-        company={company}
-        contacts={contacts}
-        onSave={handleSave}
+        title="Edit company details"
+        description="Update any field. The company name can't be changed."
+        sections={COMPANY_SECTIONS}
+        requiredKeys={["name"]}
+        readOnlyKeys={["name"]}
+        initial={companyRecord}
+        submitLabel="Save changes"
+        onSave={(values) => {
+          const typeByKey = new Map(
+            COMPANY_SECTIONS.flatMap((s) => s.fields.map((f) => [f.key, f.type] as const)),
+          );
+          const patch: Record<string, unknown> = {};
+          for (const [k, v] of Object.entries(values)) {
+            const t = typeByKey.get(k);
+            patch[k] = (t === "number" || t === "money")
+              ? (v === "" || v == null ? null : Number(v))
+              : v;
+          }
+          handleSave(patch as Partial<typeof company>);
+        }}
       />
       <LogCommsDialog
         open={logOpen}

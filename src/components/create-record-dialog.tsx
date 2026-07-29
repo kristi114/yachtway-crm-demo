@@ -199,13 +199,14 @@ function FieldInput({
 }
 
 function SectionBlock({
-  section, values, onChange, defaultOpen, requiredKeys,
+  section, values, onChange, defaultOpen, requiredKeys, readOnlyKeys,
 }: {
   section: FieldSection;
   values: Values;
   onChange: (key: string, v: unknown) => void;
   defaultOpen: boolean;
   requiredKeys: Set<string>;
+  readOnlyKeys: Set<string>;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -232,12 +233,16 @@ function SectionBlock({
                 {f.label}
                 {requiredKeys.has(f.key) && <span className="ml-1 text-destructive">*</span>}
               </Label>
-              <FieldInput
-                field={f}
-                value={values[f.key]}
-                onChange={(v) => onChange(f.key, v)}
-                setField={onChange}
-              />
+              {readOnlyKeys.has(f.key) ? (
+                <Input value={String(values[f.key] ?? "")} disabled className="h-8 text-[13px]" />
+              ) : (
+                <FieldInput
+                  field={f}
+                  value={values[f.key]}
+                  onChange={(v) => onChange(f.key, v)}
+                  setField={onChange}
+                />
+              )}
             </div>
           ))}
         </div>
@@ -248,6 +253,7 @@ function SectionBlock({
 
 export function CreateRecordDialog({
   open, onOpenChange, title, description, sections, requiredKeys = [], initial = {}, onSave,
+  submitLabel = "Create", readOnlyKeys = [],
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -257,6 +263,10 @@ export function CreateRecordDialog({
   requiredKeys?: readonly string[];
   initial?: Values;
   onSave: (values: Values) => void;
+  /** Submit button label (e.g. "Save changes" when editing). */
+  submitLabel?: string;
+  /** Fields shown but not editable (e.g. name/id when editing). */
+  readOnlyKeys?: readonly string[];
 }) {
   // Split into subsections, then merge any that share a title (e.g. two
   // "Accounting" groups) so each section appears once with combined fields.
@@ -283,6 +293,7 @@ export function CreateRecordDialog({
   const [q, setQ] = useState("");
   const [showHidden, setShowHidden] = useState(false);
   const reqSet = useMemo(() => new Set(requiredKeys), [requiredKeys]);
+  const readOnlySet = useMemo(() => new Set(readOnlyKeys), [readOnlyKeys]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -343,6 +354,7 @@ export function CreateRecordDialog({
                 onChange={handleChange}
                 defaultOpen={i === 0 || Boolean(q.trim())}
                 requiredKeys={reqSet}
+                readOnlyKeys={readOnlySet}
               />
             ))}
             {filtered.length === 0 && (
@@ -366,7 +378,7 @@ export function CreateRecordDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Create</Button>
+            <Button type="submit">{submitLabel}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
