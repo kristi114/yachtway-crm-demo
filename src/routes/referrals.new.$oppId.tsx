@@ -50,8 +50,8 @@ function NewReferralInvoicesPage() {
   );
   const [lenderRef, setLenderRef] = useState("");
 
-  // Dealer bill or payout
-  const [dealerAction, setDealerAction] = useState<"bill" | "payout" | "none">("bill");
+  // Dealer payout (or skip). Dealers are paid the referral fee, never billed.
+  const [dealerAction, setDealerAction] = useState<"payout" | "none">("payout");
   const [dealerName, setDealerName] = useState(dealer?.name ?? "");
   const [dealerAmount, setDealerAmount] = useState<string>(
     (opp.amountUsd * 0.00125).toFixed(2),
@@ -79,13 +79,13 @@ function NewReferralInvoicesPage() {
     }
     if (dealerAction !== "none" && dealerName && Number(dealerAmount) > 0) {
       addReferral({
-        type: dealerAction === "bill" ? "dealer_bill" : "dealer_payout",
+        type: "dealer_payout",
         opportunity_id: opp.id,
         opportunity_name: opp.name,
         counterparty_name: dealerName,
         amount: Number(dealerAmount),
         currency: "USD",
-        status: dealerAction === "bill" ? "bill" : "draft",
+        status: "draft",
         reference: dealerRef,
         notes: notes || undefined,
         created_by_name: opp.owner,
@@ -171,14 +171,13 @@ function NewReferralInvoicesPage() {
           {/* Dealer card */}
           <section className="rounded-sm border border-border bg-surface p-4 shadow-sm">
             <div className="mb-3">
-              <h2 className="text-sm font-semibold">Dealer payout or bill</h2>
+              <h2 className="text-sm font-semibold">Dealer payout</h2>
               <p className="text-[11px] text-muted-foreground">
-                Chargeback the dealer for the referral fee, or record a payout
-                owed to them.
+                Record the referral-fee payout owed to the dealer.
               </p>
             </div>
             <div className="mb-3 inline-flex rounded-md border border-border p-0.5 text-[11px]">
-              {(["bill", "payout", "none"] as const).map((v) => (
+              {(["payout", "none"] as const).map((v) => (
                 <button
                   key={v}
                   type="button"
@@ -189,7 +188,7 @@ function NewReferralInvoicesPage() {
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {v === "none" ? "Skip" : v === "bill" ? "Bill dealer" : "Pay dealer"}
+                  {v === "none" ? "Skip" : "Pay dealer"}
                 </button>
               ))}
             </div>
