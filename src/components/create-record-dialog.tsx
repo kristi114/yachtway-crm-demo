@@ -10,6 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { FieldDef, FieldSection } from "@/lib/field-schema";
 import { autoSplit } from "@/components/field-renderer";
+import { FIELD_OPTIONS, dynamicOptions } from "@/lib/field-options";
+
+// System-identifier fields hidden by default on create (revealed via the toggle).
+const HIDDEN_ON_CREATE = new Set<string>([
+  "id", "ownerId", "parentCompanyId", "primaryContactId", "easysignPrimaryContactId", "createdById",
+]);
 
 type Values = Record<string, unknown>;
 
@@ -78,8 +84,12 @@ function FieldInput({
           className={common}
         />
       );
-    case "single_option":
-      if (field.options?.length) {
+    case "single_option": {
+      // Options come from the field itself, else the catalog picklist.
+      const opts = field.options?.length
+        ? [...field.options]
+        : dynamicOptions(FIELD_OPTIONS[field.key] ?? [], String(value ?? ""));
+      if (opts.length) {
         return (
           <select
             value={String(value ?? "")}
@@ -87,13 +97,14 @@ function FieldInput({
             className="native-select h-8 w-full rounded-md border border-input bg-transparent px-2 text-[13px]"
           >
             <option value="">-</option>
-            {field.options.map((o) => (
+            {opts.map((o) => (
               <option key={o} value={o}>{o}</option>
             ))}
           </select>
         );
       }
       return <Input value={String(value ?? "")} onChange={(e) => onChange(e.target.value)} className={common} />;
+    }
     default:
       return (
         <Input
@@ -164,27 +175,45 @@ export function CreateRecordDialog({
   initial?: Values;
   onSave: (values: Values) => void;
 }) {
-  const groups = useMemo(() => sections.flatMap((s) => autoSplit(s)), [sections]);
+  // Split into subsections, then merge any that share a title (e.g. two
+  // "Accounting" groups) so each section appears once with combined fields.
+  const groups = useMemo(() => {
+    const norm = (t: string) => t.toLowerCase().replace(/\s+/g, " ").trim();
+    const map = new Map<string, FieldSection>();
+    for (const g of sections.flatMap((s) => autoSplit(s))) {
+      const key = norm(g.title);
+      const existing = map.get(key);
+      if (existing) {
+        const seen = new Set(existing.fields.map((f) => f.key));
+        existing.fields = [...existing.fields, ...g.fields.filter((f) => !seen.has(f.key))];
+      } else {
+        map.set(key, { ...g, fields: [...g.fields] });
+      }
+    }
+    return [...map.values()];
+  }, [sections]);
   const [values, setValues] = useState<Values>(() => {
     const seed: Values = {};
     for (const s of sections) for (const f of s.fields) seed[f.key] = initial[f.key] ?? defaultForField(f);
     return seed;
   });
   const [q, setQ] = useState("");
+  const [showHidden, setShowHidden] = useState(false);
   const reqSet = useMemo(() => new Set(requiredKeys), [requiredKeys]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    if (!needle) return groups;
     return groups
       .map((g) => ({
         ...g,
-        fields: g.fields.filter((f) =>
-          f.label.toLowerCase().includes(needle) || f.key.toLowerCase().includes(needle),
-        ),
+        fields: g.fields.filter((f) => {
+          if (!showHidden && HIDDEN_ON_CREATE.has(f.key)) return false;
+          if (!needle) return true;
+          return f.label.toLowerCase().includes(needle) || f.key.toLowerCase().includes(needle);
+        }),
       }))
       .filter((g) => g.fields.length > 0);
-  }, [groups, q]);
+  }, [groups, q, showHidden]);
 
   const handleChange = (key: string, v: unknown) => setValues((prev) => ({ ...prev, [key]: v }));
 
@@ -238,6 +267,16 @@ export function CreateRecordDialog({
                 No fields match "{q}"
               </div>
             )}
+
+            <label className="flex items-center gap-2 px-1 pt-1 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={showHidden}
+                onChange={(e) => setShowHidden(e.target.checked)}
+                className="h-3.5 w-3.5 accent-[hsl(var(--brand))]"
+              />
+              Show hidden fields (system identifiers)
+            </label>
           </div>
 
           <DialogFooter className="border-t border-border px-6 py-3">

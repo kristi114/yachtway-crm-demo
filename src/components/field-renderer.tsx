@@ -216,7 +216,8 @@ function FieldRow({
 const PREFIX_GROUPS: [RegExp, string][] = [
   [/^(billing|xero|stripe|arrUsd|saasArr|total(Amount|Draft|Unallocated|Invoiced|Paid))/, "Accounting"],
   [/^(mainOffice|office\d)/, "Offices"],
-  [/^api/, "System"],
+  // API connectivity is a Platform Adoption signal.
+  [/^api/, "Platform Adoption"],
   [/^(studio|tour3d|listingsW3d)/, "Studio & 3D tours"],
   [/^easyfund/, "EasyFund"],
   // easysign* fields stay with their parent section (Platform Adoption).
