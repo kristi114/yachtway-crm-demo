@@ -276,7 +276,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex flex-1">
         <aside
-          className={`shrink-0 border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-out ${
+          className={`sticky top-14 h-[calc(100vh-3.5rem)] shrink-0 self-start overflow-y-auto border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-out ${
             collapsed ? "w-16" : "w-60"
           }`}
         >
