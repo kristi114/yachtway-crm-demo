@@ -323,8 +323,8 @@ export const BRANDS: Brand[] = [
   { id: "brd_princess",   name: "Princess",     manufacturerCountry: "UK",     tier: "Luxury" },
   { id: "brd_riviera",    name: "Riviera",      manufacturerCountry: "Australia", tier: "Premium" },
   { id: "brd_pershing",   name: "Pershing",     manufacturerCountry: "Italy",  tier: "Luxury" },
-  { id: "brd_sea_ray",    name: "Sea Ray",      manufacturerCountry: "USA",    tier: "Mainstream", logoUrl: "https://logo.clearbit.com/searay.com" },
-  { id: "brd_whaler",     name: "Boston Whaler",manufacturerCountry: "USA",    tier: "Premium",    logoUrl: "https://logo.clearbit.com/bostonwhaler.com" },
+  { id: "brd_sea_ray",    name: "Sea Ray",      manufacturerCountry: "USA",    tier: "Mainstream", logoUrl: "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20260%20120'%3E%3Crect%20width='260'%20height='120'%20rx='14'%20fill='%23ffffff'/%3E%3Ctext%20x='130'%20y='60'%20text-anchor='middle'%20font-family='Georgia,serif'%20font-size='36'%20font-style='italic'%20font-weight='700'%20fill='%23123a7a'%3ESea%20Ray%3C/text%3E%3Ctext%20x='130'%20y='86'%20text-anchor='middle'%20font-family='Arial'%20font-size='12'%20letter-spacing='4'%20fill='%236b7280'%3EBOATS%3C/text%3E%3C/svg%3E" },
+  { id: "brd_whaler",     name: "Boston Whaler",manufacturerCountry: "USA",    tier: "Premium",    logoUrl: "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20260%20120'%3E%3Crect%20width='260'%20height='120'%20rx='14'%20fill='%23002a5c'/%3E%3Ctext%20x='130'%20y='56'%20text-anchor='middle'%20font-family='Arial'%20font-size='26'%20font-weight='700'%20fill='%23ffffff'%3EBOSTON%3C/text%3E%3Ctext%20x='130'%20y='84'%20text-anchor='middle'%20font-family='Arial'%20font-size='22'%20font-weight='400'%20letter-spacing='2'%20fill='%23cfe0f5'%3EWHALER%3C/text%3E%3C/svg%3E" },
 ];
 
 export const COMPANIES: Company[] = [
