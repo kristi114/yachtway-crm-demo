@@ -49,8 +49,18 @@ function ServicesMatrix() {
   const rows = useMemo(() => {
     let list = COMPANIES;
     if (vertical !== "all") list = list.filter((c) => c.vertical === vertical);
-    return list;
-  }, [vertical]);
+    // Enabled-service count per account (respecting per-company restrictions).
+    const countFor = (c: (typeof COMPANIES)[number]) =>
+      visibleServiceOrder.filter((k) => !isRestrictedForCompany(c, k) && c.servicesUsed[k]).length;
+    // Default sort: accounts with zero services first (upsell targets), then the
+    // rest — both groups alphabetical A–Z by account name.
+    return [...list].sort((a, b) => {
+      const az = countFor(a) === 0 ? 0 : 1;
+      const bz = countFor(b) === 0 ? 0 : 1;
+      if (az !== bz) return az - bz;
+      return a.name.localeCompare(b.name);
+    });
+  }, [vertical, visibleServiceOrder]);
 
   const totals = useMemo(() => {
     const t: Record<ServiceKey, number> = {
