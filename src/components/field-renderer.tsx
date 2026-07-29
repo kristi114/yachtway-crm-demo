@@ -413,6 +413,7 @@ export function DetailSections({
   sectionExtras,
   only,
   exclude,
+  excludeFields,
   reorderable,
   layoutKey,
 }: {
@@ -426,6 +427,8 @@ export function DetailSections({
   only?: string[];
   /** Hide these section titles (lowercase). */
   exclude?: string[];
+  /** Hide these individual field keys (e.g. "owner" when it's edited elsewhere). */
+  excludeFields?: string[];
   /** Enable per-user drag-to-reorder of the section cards. Requires layoutKey. */
   reorderable?: boolean;
   /** Distinct key for the saved order (e.g. the object key: "company"). */
@@ -471,6 +474,13 @@ export function DetailSections({
     // Roles without that grant - marketing by default - never see the numbers.
     .map((s) =>
       canBilling ? s : { ...s, fields: s.fields.filter((f) => f.type !== "money") },
+    )
+    // Drop individually excluded fields (e.g. Owner, which is edited via the
+    // header dropdown, not inline).
+    .map((s) =>
+      excludeFields && excludeFields.length
+        ? { ...s, fields: s.fields.filter((f) => !excludeFields.includes(f.key)) }
+        : s,
     )
     .filter((s) => s.fields.length > 0);
 

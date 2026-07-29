@@ -377,6 +377,7 @@ function CompanyDetail() {
               reorderable
               layoutKey="company"
               exclude={["accounting", "listings performance", "studio & 3d tours", "easyfund", "platform adoption"]}
+              excludeFields={["owner"]}
               onEditField={(key, value) => handleSave({ [key]: value } as Partial<typeof company>)}
 
               fieldActions={{
