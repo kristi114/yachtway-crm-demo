@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
-import { signatureFor, useSignatures } from "@/lib/signatures";
 import { logComms, type CommsChannel, type CommsDirection } from "@/lib/comms-log";
 import { pushNotification } from "@/lib/notifications";
 import type { NoteVisibility, RelatedType } from "@/lib/mock-data";
@@ -53,7 +52,6 @@ export function LogCommsDialog({
   onLogged?: () => void;
 }) {
   const { user } = useAuth();
-  const sigCfg = useSignatures();
   const [channel, setChannel] = useState<CommsChannel>("Email");
   const [direction, setDirection] = useState<CommsDirection>("outbound");
   const [contactName, setContactName] = useState(defaultContactName ?? "");
@@ -62,7 +60,6 @@ export function LogCommsDialog({
   const [occurredAt, setOccurredAt] = useState(nowLocalInput());
   const [followUp, setFollowUp] = useState("");
   const [visibility, setVisibility] = useState<NoteVisibility>("team");
-  const [appendSignature, setAppendSignature] = useState(true);
   // When checked, flags this interaction as an EasyFund lead and notifies Fintech.
   const [easyfund, setEasyfund] = useState(false);
 
@@ -70,9 +67,6 @@ export function LogCommsDialog({
   const showSubject = channel === "Email" || channel === "Meeting";
   const showVisibility = channel === "Note";
   const allowSecure = canCreateSecureNote(toNoteViewer(user));
-
-  const signature = signatureFor(sigCfg, user);
-  const showSignature = channel === "Email" && direction === "outbound" && sigCfg.autoAppend;
 
   function reset() {
     setChannel("Email");
@@ -83,16 +77,13 @@ export function LogCommsDialog({
     setOccurredAt(nowLocalInput());
     setFollowUp("");
     setVisibility("team");
-    setAppendSignature(true);
     setEasyfund(false);
   }
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!body.trim()) return;
-    const finalBody = showSignature && appendSignature
-      ? `${body.trim()}\n\n${signature}`
-      : body.trim();
+    const finalBody = body.trim();
     logComms({
       relatedType: relatedType,
       relatedId: relatedId,
@@ -246,27 +237,6 @@ export function LogCommsDialog({
               placeholder="What was discussed, next steps, decisions…"
             />
           </div>
-
-          {showSignature && (
-            <div className="rounded-lg border border-border bg-secondary/30 p-3">
-              <label className="flex items-center gap-2 text-xs font-medium">
-                <input
-                  type="checkbox"
-                  checked={appendSignature}
-                  onChange={(e) => setAppendSignature(e.target.checked)}
-                  className="h-3.5 w-3.5 accent-[hsl(var(--brand))]"
-                />
-                Append my email signature
-              </label>
-              {appendSignature && (
-                <pre className="mt-2 whitespace-pre-wrap border-t border-border pt-2 text-[12px] leading-relaxed text-muted-foreground">
-                  {signature}
-                </pre>
-              )}
-            </div>
-          )}
-
-
 
           <div className="rounded-lg border border-border bg-secondary/30 p-3">
             <label className="flex items-start gap-2 text-xs font-medium">
