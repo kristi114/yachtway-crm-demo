@@ -134,6 +134,11 @@ function tierBadge(tier: string) {
 
 type SortKey = "name" | "companyType" | "status" | "dealerTier" | "location" | "location_count" | "broker_count" | "activeListings" | "contact_count" | "customWebsite" | "studio_tours";
 
+/** Yacht-specific columns hidden on the FinTech (lenders/insurance) view. */
+const FINTECH_HIDDEN_COLS = new Set<SortKey>([
+  "dealerTier", "customWebsite", "location", "location_count", "activeListings", "contact_count", "studio_tours",
+]);
+
 // Deterministic derived "office locations" count for a company.
 // Roughly scales with broker footprint; shipyards get 1, big brokerages get more.
 function locationCount(c: typeof COMPANIES[number]): number {
@@ -153,6 +158,9 @@ function CompaniesList() {
 
   const search = Route.useSearch();
   const { vertical, type, status, uses, notUses, maxBrokers, noListings, portalInactive, studioNever } = search;
+  // FinTech accounts (lenders / insurance) don't use yacht-specific columns or
+  // the full lifecycle status set.
+  const fintechView = vertical === "FinTech" || allowedVertical === "FinTech";
   const navigate = Route.useNavigate();
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -362,7 +370,10 @@ function CompaniesList() {
             );
           })}
           <div className="ml-auto flex items-center gap-1 py-2 text-xs">
-            {dynamicOptions(FIELD_OPTIONS.companyStatus, ...COMPANIES.map((c) => c.status)).map((s) => {
+            {(fintechView
+              ? ["Lead", "Partner"]
+              : dynamicOptions(FIELD_OPTIONS.companyStatus, ...COMPANIES.map((c) => c.status))
+            ).map((s) => {
               const active = status === s;
               return (
                 <button
@@ -564,7 +575,9 @@ function CompaniesList() {
                   ["activeListings", "Listings", "right"],
                   ["contact_count", "Contacts", "right"],
                   ["studio_tours", "3D Tours", "right"],
-                ] as [SortKey, string, "left" | "right"][]).map(([key, label, align]) => {
+                ] as [SortKey, string, "left" | "right"][])
+                  .filter(([key]) => !(fintechView && FINTECH_HIDDEN_COLS.has(key)))
+                  .map(([key, label, align]) => {
                   const active = sortKey === key;
                   const Icon = active ? (sortDir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
                   return (
@@ -648,27 +661,36 @@ function CompaniesList() {
                       {c.status}
                     </span>
                   </td>
-                  <td className="px-3 py-2">
-                    <span className={`inline-flex rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tierBadge(c.dealerTier)}`}>
-                      {c.dealerTier}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2">
-                    {c.customWebsiteEnabled ? (
-                      <span className="inline-flex items-center gap-1 rounded-sm bg-success/15 px-1.5 py-0.5 text-[10px] font-semibold text-success">
-                        Yes
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2 text-muted-foreground">
-                    {[c.billingCity, c.billingCountry].filter(Boolean).join(", ")}
-                  </td>
-                  <td className="px-3 py-2 text-right tabular-nums">{locationCount(c)}</td>
+                  {!fintechView && (
+                    <>
+                      <td className="px-3 py-2">
+                        <span className={`inline-flex rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tierBadge(c.dealerTier)}`}>
+                          {c.dealerTier}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2">
+                        {c.customWebsiteEnabled ? (
+                          <span className="inline-flex items-center gap-1 rounded-sm bg-success/15 px-1.5 py-0.5 text-[10px] font-semibold text-success">
+                            Yes
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-muted-foreground">
+                        {[c.billingCity, c.billingCountry].filter(Boolean).join(", ")}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums">{locationCount(c)}</td>
+                    </>
+                  )}
                   <td className="px-3 py-2 text-right tabular-nums">{c.crmBrokerCount}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{c.activeListings}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{c.contact_count}</td>
+                  {!fintechView && (
+                    <>
+                      <td className="px-3 py-2 text-right tabular-nums">{c.activeListings}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{c.contact_count}</td>
+                    </>
+                  )}
+                  {!fintechView && (
                   <td className="px-3 py-2 text-right tabular-nums">
                     {c.studio_tours_count > 0 ? (
                       <div className="flex flex-col items-end leading-tight">
@@ -699,10 +721,11 @@ function CompaniesList() {
                       <span className="text-muted-foreground">-</span>
                     )}
                   </td>
+                  )}
                 </tr>
               ))}
               {rows.length === 0 && (
-                <tr><td colSpan={11} className="px-3 py-10 text-center text-sm text-muted-foreground">
+                <tr><td colSpan={fintechView ? 4 : 11} className="px-3 py-10 text-center text-sm text-muted-foreground">
                   No companies match your filters
                 </td></tr>
               )}
