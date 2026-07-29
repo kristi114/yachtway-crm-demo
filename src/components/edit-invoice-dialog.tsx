@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { updateDoc, type BillingDoc, type DocStatus, type LineItem } from "@/lib/billing";
+import { updateDoc, type BillingDoc, type DocStatus, type LineItem, type Discount } from "@/lib/billing";
 import { formatMoney, type CurrencyCode } from "@/lib/currency";
 import { contactsForCompany, OPPORTUNITIES, getOpportunity } from "@/lib/mock-data";
 import { toast } from "sonner";
@@ -64,6 +64,7 @@ export function EditInvoiceDialog({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [opportunityId, setOpportunityId] = useState(doc.opportunityId ?? "");
   const [shootLocation, setShootLocation] = useState(doc.shootLocation ?? "south_florida");
+  const [discount, setDiscount] = useState<Discount | undefined>(doc.discount);
 
   // Re-sync when reopening or when the doc changes underneath.
   useEffect(() => {
@@ -78,6 +79,7 @@ export function EditInvoiceDialog({
     setItems(draftsFromLineItems(doc.line_items));
     setOpportunityId(doc.opportunityId ?? "");
     setShootLocation(doc.shootLocation ?? "south_florida");
+    setDiscount(doc.discount);
   }, [open, doc]);
 
   const contacts = useMemo(() => contactsForCompany(doc.companyId), [doc.companyId]);
@@ -118,6 +120,7 @@ export function EditInvoiceDialog({
       issued_at: issuedAt ? new Date(issuedAt).toISOString() : doc.issued_at,
       due_at: dueAt ? new Date(dueAt).toISOString() : null,
       line_items: cleaned,
+      discount,
       notes: notes.trim() || undefined,
       recipient_contact_id: contact?.id,
       recipient_contact_name: contact ? `${contact.firstName} ${contact.lastName}` : undefined,
@@ -208,6 +211,8 @@ export function EditInvoiceDialog({
             vessels={vessels}
             studioPassActive={studioPass?.status === "active"}
             shootLocation={shootLocation}
+            discount={discount}
+            onDiscountChange={setDiscount}
           />
 
 
