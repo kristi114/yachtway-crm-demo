@@ -1,5 +1,5 @@
 import { Check, Minus } from "lucide-react";
-import { SERVICE_LABELS, isServiceAvailable, type Company, type ServiceKey } from "@/lib/mock-data";
+import { SERVICE_LABELS, isServiceAvailableForCompany, type Company, type ServiceKey } from "@/lib/mock-data";
 
 const SERVICE_ORDER: ServiceKey[] = [
   "saas", "studio", "live", "drive", "easysign", "vato",
@@ -7,16 +7,9 @@ const SERVICE_ORDER: ServiceKey[] = [
 ];
 
 export function ServicesAdoptionCard({ company }: { company: Company }) {
-  // Yacht-industry brokerages can never use Loan apps (EasyFund), PFS (MasterCover), or VATO -
-  // those are dealer-only services.
-  const isYachtBrokerage =
-    company.vertical === "Main" && company.companyType === "Brokerage";
-  const services = SERVICE_ORDER.filter((k) => {
-    if (!isServiceAvailable(k)) return false;
-    if (k === "easysign" && company.vertical === "FinTech") return false;
-    if (isYachtBrokerage && (k === "easyfund" || k === "mastercover" || k === "vato")) return false;
-    return true;
-  });
+  // Availability is driven by company type (SERVICES_BY_COMPANY_TYPE), shown in
+  // the standard display order.
+  const services = SERVICE_ORDER.filter((k) => isServiceAvailableForCompany(company, k));
   const count = services.filter((k) => company.servicesUsed[k]).length;
 
 

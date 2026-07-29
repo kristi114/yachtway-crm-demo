@@ -5,7 +5,7 @@ import { Check, Minus } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { PageHeader, PageBody } from "@/components/page-header";
-import { COMPANIES, companyPlan, SERVICE_LABELS, isServiceAvailable, type ServiceKey } from "@/lib/mock-data";
+import { COMPANIES, companyPlan, SERVICE_LABELS, isServiceAvailable, isServiceAvailableForCompany, type ServiceKey } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/services")({
   component: guarded("services", "Services adoption", ServicesMatrix),
@@ -40,9 +40,10 @@ function ServicesMatrix() {
   );
 
   // Yacht-industry brokerages can never use Loan apps (EasyFund), PFS (MasterCover), or VATO.
+  // A service is "restricted" (blank cell, excluded from total) when it isn't
+  // available to that company type — see SERVICES_BY_COMPANY_TYPE in mock-data.
   const isRestrictedForCompany = (c: (typeof COMPANIES)[number], k: ServiceKey) =>
-    c.vertical === "Main" && c.companyType === "Brokerage" &&
-    (k === "easyfund" || k === "mastercover" || k === "vato");
+    !isServiceAvailableForCompany(c, k);
 
 
 

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   SERVICE_LABELS,
-  isServiceAvailable,
+  isServiceAvailableForCompany,
   companyPlan,
   companyAddOns,
   setCompanyService,
@@ -36,11 +36,9 @@ export function ServicesAdoptionPanel({ company }: ServicesAdoptionPanelProps) {
   const [, forceTick] = useState(0);
   useEffect(() => subscribeMockData(() => forceTick((n) => n + 1)), []);
 
-  const applicable = SERVICE_ORDER.filter(
-    (k) =>
-      isServiceAvailable(k) &&
-      !(k === "easysign" && company.vertical === "FinTech"),
-  );
+  // Availability is driven by company type (SERVICES_BY_COMPANY_TYPE), ordered
+  // by the display order.
+  const applicable = SERVICE_ORDER.filter((k) => isServiceAvailableForCompany(company, k));
   const activeCount = applicable.filter((k) => company.servicesUsed[k]).length;
   const total = applicable.length;
   const plan = companyPlan(company);

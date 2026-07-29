@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Layers } from "lucide-react";
 import {
-  COMPANIES, OPPORTUNITIES, SERVICE_LABELS, isServiceAvailable, type ServiceKey,
+  COMPANIES, OPPORTUNITIES, SERVICE_LABELS, isServiceAvailable, isServiceAvailableForCompany, type ServiceKey,
 } from "@/lib/mock-data";
 import { useMoney } from "@/lib/auth";
 
@@ -53,7 +53,6 @@ function buildRows(): Row[] {
     (c) => c.vertical === "Main" &&
       (c.companyType === "Dealer" || c.companyType === "Brokerage"),
   );
-  const eligible = Math.max(1, pool.length);
 
   return ALL_SERVICES.map((key) => {
     let wonRevenue = 0, openRevenue = 0, wonCount = 0, openCount = 0;
@@ -63,12 +62,15 @@ function buildRows(): Row[] {
       if (WON_STAGES.has(o.stage)) { wonRevenue += o.amountUsd; wonCount += 1; }
       else if (!LOST_STAGES.has(o.stage)) { openRevenue += o.amountUsd; openCount += 1; }
     }
-    const adopters = pool.filter((c) => c.servicesUsed[key]).length;
+    // Only companies where the service is available count toward eligibility.
+    const eligiblePool = pool.filter((c) => isServiceAvailableForCompany(c, key));
+    const adopters = eligiblePool.filter((c) => c.servicesUsed[key]).length;
+    const denom = Math.max(1, eligiblePool.length);
     return {
       key, label: SERVICE_LABELS[key],
       wonRevenue, openRevenue, wonCount, openCount,
-      adopters, eligible: pool.length,
-      adoptionPct: Math.round((adopters / eligible) * 100),
+      adopters, eligible: eligiblePool.length,
+      adoptionPct: Math.round((adopters / denom) * 100),
     };
   });
 }

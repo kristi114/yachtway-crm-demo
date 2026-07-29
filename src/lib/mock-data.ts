@@ -1403,6 +1403,30 @@ export function isServiceAvailable(k: ServiceKey): boolean {
   return !UNAVAILABLE_SERVICES.includes(k);
 }
 
+/**
+ * Which services are *available* to each company type (single source of truth
+ * for every Services-adoption view). Unavailable services render as blank
+ * cells and never count toward a company's adoption total. Types not listed
+ * (Bank, Insurance, Service Yard) fall back to all launched services.
+ */
+export const SERVICES_BY_COMPANY_TYPE: Partial<Record<CompanyType, ServiceKey[]>> = {
+  Lender: ["drive", "vato", "easyfund", "mastercover"],
+  Brokerage: ["saas", "studio", "live", "drive", "easysign", "easyfund", "customWebsite"],
+  Dealer: ["saas", "studio", "live", "drive", "easysign", "easyfund", "customWebsite"],
+  Shipyard: ["saas", "studio", "live", "drive", "easysign", "easyfund", "customWebsite"],
+};
+
+/** Launched services available to a specific company, in a stable order. */
+export function availableServicesForCompany(company: Company): ServiceKey[] {
+  const base =
+    SERVICES_BY_COMPANY_TYPE[company.companyType] ?? (Object.keys(SERVICE_LABELS) as ServiceKey[]);
+  return base.filter(isServiceAvailable);
+}
+
+export function isServiceAvailableForCompany(company: Company, k: ServiceKey): boolean {
+  return isServiceAvailable(k) && availableServicesForCompany(company).includes(k);
+}
+
 /** The listing platform itself - every paying account starts here. */
 export const LISTING_PLATFORM_SERVICE: ServiceKey = "saas";
 
