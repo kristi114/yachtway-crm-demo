@@ -55,7 +55,27 @@ function ListingDetail() {
       <PageHeader
         eyebrow="Listing"
         title={`${brand?.name ?? ""} ${l.model}`}
-        subtitle={`${l.year} · ${l.lengthFt}ft · Hull ${l.hullId}`}
+        subtitle={
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <span>{l.year} · {l.lengthFt}ft · Hull {l.hullId}</span>
+            {company && (
+              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                · Dealer:{" "}
+                <Link to="/companies/$id" params={{ id: company.id }} className="font-medium text-brand hover:underline">
+                  {company.name}
+                </Link>
+              </span>
+            )}
+            {broker && (
+              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                · Broker:{" "}
+                <Link to="/contacts/$id" params={{ id: broker.id }} className="font-medium text-brand hover:underline">
+                  {broker.firstName} {broker.lastName}
+                </Link>
+              </span>
+            )}
+          </span>
+        }
         actions={
           <Link to="/listings" className="text-[13px] text-brand hover:underline">
             All listings
@@ -109,27 +129,6 @@ function ListingDetail() {
               <Field label="Features filled" value={`${l.featuresFilled} / ${l.featuresTotal}`} />
             </div>
 
-            {/* Ownership row */}
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border bg-secondary/30 px-4 py-3 text-[15px]">
-              {company && (
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="text-muted-foreground">Dealer:</span>
-                  <Link to="/companies/$id" params={{ id: company.id }} className="font-semibold text-brand hover:underline">
-                    {company.name}
-                  </Link>
-                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-                </span>
-              )}
-              {broker && (
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="text-muted-foreground">Broker:</span>
-                  <Link to="/contacts/$id" params={{ id: broker.id }} className="font-semibold text-brand hover:underline">
-                    {broker.firstName} {broker.lastName}
-                  </Link>
-                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-                </span>
-              )}
-            </div>
           </section>
 
           {/* Heat card */}
