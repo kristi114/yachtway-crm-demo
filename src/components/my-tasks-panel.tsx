@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { CheckSquare, AlertTriangle } from "lucide-react";
 
 import { TASKS, getCompany, getContact, type Task } from "@/lib/mock-data";
+import { getTasksSnapshot, updateTaskStatus } from "@/lib/tasks-log";
 import { useAuth } from "@/lib/auth";
 import { formatDate } from "@/lib/format-date";
 
@@ -28,15 +29,25 @@ function priorityBadge(p: string) {
 export function MyTasksPanel() {
   const { user } = useAuth();
   const today = todayISO();
+  // Bumped when a task is completed so the list recomputes and drops it.
+  const [tick, setTick] = useState(0);
 
   const { overdue, upcoming } = useMemo(() => {
-    const mine = TASKS.filter((t) => t.assignee === user.name && t.status !== "Done");
+    // Store-added tasks + seeded tasks, scoped to the current user, open only.
+    const all = [...getTasksSnapshot(), ...TASKS];
+    const mine = all.filter((t) => t.assignee === user.name && t.status !== "Done");
     const isOverdue = (t: Task) => !!t.dueDate && t.dueDate < today;
     return {
       overdue: mine.filter(isOverdue).sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
       upcoming: mine.filter((t) => !isOverdue(t)).sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
     };
-  }, [user.name, today]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.name, today, tick]);
+
+  function complete(id: string) {
+    updateTaskStatus(id, "Done");
+    setTick((n) => n + 1);
+  }
 
   const total = overdue.length + upcoming.length;
 
@@ -66,7 +77,16 @@ export function MyTasksPanel() {
             const ct = t.relatedType === "contact" ? getContact(t.relatedId) : null;
             const isOverdue = !!t.dueDate && t.dueDate < today;
             return (
-              <li key={t.id} className="grid grid-cols-[minmax(0,1fr)_110px_72px] items-center gap-3 px-4 py-2.5 text-[13px]">
+              <li key={t.id} className="grid grid-cols-[20px_minmax(0,1fr)_110px_72px] items-center gap-3 px-4 py-2.5 text-[13px]">
+                <button
+                  type="button"
+                  onClick={() => complete(t.id)}
+                  title="Mark as done"
+                  aria-label={`Mark "${t.title}" as done`}
+                  className="grid h-5 w-5 place-items-center rounded-[5px] border border-border text-transparent transition-colors hover:border-brand hover:bg-brand/10 hover:text-brand"
+                >
+                  <CheckSquare className="h-3.5 w-3.5" />
+                </button>
                 <div className="min-w-0">
                   <Link to="/tasks" className="truncate font-medium hover:underline">{t.title}</Link>
                   {(co || ct) && (
