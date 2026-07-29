@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { UserCog, UserPlus, Sliders, Trash2, Bell, Mail } from "lucide-react";
 
@@ -93,7 +93,9 @@ function AdminUsersPage() {
                 <li key={u.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="truncate text-sm font-medium">{u.name}</span>
+                      <Link to="/admin/users/$id" params={{ id: u.id }} className="truncate text-sm font-medium hover:text-brand hover:underline">
+                        {u.name}
+                      </Link>
                       {u.id === me.id && (
                         <Badge variant="outline" className="h-4 px-1.5 text-[10px]">You</Badge>
                       )}

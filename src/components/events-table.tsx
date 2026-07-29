@@ -16,7 +16,9 @@ function EventRow({ e, onEdit, showDealer }: { e: DealerEvent; onEdit: (e: Deale
       <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold text-brand-deep">{e.eventName}</span>
+          <Link to="/events/$id" params={{ id: e.id }} className="font-semibold text-brand-deep hover:underline">
+            {e.eventName}
+          </Link>
           <Badge variant="outline" className="text-[10px]">{e.eventType}</Badge>
           {e.boatShowName && (
             <Badge variant="outline" className="text-[10px]">{boatShowLabel(e.boatShowName)}</Badge>

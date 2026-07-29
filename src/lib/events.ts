@@ -99,6 +99,8 @@ export const EVENT_TIME_ZONES = [
 ] as const;
 
 export interface DealerEvent {
+  /** Catalog fields backfilled from the field schema. */
+  [key: string]: unknown;
   id: string;
   dealerId: string;
   dealerName: string;
