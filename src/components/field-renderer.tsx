@@ -340,13 +340,11 @@ export function SectionCard({
   const recordPipeline = record.pipeline;
   const inPipeline = (f: FieldSection["fields"][number]) =>
     !f.pipelines || (typeof recordPipeline === "string" && f.pipelines.includes(recordPipeline));
-  // In edit mode, keep checkboxes visible even when unchecked so they can be
-  // toggled on (otherwise an unchecked box counts as "empty" and is hidden).
+  // Show every applicable field - including empty ones (rendered as "-"/"No") -
+  // so the detail view mirrors the full catalog. Only in-pipeline fields and
+  // (unless the hidden toggle is on) raw id fields are filtered out.
   const populated = section.fields.filter(
-    (f) =>
-      inPipeline(f) &&
-      (showHidden || !HIDDEN_ID_FIELDS.has(f.key)) &&
-      (!isEmpty(f, record[f.key]) || (!!onEditField && f.type === "checkbox")),
+    (f) => inPipeline(f) && (showHidden || !HIDDEN_ID_FIELDS.has(f.key)),
   );
   // Hide empty subsections (a split group with no data), but keep top-level
   // sections that the caller marked renderWhenEmpty so every catalog section is
@@ -444,23 +442,9 @@ export function DetailSections({
     return title.toLowerCase().replace(/\s+/g, " ").trim();
   }
 
-  // A top-level section "has data" when at least one non-hidden, in-pipeline
-  // field carries a value. Sections with data are split into subsections (empty
-  // subsections drop out); sections with no data are kept whole and rendered as
-  // an empty card so every catalog section stays visible on the page.
-  const recordPipeline = record.pipeline;
-  const fieldInPipeline = (f: FieldDef) =>
-    !f.pipelines || (typeof recordPipeline === "string" && f.pipelines.includes(recordPipeline));
-  const sectionHasData = (s: FieldSection) =>
-    s.fields.some((f) => fieldInPipeline(f) && !HIDDEN_ID_FIELDS.has(f.key) && !isEmpty(f, record[f.key]));
-
-  const forceEmptyTitles = new Set<string>();
-  const expanded = sections.flatMap((s) => {
-    if (s.showWhen && !s.showWhen(record)) return [];
-    if (sectionHasData(s)) return autoSplit(s);
-    forceEmptyTitles.add(normalizeTitle(s.title));
-    return [s];
-  });
+  // Every catalog section is shown; all fields render (empty ones included), so
+  // large sections are always split into their subsections for readable grouping.
+  const expanded = sections.flatMap((s) => (s.showWhen && !s.showWhen(record) ? [] : autoSplit(s)));
 
   const merged = Array.from(
     expanded.reduce((map, s) => {
@@ -537,7 +521,6 @@ export function DetailSections({
             onEditField={onEditField}
             extra={sectionExtras?.[normalizeTitle(s.title)]}
             showHidden={showHidden}
-            renderWhenEmpty={forceEmptyTitles.has(normalizeTitle(s.title))}
             // First subsection ("Overview") is expanded, everything else collapsed.
             defaultOpen={i === 0}
           />
