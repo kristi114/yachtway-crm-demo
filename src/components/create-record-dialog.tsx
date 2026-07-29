@@ -11,11 +11,78 @@ import { Textarea } from "@/components/ui/textarea";
 import type { FieldDef, FieldSection } from "@/lib/field-schema";
 import { autoSplit } from "@/components/field-renderer";
 import { FIELD_OPTIONS, dynamicOptions } from "@/lib/field-options";
+import { COMPANIES, CONTACTS } from "@/lib/mock-data";
+import { readAdminConfig } from "@/lib/admin-config";
 
 // System-identifier fields hidden by default on create (revealed via the toggle).
 const HIDDEN_ON_CREATE = new Set<string>([
   "id", "ownerId", "parentCompanyId", "primaryContactId", "easysignPrimaryContactId", "createdById",
 ]);
+
+// Fields that should be typeahead lookups → (entity source, paired id field to set).
+type LookupSource = "company" | "contact" | "user";
+const LOOKUP_FIELDS: Record<string, { source: LookupSource; idKey?: string }> = {
+  owner: { source: "user", idKey: "ownerId" },
+  parentCompany: { source: "company", idKey: "parentCompanyId" },
+  primaryContact: { source: "contact", idKey: "primaryContactId" },
+  company: { source: "company", idKey: "companyId" },
+};
+
+interface LookupOption { id: string; label: string; sub?: string }
+function lookupOptions(source: LookupSource, query: string): LookupOption[] {
+  const q = query.trim().toLowerCase();
+  let all: LookupOption[];
+  if (source === "company") {
+    all = COMPANIES.map((c) => ({ id: c.id, label: c.name, sub: c.companyType }));
+  } else if (source === "contact") {
+    all = CONTACTS.map((c) => ({ id: c.id, label: `${c.firstName} ${c.lastName}`.trim(), sub: c.email }));
+  } else {
+    all = readAdminConfig().users.map((u) => ({ id: u.id, label: u.name, sub: u.email }));
+  }
+  const matches = q ? all.filter((o) => o.label.toLowerCase().includes(q) || (o.sub ?? "").toLowerCase().includes(q)) : all;
+  return matches.slice(0, 8);
+}
+
+/** Typeahead lookup: type to filter, click to select the entity (name + id). */
+function LookupInput({
+  source, value, onPick,
+}: {
+  source: LookupSource;
+  value: string;
+  onPick: (label: string, id: string) => void;
+}) {
+  const [query, setQuery] = useState(value);
+  const [open, setOpen] = useState(false);
+  const opts = open ? lookupOptions(source, query) : [];
+  return (
+    <div className="relative">
+      <Input
+        value={query}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder={`Search ${source === "user" ? "users" : source === "contact" ? "contacts" : "companies"}…`}
+        className="h-8 text-[13px]"
+      />
+      {open && opts.length > 0 && (
+        <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-md border border-border bg-surface py-1 shadow-lg">
+          {opts.map((o) => (
+            <li key={o.id}>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); onPick(o.label, o.id); setQuery(o.label); setOpen(false); }}
+                className="flex w-full flex-col items-start px-3 py-1.5 text-left text-[13px] hover:bg-accent"
+              >
+                <span className="font-medium text-foreground">{o.label}</span>
+                {o.sub && <span className="text-[11px] text-muted-foreground">{o.sub}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 type Values = Record<string, unknown>;
 
@@ -30,13 +97,28 @@ function defaultForField(f: FieldDef): unknown {
 }
 
 function FieldInput({
-  field, value, onChange,
+  field, value, onChange, setField,
 }: {
   field: FieldDef;
   value: unknown;
   onChange: (v: unknown) => void;
+  /** Set any field by key (used by lookups to also fill the paired id field). */
+  setField: (key: string, v: unknown) => void;
 }) {
   const common = "h-8 text-[13px]";
+  const lookup = LOOKUP_FIELDS[field.key];
+  if (lookup) {
+    return (
+      <LookupInput
+        source={lookup.source}
+        value={String(value ?? "")}
+        onPick={(label, id) => {
+          onChange(label);
+          if (lookup.idKey) setField(lookup.idKey, id);
+        }}
+      />
+    );
+  }
   switch (field.type) {
     case "checkbox":
       return (
@@ -154,6 +236,7 @@ function SectionBlock({
                 field={f}
                 value={values[f.key]}
                 onChange={(v) => onChange(f.key, v)}
+                setField={onChange}
               />
             </div>
           ))}
