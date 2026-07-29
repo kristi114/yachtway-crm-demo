@@ -440,7 +440,7 @@ function CompanyDetail() {
                     {brands.length ? "Manage brands" : "Add brands"}
                   </Button>
                 </header>
-                <div className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                <div className="flex flex-wrap gap-3 p-5">
                   {brands.map((b) => {
                     const slug = b.brand.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
                     const href = `https://yachtway.com/brand/${slug}`;
@@ -450,33 +450,33 @@ function CompanyDetail() {
                         href={href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex flex-col items-stretch gap-2 rounded-lg transition-transform hover:-translate-y-0.5"
+                        className="group flex w-36 flex-col items-stretch gap-1.5 rounded-lg transition-transform hover:-translate-y-0.5"
                         title={`Open ${b.brand.name} on YachtWay`}
                       >
-                        <div className="relative flex aspect-[4/3] items-center justify-center rounded-xl border border-border bg-secondary/30 px-4 shadow-sm transition-shadow group-hover:shadow-md">
+                        <div className="relative flex h-20 items-center justify-center rounded-lg border border-border bg-secondary/30 px-3 shadow-sm transition-shadow group-hover:shadow-md">
                           <span
-                            className="text-center text-xl font-semibold italic tracking-tight text-brand-deep"
+                            className="text-center text-sm font-semibold italic tracking-tight text-brand-deep"
                             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                           >
                             {b.brand.name}
                           </span>
                           {b.exclusive && (
-                            <span className="absolute right-2 top-2 rounded-sm bg-brand px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-brand-foreground shadow-sm">
+                            <span className="absolute right-1.5 top-1.5 rounded-sm bg-brand px-1 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-brand-foreground shadow-sm">
                               Exclusive
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center justify-center gap-1.5 pt-0.5">
-                          <span className="text-sm font-medium text-foreground group-hover:text-brand">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span className="text-xs font-medium text-foreground group-hover:text-brand">
                             {b.brand.name}
                           </span>
-                          <CheckCircle2 className="h-3.5 w-3.5 fill-brand text-brand-foreground" />
+                          <CheckCircle2 className="h-3 w-3 fill-brand text-brand-foreground" />
                         </div>
                       </a>
                     );
                   })}
                   {brands.length === 0 ? (
-                    <p className="col-span-full text-[13px] text-muted-foreground">
+                    <p className="w-full text-[13px] text-muted-foreground">
                       No brands linked yet. Brands come from the managed catalogue - use
                       {" "}<span className="font-medium text-foreground">Add brands</span> to link them.
                     </p>
