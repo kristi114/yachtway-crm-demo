@@ -1226,10 +1226,10 @@ function BrandTile({ brand, exclusive }: { brand: Brand; exclusive: boolean }) {
       href={`https://yachtway.com/brand/${slug}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex w-44 flex-col items-stretch gap-2 rounded-lg transition-transform hover:-translate-y-0.5"
+      className="group flex w-56 flex-col items-stretch gap-2 rounded-lg transition-transform hover:-translate-y-0.5"
       title={`Open ${brand.name} on YachtWay`}
     >
-      <div className="relative flex h-28 items-center justify-center overflow-hidden rounded-lg border border-border bg-secondary/30 p-4 shadow-sm transition-shadow group-hover:shadow-md">
+      <div className="relative flex h-40 items-center justify-center overflow-hidden rounded-xl border border-border bg-secondary/30 p-5 shadow-sm transition-shadow group-hover:shadow-md">
         {showLogo ? (
           <img
             src={brand.logoUrl}
@@ -1239,7 +1239,7 @@ function BrandTile({ brand, exclusive }: { brand: Brand; exclusive: boolean }) {
           />
         ) : (
           <span
-            className="text-center text-lg font-semibold italic tracking-tight text-brand-deep"
+            className="text-center text-xl font-semibold italic tracking-tight text-brand-deep"
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             {brand.name}
