@@ -33,7 +33,7 @@ import { PIPELINE_STAGES } from "@/components/create-opportunity-dialog";
 import { DetailSections } from "@/components/field-renderer";
 import { OPPORTUNITY_SECTIONS } from "@/lib/field-schema";
 import { formatDate } from "@/lib/format-date";
-import { EditOpportunityDialog } from "@/components/edit-opportunity-dialog";
+import { CreateRecordDialog } from "@/components/create-record-dialog";
 import { MergeRecordDialog } from "@/components/merge-record-dialog";
 
 export const Route = createFileRoute("/opportunities/$id")({
@@ -368,10 +368,27 @@ function OpportunityDetail() {
           <ActivityPanel type="opportunity" id={opp.id} />
         </div>
       </PageBody>
-      <EditOpportunityDialog
+      <CreateRecordDialog
         open={editOpen}
         onOpenChange={setEditOpen}
-        opportunity={opp}
+        title="Edit opportunity"
+        description="Update any field on this opportunity."
+        sections={OPPORTUNITY_SECTIONS}
+        requiredKeys={["name", "stage"]}
+        readOnlyKeys={["id"]}
+        initial={opp as unknown as Record<string, unknown>}
+        submitLabel="Save changes"
+        onSave={(values) => {
+          const typeByKey = new Map(
+            OPPORTUNITY_SECTIONS.flatMap((s) => s.fields.map((f) => [f.key, f.type] as const)),
+          );
+          const patch: Record<string, unknown> = {};
+          for (const [k, v] of Object.entries(values)) {
+            const t = typeByKey.get(k);
+            patch[k] = (t === "number" || t === "money") ? (v === "" || v == null ? null : Number(v)) : v;
+          }
+          updateOpportunity(opp.id, patch as Partial<typeof opp>);
+        }}
       />
     </AppShell>
   );

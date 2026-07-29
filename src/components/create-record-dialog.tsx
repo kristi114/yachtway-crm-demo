@@ -227,13 +227,17 @@ function SectionBlock({
       </button>
       {open && (
         <div className="grid grid-cols-1 gap-3 px-4 py-3 md:grid-cols-2">
-          {section.fields.map((f) => (
+          {section.fields.map((f) => {
+            // Read-only when explicitly listed, or when the catalog notes mark
+            // the field read-only (system identifiers, derived/computed values).
+            const isReadOnly = readOnlyKeys.has(f.key) || /read-only/i.test(f.help ?? "");
+            return (
             <div key={f.key} className="space-y-1">
               <Label htmlFor={f.key} className="text-[11px] font-medium text-muted-foreground" title={f.key}>
                 {f.label}
                 {requiredKeys.has(f.key) && <span className="ml-1 text-destructive">*</span>}
               </Label>
-              {readOnlyKeys.has(f.key) ? (
+              {isReadOnly ? (
                 <Input value={String(values[f.key] ?? "")} disabled className="h-8 text-[13px]" />
               ) : (
                 <FieldInput
@@ -244,7 +248,8 @@ function SectionBlock({
                 />
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>

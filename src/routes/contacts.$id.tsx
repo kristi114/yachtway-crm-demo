@@ -13,7 +13,7 @@ import { BrokerAnalyticsPanel } from "@/components/broker-analytics-panel";
 import { ServicesAdoptionCard } from "@/components/services-adoption-card";
 import { LogCommsDialog } from "@/components/log-comms-dialog";
 import { CreateOpportunityDialog } from "@/components/create-opportunity-dialog";
-import { EditContactDialog } from "@/components/edit-contact-dialog";
+import { CreateRecordDialog } from "@/components/create-record-dialog";
 import { MergeRecordDialog } from "@/components/merge-record-dialog";
 import { SectionTabs } from "@/components/section-tabs";
 import { ContactEmailsPanel } from "@/components/email-builder/contact-emails-panel";
@@ -186,11 +186,27 @@ function ContactDetail() {
           if (survivorId !== contact.id) navigate({ to: "/contacts/$id", params: { id: survivorId } });
         }}
       />
-      <EditContactDialog
+      <CreateRecordDialog
         open={editOpen}
         onOpenChange={setEditOpen}
-        contact={contact}
-        onSave={handleSave}
+        title="Edit contact"
+        description="Update any field on this contact."
+        sections={CONTACT_SECTIONS}
+        requiredKeys={["firstName", "lastName"]}
+        readOnlyKeys={["id"]}
+        initial={contact as unknown as Record<string, unknown>}
+        submitLabel="Save changes"
+        onSave={(values) => {
+          const typeByKey = new Map(
+            CONTACT_SECTIONS.flatMap((s) => s.fields.map((f) => [f.key, f.type] as const)),
+          );
+          const patch: Record<string, unknown> = {};
+          for (const [k, v] of Object.entries(values)) {
+            const t = typeByKey.get(k);
+            patch[k] = (t === "number" || t === "money") ? (v === "" || v == null ? null : Number(v)) : v;
+          }
+          handleSave(patch as Partial<typeof contact>);
+        }}
       />
       <SectionTabs
         active={activeTab}
