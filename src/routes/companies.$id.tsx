@@ -356,6 +356,8 @@ function CompanyDetail() {
             <DetailSections
               sections={COMPANY_SECTIONS}
               record={companyRecord}
+              reorderable
+              layoutKey="company"
               exclude={["accounting", "listings performance", "studio & 3d tours", "easyfund", "platform adoption"]}
               onEditField={(key, value) => handleSave({ [key]: value } as Partial<typeof company>)}
 

@@ -217,6 +217,8 @@ function ListingDetail() {
         <div className="mt-6">
           <DetailSections
             sections={LISTING_SECTIONS}
+            reorderable
+            layoutKey="listing"
             record={{
               ...(l as unknown as Record<string, unknown>),
               make: brand?.name ?? "",

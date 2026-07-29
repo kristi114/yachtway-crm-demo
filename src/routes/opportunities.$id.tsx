@@ -355,6 +355,8 @@ function OpportunityDetail() {
           <DetailSections
             sections={OPPORTUNITY_SECTIONS}
             record={opp as unknown as Record<string, unknown>}
+            reorderable
+            layoutKey="opportunity"
             onEditField={(key, value) => updateOpportunity(opp.id, { [key]: value })}
           />
         </div>

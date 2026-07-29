@@ -219,6 +219,8 @@ function ContactDetail() {
             <DetailSections
               sections={CONTACT_SECTIONS}
               record={contact as unknown as Record<string, unknown>}
+              reorderable
+              layoutKey="contact"
               exclude={["listings performance"]}
               onEditField={(key, value) => handleSave({ [key]: value } as Partial<typeof contact>)}
             />

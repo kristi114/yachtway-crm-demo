@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from "react";
-import { ChevronRight, HelpCircle, Lock } from "lucide-react";
+import { useState, type ReactNode, type DragEvent } from "react";
+import { ChevronRight, HelpCircle, Lock, GripVertical } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import type { FieldDef, FieldSection } from "@/lib/field-schema";
 import { FIELD_OPTIONS, dynamicOptions } from "@/lib/field-options";
+import { loadSectionOrder, saveSectionOrder, applyOrder } from "@/lib/section-layout";
 import { Badge } from "@/components/ui/badge";
 
 type EditField = (key: string, value: unknown) => void;
@@ -377,6 +378,8 @@ export function DetailSections({
   sectionExtras,
   only,
   exclude,
+  reorderable,
+  layoutKey,
 }: {
   sections: readonly FieldSection[];
   record: MockRecord;
@@ -388,8 +391,12 @@ export function DetailSections({
   only?: string[];
   /** Hide these section titles (lowercase). */
   exclude?: string[];
+  /** Enable per-user drag-to-reorder of the section cards. Requires layoutKey. */
+  reorderable?: boolean;
+  /** Distinct key for the saved order (e.g. the object key: "company"). */
+  layoutKey?: string;
 }) {
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   const canBilling = can("billing");
   const expanded = sections.flatMap((s) => (s.showWhen && !s.showWhen(record) ? [] : autoSplit(s)));
 
@@ -434,20 +441,71 @@ export function DetailSections({
     SECTION_PRIORITY[normalizeTitle(s.title)] ?? 1;
   const ranked = [...merged].sort((a, b) => sectionWeight(a) - sectionWeight(b));
 
+  const useReorder = Boolean(reorderable && layoutKey);
+  // Saved per-user order (section ids); new/unknown ids keep default position.
+  const [savedOrder, setSavedOrder] = useState<string[]>(() =>
+    useReorder ? loadSectionOrder(layoutKey!, user.id) : [],
+  );
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+
+  const orderedIds = useReorder ? applyOrder(ranked.map((s) => s.id), savedOrder) : ranked.map((s) => s.id);
+  const display = orderedIds
+    .map((id) => ranked.find((s) => s.id === id))
+    .filter((s): s is FieldSection => Boolean(s));
+
+  function onDrop(targetId: string) {
+    if (!dragId || dragId === targetId) { setDragId(null); setOverId(null); return; }
+    const ids = display.map((s) => s.id);
+    const from = ids.indexOf(dragId);
+    const to = ids.indexOf(targetId);
+    if (from !== -1 && to !== -1) {
+      const [moved] = ids.splice(from, 1);
+      ids.splice(to, 0, moved);
+      setSavedOrder(ids);
+      saveSectionOrder(layoutKey!, user.id, ids);
+    }
+    setDragId(null);
+    setOverId(null);
+  }
+
   return (
     <div className="space-y-4">
-      {ranked.map((s, i) => (
-        <SectionCard
-          key={s.id}
-          section={s}
-          record={record}
-          fieldActions={fieldActions}
-          onEditField={onEditField}
-          extra={sectionExtras?.[normalizeTitle(s.title)]}
-          // First subsection ("Overview") is expanded, everything else collapsed.
-          defaultOpen={i === 0}
-        />
-      ))}
+      {display.map((s, i) => {
+        const card = (
+          <SectionCard
+            section={s}
+            record={record}
+            fieldActions={fieldActions}
+            onEditField={onEditField}
+            extra={sectionExtras?.[normalizeTitle(s.title)]}
+            // First subsection ("Overview") is expanded, everything else collapsed.
+            defaultOpen={i === 0}
+          />
+        );
+        if (!useReorder) return <div key={s.id}>{card}</div>;
+        return (
+          <div
+            key={s.id}
+            draggable
+            onDragStart={() => setDragId(s.id)}
+            onDragEnd={() => { setDragId(null); setOverId(null); }}
+            onDragOver={(e: DragEvent) => { e.preventDefault(); if (overId !== s.id) setOverId(s.id); }}
+            onDrop={(e: DragEvent) => { e.preventDefault(); onDrop(s.id); }}
+            className={`relative pl-6 transition ${dragId === s.id ? "opacity-40" : ""} ${
+              overId === s.id && dragId !== s.id ? "ring-2 ring-brand/40 rounded-sm" : ""
+            }`}
+          >
+            <span
+              className="absolute left-0 top-3 cursor-grab text-muted-foreground active:cursor-grabbing"
+              title="Drag to reorder"
+            >
+              <GripVertical className="h-4 w-4" />
+            </span>
+            {card}
+          </div>
+        );
+      })}
     </div>
   );
 }
