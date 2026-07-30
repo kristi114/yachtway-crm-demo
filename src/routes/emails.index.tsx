@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EmailStatisticsTab } from "@/components/email-builder/email-statistics-tab";
 import { EmailSentTab } from "@/components/email-builder/email-sent-tab";
 import { EmailTemplatesTab } from "@/components/email-builder/email-templates-tab";
+import { EmailCampaignsTab } from "@/components/email-builder/email-campaigns-tab";
 import { newTemplateId } from "@/lib/email-templates";
 
 export const Route = createFileRoute("/emails/")({
@@ -48,12 +49,16 @@ function EmailMarketingPage() {
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
             <TabsTrigger value="statistics">Statistics</TabsTrigger>
+            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
             <TabsTrigger value="sent">Sent</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>
           </TabsList>
 
           <TabsContent value="statistics" className="mt-5">
             <EmailStatisticsTab />
+          </TabsContent>
+          <TabsContent value="campaigns" className="mt-5">
+            <EmailCampaignsTab />
           </TabsContent>
           <TabsContent value="sent" className="mt-5">
             <EmailSentTab />

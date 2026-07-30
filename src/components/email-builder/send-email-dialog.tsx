@@ -28,6 +28,7 @@ export function SendEmailDialog({
   html,
   templateId,
   templateName,
+  campaignId,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -35,6 +36,8 @@ export function SendEmailDialog({
   html: string;
   templateId?: string;
   templateName?: string;
+  /** Campaign this send is attributed to (from the email's campaign field). */
+  campaignId?: string;
 }) {
   const { user } = useAuth();
   const [audience, setAudience] = useState<AudienceDef>(emptyAudience);
@@ -83,6 +86,7 @@ export function SendEmailDialog({
         html,
         templateId,
         templateName,
+        campaignId,
         // The email builder is the marketing tool → routes through Mailgun.
         kind: "marketing",
         abTest: abOn

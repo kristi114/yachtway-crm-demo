@@ -24,7 +24,6 @@ export interface CampaignStats {
   delivered: number;
   opened: number;
   clicked: number;
-  ordered: number;
   bounced: number;
   unsubscribed: number;
   spam: number;
@@ -59,7 +58,6 @@ const CAMPAIGNS: CampaignStats[] = [
     delivered: 3440,
     opened: 1040,
     clicked: 560,
-    ordered: 0,
     bounced: 120,
     unsubscribed: 7,
     spam: 1,
@@ -72,7 +70,6 @@ const CAMPAIGNS: CampaignStats[] = [
     delivered: 2380,
     opened: 690,
     clicked: 360,
-    ordered: 0,
     bounced: 90,
     unsubscribed: 5,
     spam: 0,
@@ -85,7 +82,6 @@ const CAMPAIGNS: CampaignStats[] = [
     delivered: 1140,
     opened: 300,
     clicked: 130,
-    ordered: 0,
     bounced: 40,
     unsubscribed: 2,
     spam: 0,
@@ -98,7 +94,6 @@ const CAMPAIGNS: CampaignStats[] = [
     delivered: 642,
     opened: 145,
     clicked: 90,
-    ordered: 0,
     bounced: 30,
     unsubscribed: 2,
     spam: 0,
@@ -134,7 +129,6 @@ function aggregate(): CampaignStats {
     delivered: totalDelivered,
     opened: sum((c) => c.opened),
     clicked: sum((c) => c.clicked),
-    ordered: sum((c) => c.ordered),
     bounced: sum((c) => c.bounced),
     unsubscribed: sum((c) => c.unsubscribed),
     spam: sum((c) => c.spam),
@@ -166,7 +160,6 @@ export function engagementRows(s: CampaignStats) {
     { stage: "Delivered", total: s.delivered, ...share(s.delivered) },
     { stage: "Opened", total: s.opened, ...share(s.opened) },
     { stage: "Clicked", total: s.clicked, ...share(s.clicked) },
-    { stage: "Ordered", total: s.ordered, ...share(s.ordered) },
   ];
 }
 
@@ -176,7 +169,6 @@ export function cumulativePct(s: CampaignStats) {
     Delivered: 100,
     Opened: Math.round((s.opened / d) * 100),
     Clicked: Math.round((s.clicked / d) * 100),
-    Ordered: Math.round((s.ordered / d) * 100),
   };
 }
 

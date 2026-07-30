@@ -61,6 +61,8 @@ export interface SendEmailInput {
   kind?: EmailKind;
   /** The audience definition this send resolved from (for auditing / re-sends). */
   audienceName?: string;
+  /** Campaign (series of sends) this send belongs to. */
+  campaignId?: string;
   /** Optional A/B test across subject + body. */
   abTest?: AbTestConfig;
   /** Optional automatic re-send to non-openers. */
@@ -96,6 +98,8 @@ export interface SentEmail {
   providerName?: string;
   /** Name of the audience/list this send went to. */
   audienceName?: string;
+  /** Campaign (series of sends) this send is attributed to. */
+  campaignId?: string;
   /** Present when this send was an A/B test; holds per-variant results. */
   abTest?: { splitPercentB: number; winnerMetric: "open" | "click"; variants: VariantStats[] };
   /** Follow-up plan for non-openers, and its state. */
@@ -396,6 +400,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
     providerName: providerName(provider),
     marketing: sendKind === "marketing" || undefined,
     audienceName: input.audienceName,
+    campaignId: input.campaignId,
     abTest,
     followUp,
   };
@@ -459,6 +464,7 @@ export async function sendFollowUp(
     audienceName: original.audienceName
       ? `${original.audienceName} · non-openers`
       : "Non-openers",
+    campaignId: original.campaignId,
     followUpOf: original.id,
   };
 

@@ -23,6 +23,13 @@ import {
   saveEmailTemplate,
   type EmailMode,
 } from "@/lib/email-templates";
+import {
+  useCampaigns, listCampaigns, campaignForTemplate, setTemplateCampaign,
+  createCampaign, getCampaign,
+} from "@/lib/email-campaigns";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/emails/$id")({
   component: guarded("emails", "Emails", EmailEditorPage),
@@ -60,6 +67,14 @@ function EmailEditorPage() {
   // Remount key for the designer so it re-imports the latest HTML on entry.
   const [grapesKey, setGrapesKey] = useState(0);
   const [sendOpen, setSendOpen] = useState(false);
+  // Campaign this email belongs to ("" = standalone). Applied on save.
+  useCampaigns();
+  const campaigns = listCampaigns();
+  const [campaignId, setCampaignId] = useState<string>(
+    () => campaignForTemplate(id)?.id ?? "",
+  );
+  const [newCampaignOpen, setNewCampaignOpen] = useState(false);
+  const [newCampaignName, setNewCampaignName] = useState("");
 
   const grapesRef = useRef<GrapesEditorHandle>(null);
 
@@ -95,7 +110,12 @@ function EmailEditorPage() {
       design: tab === "design" ? content.design : null,
       updatedBy: user.name,
     });
-    toast.success(isNew ? "Email created" : "Email saved", { description: saved.name });
+    // Attach/detach the email from its campaign alongside the template save.
+    setTemplateCampaign(id, campaignId || null);
+    const campaignName = campaignId ? getCampaign(campaignId)?.name : undefined;
+    toast.success(isNew ? "Email created" : "Email saved", {
+      description: campaignName ? `${saved.name} · ${campaignName}` : saved.name,
+    });
     if (isNew) navigate({ to: "/emails/$id", params: { id }, replace: true });
   }
 
@@ -112,14 +132,37 @@ function EmailEditorPage() {
           />
         }
         subtitle={
-          <div className="flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground">Subject</Label>
-            <Input
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              className="h-8 w-[min(560px,60vw)]"
-              placeholder="Subject line — supports {{merge_tags}}"
-            />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Subject</Label>
+              <Input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                className="h-8 w-[min(560px,60vw)]"
+                placeholder="Subject line — supports {{merge_tags}}"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Campaign</Label>
+              <select
+                value={campaignId}
+                onChange={(e) => {
+                  if (e.target.value === "__new") {
+                    setNewCampaignOpen(true);
+                    return;
+                  }
+                  setCampaignId(e.target.value);
+                }}
+                className="native-select h-8 rounded-md border border-border bg-surface px-2 text-[13px]"
+                title="Add this email to a campaign (a series of sends)"
+              >
+                <option value="">None (standalone)</option>
+                {campaigns.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+                <option value="__new">+ New campaign…</option>
+              </select>
+            </div>
           </div>
         }
         actions={
@@ -203,7 +246,44 @@ function EmailEditorPage() {
         html={html}
         templateId={id}
         templateName={name}
+        campaignId={campaignId || undefined}
       />
+
+      {/* Create a campaign inline from the picker */}
+      <Dialog open={newCampaignOpen} onOpenChange={setNewCampaignOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>New campaign</DialogTitle>
+            <DialogDescription>
+              This email will be added to it as the first in the series.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="new-camp">Campaign name</Label>
+            <Input
+              id="new-camp"
+              value={newCampaignName}
+              onChange={(e) => setNewCampaignName(e.target.value)}
+              placeholder="e.g. Dealer onboarding series"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewCampaignOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!newCampaignName.trim()}
+              onClick={() => {
+                const c = createCampaign(newCampaignName, "", user.name);
+                setCampaignId(c.id);
+                setNewCampaignName("");
+                setNewCampaignOpen(false);
+              }}
+            >
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

@@ -75,7 +75,6 @@ export function EmailStatisticsTab() {
       `Delivered,${stats.delivered}`,
       `Opened,${stats.opened}`,
       `Clicked,${stats.clicked}`,
-      `Ordered,${stats.ordered}`,
       `Bounced,${stats.bounced}`,
       `Unsubscribed,${stats.unsubscribed}`,
       `Spam complaints,${stats.spam}`,
@@ -172,7 +171,7 @@ export function EmailStatisticsTab() {
               <div className="mb-1 hidden text-center text-xs font-medium text-muted-foreground lg:block">
                 Cumulative
               </div>
-              {(["Delivered", "Opened", "Clicked", "Ordered"] as const).map((stage, i) => (
+              {(["Delivered", "Opened", "Clicked"] as const).map((stage, i) => (
                 <div key={stage} className="flex flex-col items-center">
                   <div className="flex h-14 w-full min-w-[72px] items-center justify-center rounded-md bg-secondary/70 text-lg font-semibold">
                     {cumulative[stage]}%
