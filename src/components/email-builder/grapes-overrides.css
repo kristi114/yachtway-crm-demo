@@ -51,22 +51,29 @@
 }
 
 /* ------------------------------------------------------------------
-   Top toolbar seating.
+   Canvas offset must clear the toolbar.
 
-   GrapesJS's top command bar (.gjs-pn-commands) is an absolutely-positioned
-   panel at top:0/left:0 sized `calc(100% - var(--gjs-left-width))` — it does
-   not fill the corner. Nested in a rounded, overflow-hidden card, the card's
-   radius clipped that dark bar and exposed the card's light background as a
-   wedge in the top-left corner.
+   GrapesJS positions the canvas at `top: var(--gjs-canvas-top)`, default 40px,
+   which assumes its stock ~40px toolbar. The font bumps above make our toolbar
+   taller than that, so the canvas started *underneath* the bar. The canvas
+   clips its own content, but selection decorations sit at a higher z-index
+   than the panels (.gjs-resizer-c is 9, .gjs-toolbar is 10, panels are 3), so a
+   selected component's white resize handle (.gjs-resizer-h, background #fff)
+   painted over the bottom edge of the dark bar — the white notch.
 
-   Fix: the editor chrome owns the top edge, so give the editor root the dark
-   toolbar background. Now if any corner is clipped, what shows through is the
-   toolbar colour rather than white. The wrapper squares its own top corners
-   too (see grapes-editor.tsx), so the bar reads as a flush, full-bleed toolbar.
+   Pushing the canvas down so it starts below the real toolbar height fixes the
+   overlap at its source, rather than restyling the handles.
    ------------------------------------------------------------------ */
-.gjs-editor {
-  /* --gjs-primary-color is the toolbar/panel colour (#444 by default). */
-  background-color: var(--gjs-primary-color, #444) !important;
+:root {
+  --gjs-canvas-top: 54px;
+}
+
+/* Belt-and-braces: keep the chrome above canvas selection decorations so a
+   handle can never paint over the toolbar again if its height changes. */
+.gjs-pn-commands,
+.gjs-pn-options,
+.gjs-pn-views {
+  z-index: 11 !important;
 }
 
 /* Top/side toolbar icon buttons */
