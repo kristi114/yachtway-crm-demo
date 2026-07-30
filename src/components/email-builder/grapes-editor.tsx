@@ -21,8 +21,20 @@ export interface GrapesContent {
   design: unknown;
 }
 
+/** Canvas preview widths offered by our own device switcher. */
+export type GrapesDevice = "desktop" | "tablet" | "mobile";
+
+/** Device id → the GrapesJS device we register for it. */
+export const GRAPES_DEVICES: Record<GrapesDevice, { name: string; width: string }> = {
+  desktop: { name: "Desktop", width: "" },
+  tablet: { name: "Tablet", width: "768px" },
+  mobile: { name: "Mobile", width: "375px" },
+};
+
 export interface GrapesEditorHandle {
   getContent: () => GrapesContent;
+  /** Switch the canvas preview width. */
+  setDevice: (device: GrapesDevice) => void;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -130,8 +142,10 @@ export const GrapesEditor = forwardRef<
     design?: unknown | null;
     /** Fallback HTML to import when there's no saved project JSON yet. */
     html?: string;
+    /** Preview width to apply on init (survives remounts on tab switch). */
+    initialDevice?: GrapesDevice;
   }
->(function GrapesEditor({ design, html }, ref) {
+>(function GrapesEditor({ design, html, initialDevice = "desktop" }, ref) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<any>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -149,6 +163,15 @@ export const GrapesEditor = forwardRef<
         inlined = `${editor.getHtml()}<style>${editor.getCss()}</style>`;
       }
       return { html: inlined || "", design: editor.getProjectData() };
+    },
+    setDevice(device: GrapesDevice) {
+      const editor = editorRef.current;
+      if (!editor) return;
+      try {
+        editor.setDevice(GRAPES_DEVICES[device].name);
+      } catch {
+        /* device not registered — non-fatal */
+      }
     },
   }));
 
@@ -181,6 +204,15 @@ export const GrapesEditor = forwardRef<
           width: "100%",
           storageManager: false,
           fromElement: false,
+          // Register the exact devices our icon switcher drives, so setDevice()
+          // never depends on whatever names the preset happens to ship.
+          deviceManager: {
+            devices: [
+              { id: "desktop", name: GRAPES_DEVICES.desktop.name, width: GRAPES_DEVICES.desktop.width },
+              { id: "tablet", name: GRAPES_DEVICES.tablet.name, width: GRAPES_DEVICES.tablet.width, widthMedia: "992px" },
+              { id: "mobile", name: GRAPES_DEVICES.mobile.name, width: GRAPES_DEVICES.mobile.width, widthMedia: "575px" },
+            ],
+          },
           plugins,
           pluginsOpts:
             plugins.length > 0
@@ -209,6 +241,13 @@ export const GrapesEditor = forwardRef<
           }
         } else if (html) {
           editor.setComponents(html);
+        }
+
+        // Restore the caller's preview width (the editor remounts on tab switch).
+        try {
+          editor.setDevice(GRAPES_DEVICES[initialDevice].name);
+        } catch {
+          /* non-fatal */
         }
 
         if (!cancelled) setStatus("ready");

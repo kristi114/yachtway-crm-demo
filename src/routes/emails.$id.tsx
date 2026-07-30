@@ -1,7 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Save, Code2, LayoutTemplate, Send, Download, AlertTriangle } from "lucide-react";
+import {
+  Save, Code2, LayoutTemplate, Send, Download, AlertTriangle,
+  Monitor, Tablet, Smartphone,
+} from "lucide-react";
 
 import { guarded } from "@/components/require-access";
 import { AppShell } from "@/components/app-shell";
@@ -16,7 +19,15 @@ import { SendEmailDialog } from "@/components/email-builder/send-email-dialog";
 import {
   GrapesEditor,
   type GrapesEditorHandle,
+  type GrapesDevice,
 } from "@/components/email-builder/grapes-editor";
+
+/** Preview widths offered in the designer toolbar. */
+const DEVICE_OPTIONS: { id: GrapesDevice; label: string; icon: typeof Monitor }[] = [
+  { id: "desktop", label: "Desktop", icon: Monitor },
+  { id: "tablet", label: "Tablet", icon: Tablet },
+  { id: "mobile", label: "Mobile", icon: Smartphone },
+];
 import { useAuth } from "@/lib/auth";
 import {
   getEmailTemplate,
@@ -76,6 +87,8 @@ function EmailEditorPage() {
   );
   // Which text field the merge-tag helper should insert into.
   const [tagTarget, setTagTarget] = useState<"subject" | "preheader" | "title">("subject");
+  // Canvas preview width (replaces GrapesJS's built-in Device dropdown).
+  const [device, setDevice] = useState<GrapesDevice>("desktop");
   const [tab, setTab] = useState<EmailMode>(existing?.mode ?? "design");
   const [html, setHtml] = useState(existing?.html ?? BLANK_HTML);
   const [design, setDesign] = useState<unknown | null>(existing?.design ?? null);
@@ -287,14 +300,49 @@ function EmailEditorPage() {
       />
       <PageBody>
         <Tabs value={tab} onValueChange={handleTabChange}>
-          <TabsList>
-            <TabsTrigger value="design" className="gap-1.5">
-              <LayoutTemplate className="h-4 w-4" /> Designer
-            </TabsTrigger>
-            <TabsTrigger value="html" className="gap-1.5">
-              <Code2 className="h-4 w-4" /> HTML editor
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <TabsList>
+              <TabsTrigger value="design" className="gap-1.5">
+                <LayoutTemplate className="h-4 w-4" /> Designer
+              </TabsTrigger>
+              <TabsTrigger value="html" className="gap-1.5">
+                <Code2 className="h-4 w-4" /> HTML editor
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Canvas preview width — drives GrapesJS's device manager. */}
+            {tab === "design" && (
+              <div
+                className="flex items-center gap-0.5 rounded-lg border border-border bg-surface p-0.5"
+                role="group"
+                aria-label="Preview width"
+              >
+                {DEVICE_OPTIONS.map(({ id, label, icon: Icon }) => {
+                  const active = device === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => {
+                        setDevice(id);
+                        grapesRef.current?.setDevice(id);
+                      }}
+                      title={`Preview: ${label}`}
+                      aria-label={`Preview: ${label}`}
+                      aria-pressed={active}
+                      className={`rounded-md p-1.5 transition-colors ${
+                        active
+                          ? "bg-brand text-brand-foreground"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           <TabsContent value="design" className="mt-4">
             <ClientOnly
@@ -304,7 +352,13 @@ function EmailEditorPage() {
                 </div>
               }
             >
-              <GrapesEditor key={grapesKey} ref={grapesRef} design={design} html={html} />
+              <GrapesEditor
+                key={grapesKey}
+                ref={grapesRef}
+                design={design}
+                html={html}
+                initialDevice={device}
+              />
             </ClientOnly>
             <p className="mt-2 text-xs text-muted-foreground">
               Drag blocks (text, image, button, columns) from the right panel. Styling and layers
