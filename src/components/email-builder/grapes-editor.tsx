@@ -235,7 +235,9 @@ export const GrapesEditor = forwardRef<
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-surface">
+    // Top corners are square: the GrapesJS toolbar is a full-bleed dark bar and
+    // a radius there clips it, leaving a light wedge in the corner.
+    <div className="overflow-hidden rounded-b-lg border border-border bg-surface">
       {status === "loading" ? (
         <div className="p-3 text-sm text-muted-foreground">Loading the drag-and-drop designer…</div>
       ) : null}

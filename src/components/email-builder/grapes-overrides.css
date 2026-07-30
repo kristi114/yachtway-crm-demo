@@ -50,6 +50,25 @@
   font-size: 13px !important;
 }
 
+/* ------------------------------------------------------------------
+   Top toolbar seating.
+
+   GrapesJS's top command bar (.gjs-pn-commands) is an absolutely-positioned
+   panel at top:0/left:0 sized `calc(100% - var(--gjs-left-width))` — it does
+   not fill the corner. Nested in a rounded, overflow-hidden card, the card's
+   radius clipped that dark bar and exposed the card's light background as a
+   wedge in the top-left corner.
+
+   Fix: the editor chrome owns the top edge, so give the editor root the dark
+   toolbar background. Now if any corner is clipped, what shows through is the
+   toolbar colour rather than white. The wrapper squares its own top corners
+   too (see grapes-editor.tsx), so the bar reads as a flush, full-bleed toolbar.
+   ------------------------------------------------------------------ */
+.gjs-editor {
+  /* --gjs-primary-color is the toolbar/panel colour (#444 by default). */
+  background-color: var(--gjs-primary-color, #444) !important;
+}
+
 /* Top/side toolbar icon buttons */
 .gjs-pn-btn {
   font-size: 16px !important;
