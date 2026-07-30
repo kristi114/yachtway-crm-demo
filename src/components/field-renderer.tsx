@@ -13,13 +13,23 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 type MockRecord = Record<string, unknown>;
 
-// Raw relationship/system id fields that are hidden by default on read-only
-// detail views (the human-readable lookup versions - Owner, Primary Contact,
-// Parent Company - are shown instead). Revealed via the "Show hidden fields"
-// toggle. Kept in sync with HIDDEN_ON_CREATE in create-record-dialog.tsx.
+// Raw relationship/system id fields hidden by default on detail views (the
+// human-readable lookups - Owner, Primary Contact, Parent Company - show
+// instead). Revealed via the "Show hidden fields" toggle.
 export const HIDDEN_ID_FIELDS = new Set<string>([
   "id", "ownerId", "parentCompanyId", "primaryContactId", "easysignPrimaryContactId", "createdById",
 ]);
+
+/**
+ * Is this field a raw identifier that should stay hidden by default?
+ *
+ * Driven off the catalog's own "System identifier" annotation rather than a
+ * hand-maintained key list, so a new id field is hidden automatically instead of
+ * leaking onto the page until someone remembers to add it.
+ */
+export function isHiddenIdField(field: { key: string; help?: string }): boolean {
+  return HIDDEN_ID_FIELDS.has(field.key) || /system identifier/i.test(field.help ?? "");
+}
 
 // A field is considered "empty" (nothing to show on the profile) when the
 // raw value is null, undefined, empty string, empty array, false boolean,
@@ -246,7 +256,10 @@ const PREFIX_GROUPS: [RegExp, string][] = [
   // Last YachtWay login is surfaced in the "At a glance" snapshot panel.
   [/^lastLogin$/, "At a glance"],
   [/^(lastContacted|lastContactChannel|lastStudioSession|nextStep)/, "Engagement"],
-  [/^(doNotCall|emailOptOut|highIntentFlag)/, "Preferences"],
+  // Consent flags (emailOptOut / smsOptOut) are intentionally NOT classified
+  // here: they belong to whichever section declares them (System), and pulling
+  // them into a separate "Preferences" card split them away from it.
+  [/^(doNotCall|highIntentFlag)/, "Preferences"],
   [/^(sf|yachtwayDb|yachtwayDealerPage|enrichedFromAws|logoUrl|hubspot|salesforce)/, "System IDs"],
   // Listing-specific
   [/^(engine|generator|horsepower|numberOfEngines|driveType|fuel)/, "Powertrain"],
@@ -344,7 +357,7 @@ export function SectionCard({
   // so the detail view mirrors the full catalog. Only in-pipeline fields and
   // (unless the hidden toggle is on) raw id fields are filtered out.
   const populated = section.fields.filter(
-    (f) => inPipeline(f) && (showHidden || !HIDDEN_ID_FIELDS.has(f.key)),
+    (f) => inPipeline(f) && (showHidden || !isHiddenIdField(f)),
   );
   // Hide empty subsections (a split group with no data), but keep top-level
   // sections that the caller marked renderWhenEmpty so every catalog section is
@@ -498,7 +511,7 @@ export function DetailSections({
   const [overId, setOverId] = useState<string | null>(null);
   const [showHidden, setShowHidden] = useState(false);
   // Only offer the toggle when some visible section actually carries a hidden id.
-  const hasHiddenFields = ranked.some((s) => s.fields.some((f) => HIDDEN_ID_FIELDS.has(f.key)));
+  const hasHiddenFields = ranked.some((s) => s.fields.some((f) => isHiddenIdField(f)));
 
   const orderedIds = useReorder ? applyOrder(ranked.map((s) => s.id), savedOrder) : ranked.map((s) => s.id);
   const display = orderedIds

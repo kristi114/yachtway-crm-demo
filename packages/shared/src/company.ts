@@ -27,6 +27,17 @@ export const CompanySchema = z.object({
   primaryContactId: IdSchema.nullish(),
   parentCompanyId: IdSchema.nullish(),
   yachtwayDbAccountId: z.string().nullish(),
+  /** Suppresses only the company's own email address on this record. */
+  emailOptOut: z.boolean().nullish(),
+  /** Suppresses every contact at this company (absolute audience suppression). */
+  accountWideEmailOptOut: z.boolean().nullish(),
+  // Social profiles
+  facebookUrl: z.string().nullish(),
+  instagramUrl: z.string().nullish(),
+  whatsappNumber: z.string().nullish(),
+  youtubeUrl: z.string().nullish(),
+  tiktokUrl: z.string().nullish(),
+  linkedinUrl: z.string().nullish(),
   tags: z.array(z.string()).nullish(),
   createdAt: IsoDateSchema,
   updatedAt: IsoDateSchema,

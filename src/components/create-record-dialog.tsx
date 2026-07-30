@@ -9,7 +9,7 @@ import { CurrencyInput } from "@/components/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { FieldDef, FieldSection } from "@/lib/field-schema";
-import { autoSplit } from "@/components/field-renderer";
+import { autoSplit, isHiddenIdField } from "@/components/field-renderer";
 import { FIELD_OPTIONS, dynamicOptions } from "@/lib/field-options";
 import { COMPANIES, CONTACTS } from "@/lib/mock-data";
 import { readAdminConfig } from "@/lib/admin-config";
@@ -324,7 +324,9 @@ export function CreateRecordDialog({
       .map((g) => ({
         ...g,
         fields: g.fields.filter((f) => {
-          if (!showHidden && HIDDEN_ON_CREATE.has(f.key)) return false;
+          // Raw identifiers stay behind the "Show hidden fields" toggle. Driven
+          // off the catalog annotation so new id fields are covered too.
+          if (!showHidden && (HIDDEN_ON_CREATE.has(f.key) || isHiddenIdField(f))) return false;
           if (!needle) return true;
           return f.label.toLowerCase().includes(needle) || f.key.toLowerCase().includes(needle);
         }),

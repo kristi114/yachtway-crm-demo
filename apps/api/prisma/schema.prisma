@@ -157,7 +157,19 @@ model Company {
   easysignTrialActive              Boolean?  @map("easysign_trial_active")
   easysignTrialEndDate             DateTime? @map("easysign_trial_end_date") @db.Date
   easysignTrialStartDate           DateTime? @map("easysign_trial_start_date") @db.Date
+  /// Suppresses ONLY the company's own email address on this record; contacts at
+  /// the company are unaffected.
   emailOptOut                      Boolean?  @map("email_opt_out")
+  /// Suppresses EVERY contact at this company (whole account asked to stop).
+  /// Audience building treats this as an absolute suppression.
+  accountWideEmailOptOut           Boolean?  @map("account_wide_email_opt_out")
+  /// Social profiles (Social Profiles section on the company record).
+  facebookUrl                      String?   @map("facebook_url")
+  instagramUrl                     String?   @map("instagram_url")
+  whatsappNumber                   String?   @map("whatsapp_number")
+  youtubeUrl                       String?   @map("youtube_url")
+  tiktokUrl                        String?   @map("tiktok_url")
+  linkedinUrl                      String?   @map("linkedin_url")
   firstListingDate                 DateTime? @map("first_listing_date") @db.Date
   firstSignupDate                  DateTime? @map("first_signup_date") @db.Date
   hasClickedSignupLink             Boolean?  @map("has_clicked_signup_link")
@@ -331,7 +343,15 @@ model Contact {
   totalLogins              Decimal?  @map("total_logins")
   lastAmplitudeEvent       String?   @map("last_amplitude_event")
   loginFrequencyTier       String?   @map("login_frequency_tier")
+  /// Consent is modelled as OPT-OUT (the CRM default is "may contact"), matching
+  /// the audience-suppression rules. emailOptIn/smsOptIn are DEPRECATED mirrors
+  /// kept only so the GHL dual-write keeps writing without a code change; drop
+  /// them once the sync's field catalog is regenerated against opt-out.
+  emailOptOut              Boolean?  @map("email_opt_out")
+  smsOptOut                Boolean?  @map("sms_opt_out")
+  /// @deprecated use emailOptOut
   emailOptIn               Boolean?  @map("email_opt_in")
+  /// @deprecated use smsOptOut
   smsOptIn                 Boolean?  @map("sms_opt_in")
   createdDate              DateTime? @map("created_date")
   brokerImage              String?   @map("broker_image")
@@ -546,6 +566,7 @@ model Listing {
   brokerLinks          BrokerFriendlyLink[] @relation("BrokerLinkListing")
   messages             Message[]            @relation("MessageListing")
   conversations        Conversation[]       @relation("ConversationListing")
+  analyticsProfiles    AnalyticsProfile[]   @relation("AnalyticsProfileListing")
 
   customFields Json?    @map("custom_fields")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -892,6 +913,9 @@ model EasyFundLoan {
   opportunityCreated              DateTime? @map("opportunity_created") @db.Date
   paidToReferringDealer           Decimal?  @map("paid_to_referring_dealer") @db.Decimal(14, 2)
   prequalificationId              String?   @unique @map("prequalification_id")
+  /// Outcome of the prequalification step: "Pre-Qualified" | "Not Qualified".
+  /// Distinct from `status` (application lifecycle) and `currentStep` (funnel position).
+  prequalStatus                   String?   @map("prequal_status")
   purchasePrice                   Decimal?  @map("purchase_price") @db.Decimal(14, 2)
   purchaseRefinance               String?   @map("purchase_refinance")
   referralToDealer                Decimal?  @map("referral_to_dealer")
@@ -1223,8 +1247,17 @@ model ConversationReadState {
 // to Company; channel-specific extras land in `metrics` JSON.
 model AnalyticsProfile {
   id                String    @id @default(cuid())
-  /// Lookup(Company) — owning company (nullable: some profiles are house-level)
+  /// What this profile measures: 'dealer' (a customer's own channel account),
+  /// 'listing' (a single vessel) or 'platform' (YachtWay's own house accounts).
+  /// Platform metrics must NEVER be shown or stored against a dealer or listing,
+  /// so a DB CHECK ties scope to the id columns: dealer => company_id NOT NULL,
+  /// listing => listing_id NOT NULL, platform => BOTH NULL. Dealer-scoped reads
+  /// therefore cannot pick up house-level rows even by mistake.
+  scope             String    @default("dealer") @map("scope")
+  /// Lookup(Company) — owning company. NULL for platform scope.
   companyId         String?   @map("company_id")
+  /// Lookup(Listing) — the vessel, for listing scope. NULL otherwise.
+  listingId         String?   @map("listing_id")
   /// Channel: youtube | google_analytics | google_ads | google_business |
   /// linkedin | tiktok | meta_page | meta_instagram | meta_ad_account | meta_business
   channel           String    @map("channel")
@@ -1241,6 +1274,7 @@ model AnalyticsProfile {
   scopes            String[]  @map("scopes")
 
   companyRecord Company?            @relation("AnalyticsProfileCompany", fields: [companyId], references: [id])
+  listingRecord Listing?            @relation("AnalyticsProfileListing", fields: [listingId], references: [id])
   snapshots     AnalyticsSnapshot[]
 
   customFields Json?    @map("custom_fields")
@@ -1249,6 +1283,8 @@ model AnalyticsProfile {
 
   @@unique([channel, externalId])
   @@index([companyId])
+  @@index([listingId])
+  @@index([scope])
   @@index([channel])
   @@map("analytics_profiles")
 }

@@ -269,8 +269,6 @@ export const CONTACT_SECTIONS: readonly FieldSection[] = [
       { key: "officeCountry", label: "Country", type: "text", sensitivity: "contact.general", help: "If dealership_office_id is not empty, derive from matching office on the company" },
       { key: "officePostalCode", label: "Postal Code", type: "text", sensitivity: "contact.general", help: "If dealership_office_id is not empty, derive from matching office on the company" },
       { key: "tags", label: "Tags", type: "multi_option", sensitivity: "contact.general" },
-      { key: "emailOptOut", label: "Email Opt-Out", type: "checkbox", sensitivity: "contact.general" },
-      { key: "smsOptOut", label: "SMS Opt-Out", type: "checkbox", sensitivity: "contact.general" },
       { key: "platformRole", label: "Platform Role", type: "single_option", sensitivity: "contact.general" },
       { key: "phone", label: "Phone", type: "phone", sensitivity: "contact.general" },
       { key: "mailingStreet", label: "Street Address", type: "text", sensitivity: "contact.general" },
@@ -352,6 +350,10 @@ export const CONTACT_SECTIONS: readonly FieldSection[] = [
       { key: "dealershipOfficeId", label: "Office", type: "text", sensitivity: "contact.general", help: "System identifier - read-only" },
       { key: "isEmailVerified", label: "Email Verified", type: "checkbox", sensitivity: "contact.general" },
       { key: "signupSource", label: "Signup Source", type: "single_option", sensitivity: "contact.general" },
+      // Consent flags live here alongside the other record-level state. Checked
+      // = unsubscribed; audiences suppress these contacts unconditionally.
+      { key: "emailOptOut", label: "Email Opt-Out", type: "checkbox", sensitivity: "contact.general", help: "Checked = unsubscribed. Excluded from every email send." },
+      { key: "smsOptOut", label: "SMS Opt-Out", type: "checkbox", sensitivity: "contact.general", help: "Checked = unsubscribed from SMS." },
     ],
   },
   {

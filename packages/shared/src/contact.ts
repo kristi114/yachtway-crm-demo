@@ -35,6 +35,13 @@ export const ContactSchema = z.object({
   companyId: IdSchema.nullish(),
   ownerId: IdSchema.nullish(),
   yachtwayDbId: z.string().nullish(),
+  /**
+   * Consent is OPT-OUT: absent/false means the contact may be emailed. Only an
+   * explicit `true` suppresses. A company-level `accountWideEmailOptOut` also
+   * suppresses every contact at that company (see CompanySchema).
+   */
+  emailOptOut: z.boolean().nullish(),
+  smsOptOut: z.boolean().nullish(),
   createdAt: IsoDateSchema,
   updatedAt: IsoDateSchema,
 });
