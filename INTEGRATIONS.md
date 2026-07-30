@@ -98,7 +98,7 @@ delivery path on schedule when the backend lands.
 **Audiences (sending lists).** `src/lib/audiences.ts` resolves a list *definition*
 (contact filter clauses + contact tags + company tags + manual addresses) against
 the CRM at send time, so lists never go stale. Suppressions applied last:
-no email, `emailOptIn === false`, the `Do Not Contact` tag on the contact **or**
+no email, `emailOptOut === true`, the `Do Not Contact` tag on the contact **or**
 its company, and duplicate addresses. Saved lists live in `localStorage`
 (`yw:email-audiences:v1`).
 
@@ -106,7 +106,11 @@ its company, and duplicate addresses. Saved lists live in `localStorage`
   into the query (and enforce them again in the send route so no caller can
   bypass an unsubscribe). Persist saved lists in Postgres with RLS.
 - Sync the suppression list with **Mailgun**'s own unsubscribes/bounces both ways
-  so an unsubscribe at the provider writes back to `emailOptIn`.
+  so an unsubscribe at the provider writes back to `emailOptOut`.
+- Schema note: the contact fields are **opt-*out*** (`emailOptOut` / `smsOptOut`,
+  true = unsubscribed). Postgres still has `email_opt_in` / `sms_opt_in`
+  (`apps/api/prisma/schema.prisma`) — invert on read/write, or migrate the
+  columns to `email_opt_out` / `sms_opt_out` to match.
 
 **A/B testing.** Configured per send: variant B carries its own subject *and*
 HTML body, with a configurable split % and winner metric (open or click rate).

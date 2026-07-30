@@ -161,8 +161,10 @@ export interface Contact {
   nextStepDate: string;            // "" = no date scheduled (YYYY-MM-DD)
   /** Marketing/segmentation tags used to build email sending lists. */
   tags?: string[];
-  /** False = unsubscribed / suppressed; audiences exclude these contacts. */
-  emailOptIn?: boolean;
+  /** True = unsubscribed from email; audiences suppress these contacts. */
+  emailOptOut?: boolean;
+  /** True = unsubscribed from SMS. */
+  smsOptOut?: boolean;
 }
 
 export const COMPANY_ROLES = [
@@ -587,7 +589,7 @@ export const CONTACTS: Contact[] = [
     lastLoginAt: "2026-07-12", avgResponseTimeHours: 1.8, studioSpendYtd: 24_500,
     loanApplicationId: null,
     nextStep: "Send SaaS renewal DocuSign", nextStepDate: "2026-07-18",
-    tags: ["Newsletter", "Product Updates", "VIP"], emailOptIn: true,
+    tags: ["Newsletter", "Product Updates", "VIP"], emailOptOut: false, smsOptOut: false,
   },
   {
     id: "cnt_002", vertical: "Main", companyId: "cmp_002",

@@ -20,7 +20,7 @@ import { applyClauses, filterableFields, type FilterClause } from "@/lib/record-
  *
  * Suppressions, always applied last:
  *   - no email address on the contact
- *   - emailOptIn === false (unsubscribed)
+ *   - emailOptOut === true (unsubscribed)
  *   - the "Do Not Contact" tag on the contact or its company
  *   - duplicate addresses (first occurrence wins, case-insensitive)
  *
@@ -151,7 +151,7 @@ export function resolveAudience(def: AudienceDef): ResolvedAudience {
     if (!c) continue;
     const email = typeof c.email === "string" ? c.email.trim() : "";
     if (!email) { suppressed.noEmail += 1; continue; }
-    if (c.emailOptIn === false) { suppressed.optedOut += 1; continue; }
+    if (c.emailOptOut === true) { suppressed.optedOut += 1; continue; }
     const company = c.companyId ? companyById.get(c.companyId) : undefined;
     if (tagsOf(c).includes(DNC_TAG) || (company && tagsOf(company).includes(DNC_TAG))) {
       suppressed.doNotContact += 1;
