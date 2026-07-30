@@ -121,7 +121,8 @@ export function SendSchedulePanel({
               >
                 <Icon className="h-3.5 w-3.5" />
               </span>
-              <span className="truncate">{label}</span>
+              {/* No truncation — the mode names are the primary control labels. */}
+              <span className="whitespace-nowrap">{label}</span>
             </button>
           );
         })}

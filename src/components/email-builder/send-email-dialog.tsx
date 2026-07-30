@@ -248,7 +248,7 @@ export function SendEmailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[94vh] w-[95vw] max-w-3xl overflow-hidden p-0">
+      <DialogContent className="max-h-[94vh] w-[96vw] max-w-6xl overflow-hidden p-0">
         <DialogHeader className="flex-row items-start justify-between gap-3 border-b border-border px-6 py-4">
           <div>
             <DialogTitle>Send or schedule</DialogTitle>
