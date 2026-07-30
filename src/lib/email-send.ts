@@ -3,6 +3,7 @@ import {
   providerForKind, providerName, isProviderConnected, isProviderAllowedForKind,
   KIND_ALLOWED_PROVIDERS, type EmailKind, type ProviderId,
 } from "@/lib/email-providers";
+import { describeSchedule, firstFireAt, type SendSchedule } from "@/lib/email-scheduling";
 
 /**
  * Email sending seam for the Emails builder.
@@ -16,6 +17,44 @@ import {
  *
  * The signature and return shape are already what a real transport would use.
  */
+
+/** Subscription categories a recipient can opt out of individually. */
+export const PREFERENCE_TYPES = [
+  "Newsletter",
+  "Product updates",
+  "Listing alerts",
+  "Studio & content",
+  "Financing (EasyFund)",
+  "Events & boat shows",
+] as const;
+export type PreferenceType = (typeof PREFERENCE_TYPES)[number];
+
+/** Per-campaign delivery / tracking options. */
+export interface SendOptions {
+  /** Rewrite links so clicks are attributable. */
+  trackClicks: boolean;
+  /** Append the default UTM parameters to every link. */
+  utmTracking: boolean;
+  /** Tags applied to a contact based on how they interact. */
+  addTagsOnInteraction: boolean;
+  /** Tag to apply when a recipient opens. */
+  tagOnOpen?: string;
+  /** Tag to apply when a recipient clicks. */
+  tagOnClick?: string;
+  /**
+   * Subscription category. Lets a recipient unsubscribe from this kind of email
+   * without killing every send — a real requirement for staying out of spam.
+   */
+  preferenceType?: PreferenceType;
+}
+
+export function defaultSendOptions(): SendOptions {
+  return {
+    trackClicks: true,
+    utmTracking: true,
+    addTagsOnInteraction: false,
+  };
+}
 
 /** One arm of an A/B test: its own subject line and body. */
 export interface AbVariant {
@@ -71,6 +110,18 @@ export interface SendEmailInput {
   preheader?: string;
   /** Document <title>. Falls back to the subject when blank. */
   title?: string;
+  /** Friendly sender name recipients see. */
+  senderName?: string;
+  /** Address recipients see (may be a {{custom_value}} token). */
+  senderEmail?: string;
+  /** Optional Reply-To for this campaign only. */
+  replyTo?: string;
+  /** When and how to dispatch. Absent = send immediately. */
+  schedule?: SendSchedule;
+  /** Per-campaign delivery/tracking options. */
+  options?: SendOptions;
+  /** Attachment file names (mock — real uploads land in object storage). */
+  attachments?: string[];
   /** The audience definition this send resolved from (for auditing / re-sends). */
   audienceName?: string;
   /** Campaign (series of sends) this send belongs to. */
@@ -88,8 +139,8 @@ export interface SentEmail {
   subject: string;
   templateId?: string;
   templateName?: string;
-  sentAt: string; // ISO
-  status: "sent" | "failed" | "sending";
+  sentAt: string; // ISO — for scheduled sends, when it's due to go out
+  status: "sent" | "failed" | "sending" | "scheduled" | "cancelled";
   /** True when produced by the mock transport (no real email left the app). */
   mock: boolean;
   /** Optional engagement metrics (present for seeded campaign-style sends). */
@@ -117,6 +168,17 @@ export interface SentEmail {
   title?: string;
   /** True when the provider was not the default for this kind. */
   providerOverridden?: boolean;
+  /** Sender identity + reply-to shown to recipients. */
+  senderName?: string;
+  senderEmail?: string;
+  replyTo?: string;
+  /** Dispatch schedule (absent for immediate sends). */
+  schedule?: SendSchedule;
+  /** Human summary of the schedule, for lists and the report header. */
+  scheduleLabel?: string;
+  /** Delivery/tracking options this send used. */
+  options?: SendOptions;
+  attachments?: string[];
   /** Present when this send was an A/B test; holds per-variant results. */
   abTest?: { splitPercentB: number; winnerMetric: "open" | "click"; variants: VariantStats[] };
   /** Follow-up plan for non-openers, and its state. */
@@ -372,14 +434,20 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
   const mock = true;
   // ---- END mock transport ----
 
-  const sentAt = new Date();
+  // A schedule other than "now" means the send is *queued*, not delivered: it
+  // gets no engagement metrics (there's nothing to measure yet) and its sentAt
+  // is the first fire time so lists can sort and count down to it.
+  const schedule = input.schedule;
+  const deferred = Boolean(schedule && schedule.mode !== "now");
+  const fireAt = schedule ? firstFireAt(schedule) : null;
+  const sentAt = deferred && fireAt ? new Date(fireAt) : new Date();
   const total = input.to.length;
 
   // A/B split: B gets splitPercentB of the audience, A gets the remainder.
   // Mock engagement is derived so the report has plausible per-variant numbers;
   // real numbers arrive from Mailgun events once the webhook is wired.
   let abTest: SentEmail["abTest"];
-  if (input.abTest?.enabled && total > 0) {
+  if (!deferred && input.abTest?.enabled && total > 0) {
     const pctB = Math.min(99, Math.max(1, Math.round(input.abTest.splitPercentB)));
     const nB = Math.max(1, Math.round((total * pctB) / 100));
     const nA = Math.max(0, total - nB);
@@ -399,6 +467,8 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
     };
   }
 
+  // The non-opener follow-up is timed from when the email actually goes out,
+  // which for a queued send is its first fire time.
   let followUp: SentEmail["followUp"];
   if (input.followUp?.enabled) {
     const days = Math.max(1, Math.round(input.followUp.delayDays));
@@ -417,10 +487,11 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
     templateId: input.templateId,
     templateName: input.templateName,
     sentAt: sentAt.toISOString(),
-    status: "sent",
+    status: deferred ? "scheduled" : "sent",
     mock,
     recipientCount: total,
-    delivered: total,
+    // Nothing is delivered until a queued send actually fires.
+    delivered: deferred ? undefined : total,
     html: input.html,
     kind: sendKind,
     provider,
@@ -432,6 +503,13 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
     // An empty title falls back to the subject line.
     title: input.title?.trim() || input.subject,
     providerOverridden: provider !== defaultProvider || undefined,
+    senderName: input.senderName?.trim() || undefined,
+    senderEmail: input.senderEmail?.trim() || undefined,
+    replyTo: input.replyTo?.trim() || undefined,
+    schedule: deferred ? schedule : undefined,
+    scheduleLabel: schedule ? describeSchedule(schedule, total) : undefined,
+    options: input.options,
+    attachments: input.attachments?.length ? input.attachments : undefined,
     abTest,
     followUp,
   };
@@ -448,13 +526,39 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
 }
 
 /* ------------------------------------------------------------------ */
+/* Scheduled sends                                                     */
+/* ------------------------------------------------------------------ */
+
+/** Queued sends that haven't fired yet, soonest first. */
+export function listScheduledSends(): SentEmail[] {
+  return state
+    .filter((s) => s.status === "scheduled")
+    .sort((a, b) => a.sentAt.localeCompare(b.sentAt));
+}
+
+/** Cancel a queued send. Already-sent campaigns are left untouched. */
+export function cancelScheduledSend(id: string): boolean {
+  const target = state.find((s) => s.id === id);
+  if (!target || target.status !== "scheduled") return false;
+  state = state.map((s) => (s.id === id ? { ...s, status: "cancelled" as const } : s));
+  persist();
+  listeners.forEach((l) => l());
+  return true;
+}
+
+/* ------------------------------------------------------------------ */
 /* Non-opener follow-up                                                */
 /* ------------------------------------------------------------------ */
 
 /** Sends whose follow-up is configured, due, and not yet sent. */
 export function dueFollowUps(now = new Date()): SentEmail[] {
   return state.filter(
-    (s) => s.followUp?.enabled && !s.followUp.sentId && new Date(s.followUp.dueAt) <= now,
+    (s) =>
+      // Only campaigns that actually went out can have non-openers.
+      s.status === "sent" &&
+      s.followUp?.enabled &&
+      !s.followUp.sentId &&
+      new Date(s.followUp.dueAt) <= now,
   );
 }
 

@@ -82,16 +82,22 @@ afterAll(async () => {
 describe("Stripe billing rail + Accounting (HTTP)", () => {
   let invoiceId = "";
 
-  it("a Stripe-toggled invoice opens a Checkout link on approval", async () => {
+  it("a Stripe-toggled invoice: approve is CRM-native, send opens the Checkout link", async () => {
     const created = await request(app).post(`/opportunities/${OPP}/invoice`).set(rep).send({ invoiceType: "other", amount: 100, billingProvider: "stripe" });
     expect(created.status).toBe(201);
     invoiceId = created.body.invoiceId;
 
+    // Approve no longer touches Stripe — it just finalizes the invoice.
     const appr = await request(app).post(`/invoices/${invoiceId}/approve`).set(rep).send({});
     expect(appr.status).toBe(200);
-    expect(appr.body.status).toBe("sent");
-    expect(appr.body.checkoutUrl).toBe("https://checkout.stripe.test/cs_1");
-    expect(fetchMock).toHaveBeenCalledTimes(1); // the Stripe Checkout API call
+    expect(appr.body.status).toBe("approved");
+
+    // Send opens the Stripe pay link and marks the invoice sent.
+    const sent = await request(app).post(`/invoices/${invoiceId}/send`).set(rep).send({});
+    expect(sent.status).toBe(200);
+    expect(sent.body.status).toBe("sent");
+    expect(sent.body.payLinkUrl).toBe("https://checkout.stripe.test/cs_1");
+    expect(fetchMock).toHaveBeenCalled(); // the Stripe Checkout API call
   });
 
   it("checkout.session.completed marks the invoice paid + records a stripe payment", async () => {

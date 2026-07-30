@@ -412,6 +412,44 @@ function SentReportPage() {
                     <div className="text-sm">{email.preheader}</div>
                   </div>
                 )}
+                {email.scheduleLabel && (
+                  <div>
+                    <div className="text-xs text-muted-foreground">Schedule</div>
+                    <div className="text-sm">{email.scheduleLabel}</div>
+                  </div>
+                )}
+                {(email.senderName || email.senderEmail || email.replyTo) && (
+                  <div>
+                    <div className="text-xs text-muted-foreground">Sender</div>
+                    <div className="text-sm">
+                      {email.senderName} {email.senderEmail && `<${email.senderEmail}>`}
+                      {email.replyTo && (
+                        <span className="text-muted-foreground"> · reply-to {email.replyTo}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {email.options && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {email.options.trackClicks && (
+                      <Badge variant="outline" className="text-[10px]">Click tracking</Badge>
+                    )}
+                    {email.options.utmTracking && (
+                      <Badge variant="outline" className="text-[10px]">UTM tagging</Badge>
+                    )}
+                    {email.options.preferenceType && (
+                      <Badge variant="outline" className="text-[10px]">
+                        {email.options.preferenceType}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                {email.attachments?.length ? (
+                  <div>
+                    <div className="text-xs text-muted-foreground">Attachments</div>
+                    <div className="text-sm">{email.attachments.join(", ")}</div>
+                  </div>
+                ) : null}
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   {email.kind && (
                     <Badge variant="outline" className="text-[10px] capitalize">{email.kind}</Badge>

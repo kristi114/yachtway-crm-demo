@@ -79,7 +79,7 @@ describe("parseAmplitudeEvents", () => {
         },
       ],
     };
-    const [ev] = parseAmplitudeEvents(raw);
+    const ev = parseAmplitudeEvents(raw)[0]!;
     expect(ev.externalId).toBe("ins_1");
     expect(ev.userId).toBe("84213");
     expect(ev.eventType).toBe("listing_viewed");
@@ -88,9 +88,9 @@ describe("parseAmplitudeEvents", () => {
   });
 
   it("synthesizes a stable id when insert_id is absent", () => {
-    const [ev] = parseAmplitudeEvents([
+    const ev = parseAmplitudeEvents([
       { user_id: "1", event_type: "x", event_time: 1000 },
-    ]);
+    ])[0]!;
     expect(ev.externalId).toContain("1");
     expect(ev.externalId).toContain("x");
   });
@@ -98,9 +98,9 @@ describe("parseAmplitudeEvents", () => {
 
 describe("parseAmplitudeUserProperties", () => {
   it("extracts nested user_properties", () => {
-    const [u] = parseAmplitudeUserProperties([
+    const u = parseAmplitudeUserProperties([
       { user_id: "84213", user_properties: { role: "broker", funnelStage: "active" } },
-    ]);
+    ])[0]!;
     expect(u.userId).toBe("84213");
     expect(u.properties).toEqual({ role: "broker", funnelStage: "active" });
   });

@@ -1,9 +1,23 @@
 import { Router } from "express";
-import { AccountingTabSchema, type AccountingRow, SubscriptionCreateSchema } from "@yachtway/shared";
+import {
+  AccountingTabSchema,
+  type AccountingRow,
+  PaginationQuerySchema,
+  PartnerSettlementSchema,
+  PayoutCreateSchema,
+  PayoutMarkPaidSchema,
+  SubscriptionCreateSchema,
+} from "@yachtway/shared";
 import { authContext } from "../auth/context.js";
-import { authorizeAny } from "../permissions/authorize.js";
+import { authorize, authorizeAny } from "../permissions/authorize.js";
 import { withRole } from "../permissions/rls.js";
 import { createCheckoutSession, StripeConfigError } from "../integrations/stripe.js";
+import {
+  approvePayout,
+  createPayout,
+  markPayoutPaid,
+  recordPartnerSettlement,
+} from "../billing/financingLedger.js";
 
 /**
  * Accounting (ADMIN) + Stripe subscription checkout.
@@ -101,7 +115,7 @@ router.get("/accounting/:tab", authorizeAny(["invoice.general", "invoice.financi
         date: iso(i.dueDate ?? i.createdAt),
         companyId: i.companyId ?? null,
         contactId: i.contactId ?? null,
-        reference: i.reference ?? i.xeroInvoiceNumber ?? null,
+        reference: i.reference ?? null,
         amount: dec(i.amount),
         amountDue: dec(i.amountDue ?? i.amount),
         status: i.status,
@@ -124,11 +138,59 @@ router.get("/accounting/:tab", authorizeAny(["invoice.general", "invoice.financi
         currency: b.currency,
       }));
     }
+    if (tab === "partner-owed") {
+      const recs = await tx.partnerReceivable.findMany({ where: { status: "accrued" }, orderBy: { expectedSettlementDate: "asc" }, take: 500 });
+      return recs.map((r) => ({
+        id: r.id,
+        source: "accrual",
+        kind: r.kind, // easyfund | mastercover
+        date: iso(r.expectedSettlementDate),
+        companyId: r.companyId,
+        contactId: null,
+        reference: null,
+        amount: dec(r.amount),
+        amountDue: dec(r.amount),
+        status: r.status,
+        currency: r.currency,
+      }));
+    }
+    if (tab === "payouts") {
+      const payouts = await tx.payout.findMany({ orderBy: { createdAt: "desc" }, take: 500 });
+      return payouts.map((p) => ({
+        id: p.id,
+        source: p.method ?? p.amountSource,
+        kind: "payout",
+        date: iso(p.paidAt ?? p.createdAt),
+        companyId: p.companyId,
+        contactId: null,
+        reference: p.reference ?? null,
+        amount: dec(p.amount),
+        amountDue: p.status === "paid" ? 0 : dec(p.amount),
+        status: p.status,
+        currency: p.currency,
+      }));
+    }
+    if (tab === "shoot-credits") {
+      const credits = await tx.studioShootCredit.findMany({ orderBy: { createdAt: "desc" }, take: 500 });
+      return credits.map((s) => ({
+        id: s.id,
+        source: "shoot_credit",
+        kind: s.delta > 0 ? "credit_granted" : "credit_consumed",
+        date: iso(s.createdAt),
+        companyId: s.companyId,
+        contactId: null,
+        reference: s.reason ?? null,
+        amount: s.delta, // non-monetary: number of shoots
+        amountDue: null,
+        status: null,
+        currency: null,
+      }));
+    }
     // dealer-credits
     const credits = await tx.creditNote.findMany({ orderBy: { createdAt: "desc" }, take: 500 });
     return credits.map((c) => ({
       id: c.id,
-      source: c.billingProvider,
+      source: "manual",
       kind: "credit_note",
       date: iso(c.createdAt),
       companyId: c.companyId ?? null,
@@ -142,6 +204,119 @@ router.get("/accounting/:tab", authorizeAny(["invoice.general", "invoice.financi
   });
 
   res.json({ tab, data: rows, nextCursor: null });
+});
+
+// ---------------------------------------------------------------------------
+// Partner receivables (lenders/insurers) — FINTECH/ADMIN. Accrual is automatic on
+// the opportunity close trigger; here we list them + record the monthly settlement.
+// ---------------------------------------------------------------------------
+router.get("/receivables", authorize("receivable.financing", "read"), async (req, res) => {
+  const { cursor, limit } = PaginationQuerySchema.parse(req.query);
+  const q = req.query as { companyId?: string; status?: string; kind?: string };
+  const rows = await withRole(req.auth!.role, (tx) =>
+    tx.partnerReceivable.findMany({
+      where: {
+        ...(q.companyId ? { companyId: String(q.companyId) } : {}),
+        ...(q.status ? { status: String(q.status) } : {}),
+        ...(q.kind ? { kind: String(q.kind) } : {}),
+      },
+      take: limit + 1,
+      orderBy: { expectedSettlementDate: "asc" },
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    }),
+  );
+  const hasMore = rows.length > limit;
+  const data = hasMore ? rows.slice(0, limit) : rows;
+  res.json({ data, nextCursor: hasMore ? data[data.length - 1]!.id : null });
+});
+
+router.post("/companies/:id/partner-settlement", authorize("receivable.financing", "write"), async (req, res) => {
+  const input = PartnerSettlementSchema.parse(req.body);
+  const result = await withRole("INTEGRATION", (tx) =>
+    recordPartnerSettlement(tx, {
+      companyId: String(req.params.id),
+      amount: input.amount,
+      method: input.method,
+      paidAt: input.paidAt ?? null,
+      reference: input.reference ?? null,
+      actorUserId: req.auth!.userId,
+      actorRole: req.auth!.role,
+    }),
+  );
+  if (result.status) {
+    res.status(result.status).json({ error: result.error });
+    return;
+  }
+  res.status(201).json(result);
+});
+
+// ---------------------------------------------------------------------------
+// Dealer payouts — FINTECH/ADMIN. Auto-drafted on close from paid_to_referring_dealer;
+// finance can also add ad-hoc payouts, then approve + mark paid.
+// ---------------------------------------------------------------------------
+router.get("/payouts", authorize("payout.financing", "read"), async (req, res) => {
+  const { cursor, limit } = PaginationQuerySchema.parse(req.query);
+  const q = req.query as { companyId?: string; status?: string };
+  const rows = await withRole(req.auth!.role, (tx) =>
+    tx.payout.findMany({
+      where: {
+        ...(q.companyId ? { companyId: String(q.companyId) } : {}),
+        ...(q.status ? { status: String(q.status) } : {}),
+      },
+      take: limit + 1,
+      orderBy: { createdAt: "desc" },
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    }),
+  );
+  const hasMore = rows.length > limit;
+  const data = hasMore ? rows.slice(0, limit) : rows;
+  res.json({ data, nextCursor: hasMore ? data[data.length - 1]!.id : null });
+});
+
+router.post("/companies/:id/payouts", authorize("payout.financing", "write"), async (req, res) => {
+  const input = PayoutCreateSchema.parse(req.body);
+  const result = await withRole("INTEGRATION", async (tx) => {
+    const company = await tx.company.findUnique({ where: { id: String(req.params.id) }, select: { id: true } });
+    if (!company) return { status: 404 as const, error: "company_not_found" };
+    return createPayout(tx, {
+      companyId: String(req.params.id),
+      amount: input.amount,
+      currency: input.currency,
+      method: input.method ?? null,
+      reference: input.reference ?? null,
+      relatedOpportunityId: input.relatedOpportunityId ?? null,
+      createdById: req.auth!.userId,
+      actorRole: req.auth!.role,
+    });
+  });
+  if ("status" in result) {
+    res.status(result.status).json({ error: result.error });
+    return;
+  }
+  res.status(201).json({ payoutId: result.id });
+});
+
+router.post("/payouts/:id/approve", authorize("payout.financing", "write"), async (req, res) => {
+  const result = await withRole("INTEGRATION", (tx) =>
+    approvePayout(tx, String(req.params.id), { userId: req.auth!.userId, role: req.auth!.role }),
+  );
+  if (result.status) {
+    res.status(result.status).json({ error: result.error });
+    return;
+  }
+  res.status(200).json({ payoutId: req.params.id, status: result.payoutStatus });
+});
+
+router.post("/payouts/:id/mark-paid", authorize("payout.financing", "write"), async (req, res) => {
+  const input = PayoutMarkPaidSchema.parse(req.body);
+  const result = await withRole("INTEGRATION", (tx) =>
+    markPayoutPaid(tx, String(req.params.id), { method: input.method, reference: input.reference ?? null, paidAt: input.paidAt ?? null }, { userId: req.auth!.userId, role: req.auth!.role }),
+  );
+  if (result.status) {
+    res.status(result.status).json({ error: result.error });
+    return;
+  }
+  res.status(200).json({ payoutId: req.params.id, status: result.payoutStatus });
 });
 
 export default router;

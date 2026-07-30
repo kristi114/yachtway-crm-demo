@@ -230,6 +230,12 @@ model Company {
   totalAmountPaid                  Decimal?  @map("total_amount_paid")
   totalDraftAmount                 Decimal?  @map("total_draft_amount")
   totalUnallocatedCredit           Decimal?  @map("total_unallocated_credit")
+  /// Partner (lender/insurer) accrual rollups — accrued (owed to us) vs settled.
+  totalPartnerOwed                 Decimal?  @map("total_partner_owed") @db.Decimal(14, 2)
+  totalPartnerSettled              Decimal?  @map("total_partner_settled") @db.Decimal(14, 2)
+  /// Dealer payout rollups — owed (pending/approved) vs paid.
+  totalPayoutsPending              Decimal?  @map("total_payouts_pending") @db.Decimal(14, 2)
+  totalPayoutsPaid                 Decimal?  @map("total_payouts_paid") @db.Decimal(14, 2)
   freeListingShootsEarned          Decimal?  @map("free_listing_shoots_earned")
   freeListingShootsRemaining       Decimal?  @map("free_listing_shoots_remaining")
   upsellTargetPriority1            String?   @map("upsell_target_priority_1")
@@ -237,7 +243,6 @@ model Company {
   upsellTargetPriority3            String?   @map("upsell_target_priority_3")
   website                          String?   @map("website")
   websiteVisitCount                Decimal?  @map("website_visit_count")
-  xeroContactId                    String?   @map("xero_contact_id")
   yachtwayDbAccountId              String?   @unique @map("yachtway_db_account_id")
   yachtwayDealerPage               String?   @map("yachtway_dealer_page")
   lastBrokerSignin                 Decimal?  @map("last_broker_signin")
@@ -278,6 +283,8 @@ model Company {
   studioShootCredits           StudioShootCredit[]      @relation("ShootCreditCompany")
   subscriptions                Subscription[]           @relation("SubscriptionCompany")
   payments                     Payment[]                @relation("PaymentCompany")
+  partnerReceivables           PartnerReceivable[]      @relation("PartnerReceivableCompany")
+  payouts                      Payout[]                 @relation("PayoutCompany")
 
   customFields Json?    @map("custom_fields")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -749,6 +756,8 @@ model Opportunity {
   lineItems              OpportunityLineItem[]
   invoices               Invoice[]                  @relation("InvoiceOpportunity")
   studioShootCredits     StudioShootCredit[]        @relation("ShootCreditOpportunity")
+  partnerReceivable      PartnerReceivable?         @relation("PartnerReceivableOpportunity")
+  payout                 Payout?                    @relation("PayoutOpportunity")
 
   customFields Json?    @map("custom_fields")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -926,6 +935,8 @@ model MasterCoverApplication {
   /// Links the dealer to the opp (parity with EasyFund's dealer_id) and drives the
   /// rep-visible paid-referral rollup onto the dealer's Company.
   referringDealerId               String?   @map("referring_dealer_id")
+  /// payout owed to the referring dealer for this deal (null = not a dealer referral)
+  paidToReferringDealer           Decimal?  @map("paid_to_referring_dealer") @db.Decimal(14, 2)
   actualPremium                   Decimal?  @map("actual_premium") @db.Decimal(14, 2)
   addedToDealerClosedReferrals    Boolean?  @map("added_to_dealer_closed_referrals")
   addedToDealerTotalReferrals     Boolean?  @map("added_to_dealer_total_referrals")
@@ -1455,8 +1466,8 @@ model Invoice {
   /// Set (unique) when converted from an accepted estimate — powers Estimate 1:1.
   fromEstimateId    String?   @unique @map("from_estimate_id")
   invoiceType       String    @map("invoice_type")
-  /// billing rail: 'xero' (Make→Xero) | 'stripe' (Stripe Checkout). Toggled per invoice.
-  billingProvider   String    @default("xero") @map("billing_provider")
+  /// card payment rail: 'stripe' (pay link) | 'manual' (bank/check, recorded by hand).
+  billingProvider   String    @default("stripe") @map("billing_provider")
   orgKey            String?   @map("org_key")
   currency          String    @default("USD") @map("currency")
   amount            Decimal?  @map("amount") @db.Decimal(14, 2)
@@ -1466,12 +1477,13 @@ model Invoice {
   amountPaid        Decimal?  @map("amount_paid") @db.Decimal(14, 2)
   amountDue         Decimal?  @map("amount_due") @db.Decimal(14, 2)
   dueDate           DateTime? @map("due_date") @db.Date
-  xeroInvoiceId     String?   @unique @map("xero_invoice_id")
-  xeroInvoiceNumber String?   @map("xero_invoice_number")
-  xeroContactId     String?   @map("xero_contact_id")
-  /// Stripe id (Checkout session / invoice) when billingProvider='stripe'
+  /// when the invoice PDF was emailed to the payer
+  sentAt            DateTime? @map("sent_at")
+  /// stored path/URL of the generated invoice PDF
+  pdfPath           String?   @map("pdf_path")
+  /// Stripe id (Checkout session) when billingProvider='stripe'
   stripeInvoiceId   String?   @unique @map("stripe_invoice_id")
-  /// Hosted invoice / Xero online-invoice / Stripe Checkout URL
+  /// Stripe Checkout / hosted pay URL sent to the payer
   onlineInvoiceUrl  String?   @map("online_invoice_url")
   /// general | financing | easyfund | mastercover — drives invoice.* RLS
   sensitivityClass  String    @default("general") @map("sensitivity_class")
@@ -1512,10 +1524,13 @@ model Payment {
   invoiceId        String?   @map("invoice_id")
   companyId        String?   @map("company_id")
   subscriptionId   String?   @map("subscription_id")
-  xeroPaymentId    String?   @unique @map("xero_payment_id")
-  /// Stripe charge/payment id (when billingProvider='stripe')
+  /// Stripe charge/payment id (when method='stripe')
   stripePaymentId  String?   @unique @map("stripe_payment_id")
-  billingProvider  String    @default("xero") @map("billing_provider")
+  billingProvider  String    @default("stripe") @map("billing_provider")
+  /// how the payment was received: stripe | bank_transfer | check | wire | manual
+  method           String?   @map("method")
+  /// CRM user who recorded a manual payment (null for Stripe-webhook payments)
+  recordedById     String?   @map("recorded_by_id")
   amount           Decimal?  @map("amount") @db.Decimal(14, 2)
   paidAt           DateTime? @map("paid_at") @db.Date
   reference        String?   @map("reference")
@@ -1548,8 +1563,6 @@ model Bill {
   status           String    @default("awaiting_payment") @map("status")
   amountPaid       Decimal?  @map("amount_paid") @db.Decimal(14, 2)
   dueDate          DateTime? @map("due_date") @db.Date
-  xeroBillId       String?   @unique @map("xero_bill_id")
-  xeroContactId    String?   @map("xero_contact_id")
   /// general (studio spend) | financing (easyfund/mastercover) — drives bill.* RLS
   sensitivityClass String    @default("general") @map("sensitivity_class")
   syncError        String?   @map("sync_error")
@@ -1570,16 +1583,18 @@ model Bill {
 /// Notes"). The sum feeds the rep-visible dealerCredits rollup on Company.
 model CreditNote {
   id               String    @id @default(cuid())
-  companyId        String?   @map("company_id")
-  contactId        String?   @map("contact_id")
-  xeroCreditNoteId String?   @unique @map("xero_credit_note_id")
-  billingProvider  String    @default("xero") @map("billing_provider")
-  amount           Decimal?  @map("amount") @db.Decimal(14, 2)
-  remainingCredit  Decimal?  @map("remaining_credit") @db.Decimal(14, 2)
-  status           String?   @map("status")
-  currency         String    @default("USD") @map("currency")
-  reference        String?   @map("reference")
-  sensitivityClass String    @default("general") @map("sensitivity_class")
+  companyId          String?   @map("company_id")
+  contactId          String?   @map("contact_id")
+  /// invoice this credit was applied against (optional)
+  appliedToInvoiceId String?   @map("applied_to_invoice_id")
+  amount             Decimal?  @map("amount") @db.Decimal(14, 2)
+  remainingCredit    Decimal?  @map("remaining_credit") @db.Decimal(14, 2)
+  /// open | applied | void
+  status             String    @default("open") @map("status")
+  currency           String    @default("USD") @map("currency")
+  reference          String?   @map("reference")
+  sensitivityClass   String    @default("general") @map("sensitivity_class")
+  issuedById         String?   @map("issued_by_id")
 
   company Company? @relation("CreditNoteCompany", fields: [companyId], references: [id])
   contact Contact? @relation("CreditNoteContact", fields: [contactId], references: [id])
@@ -1643,6 +1658,73 @@ model StudioShootCredit {
   @@index([companyId])
   @@index([relatedOpportunityId])
   @@map("studio_shoot_credits")
+}
+
+/// Amount a lender (easyfund) or insurer (mastercover) owes YachtWay for a closed
+/// deal. NOT invoiced — auto-accrued on the opportunity's close-stage trigger, then
+/// cleared when the partner's monthly (15th) lump settlement payment is recorded.
+/// One per opportunity. Financing sensitivity (FINTECH/ADMIN only).
+model PartnerReceivable {
+  id                     String    @id @default(cuid())
+  companyId              String    @map("company_id")
+  opportunityId          String    @unique @map("opportunity_id")
+  /// easyfund | mastercover
+  kind                   String    @map("kind")
+  amount                 Decimal?  @map("amount") @db.Decimal(14, 2)
+  currency               String    @default("USD") @map("currency")
+  closedAt               DateTime  @map("closed_at") @db.Date
+  /// next 15th on/after closedAt — when the partner is expected to pay
+  expectedSettlementDate DateTime  @map("expected_settlement_date") @db.Date
+  /// accrued | settled | void
+  status                 String    @default("accrued") @map("status")
+  settlementPaymentId    String?   @map("settlement_payment_id")
+  sensitivityClass       String    @default("financing") @map("sensitivity_class")
+
+  company     Company     @relation("PartnerReceivableCompany", fields: [companyId], references: [id])
+  opportunity Opportunity @relation("PartnerReceivableOpportunity", fields: [opportunityId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId])
+  @@index([status])
+  @@index([expectedSettlementDate])
+  @@map("partner_receivables")
+}
+
+/// Money owed/paid TO a dealer (referral payouts). Auto-drafted on a financing
+/// deal's close trigger when the deal carries `paid_to_referring_dealer`; finance
+/// approves + marks paid (bank transfer today). Recorded now; Stripe Connect
+/// execution can slot in later (stripeTransferId). Financing sensitivity.
+model Payout {
+  id                   String    @id @default(cuid())
+  companyId            String    @map("company_id")
+  amount               Decimal?  @map("amount") @db.Decimal(14, 2)
+  currency             String    @default("USD") @map("currency")
+  /// pending | approved | paid | void
+  status               String    @default("pending") @map("status")
+  /// bank_transfer | check | wire | stripe_connect | manual
+  method               String?   @map("method")
+  /// referral_field (auto from paid_to_referring_dealer) | manual
+  amountSource         String    @default("referral_field") @map("amount_source")
+  reference            String?   @map("reference")
+  paidAt               DateTime? @map("paid_at") @db.Date
+  /// set (unique) when auto-drafted from a closed deal — one payout per deal
+  relatedOpportunityId String?   @unique @map("related_opportunity_id")
+  stripeTransferId     String?   @map("stripe_transfer_id")
+  sensitivityClass     String    @default("financing") @map("sensitivity_class")
+  approvedById         String?   @map("approved_by_id")
+  createdById          String?   @map("created_by_id")
+
+  company            Company      @relation("PayoutCompany", fields: [companyId], references: [id])
+  relatedOpportunity Opportunity? @relation("PayoutOpportunity", fields: [relatedOpportunityId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId])
+  @@index([status])
+  @@map("payouts")
 }
 
 /// A CRM-only client estimate (no Xero object). Drafted, sent to a company

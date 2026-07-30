@@ -168,6 +168,42 @@ than blanked, and the editor warns about them.
   from the contact/company row. `{{unsubscribe_url}}` / `{{preferences_url}}` must
   be generated per recipient with a signed token — never a shared link.
 
+## Campaign sending: five dispatch modes (added — mock)
+
+`src/lib/email-scheduling.ts` models how a campaign goes out. The dialog is
+"Send or schedule": pick a mode, configure only that mode, then send.
+
+| Mode | Config | Backend requirement |
+|---|---|---|
+| **Send Now** | — | immediate POST to the send route |
+| **Schedule** | start datetime + timezone | one-shot job at `firstFireAt()` |
+| **Batch Schedule** | batch size, repeat interval/unit, send-on weekdays, daily window | recurring worker that walks the audience in slices and respects the weekday/hour restrictions |
+| **RSS Schedule** | feed URL, poll cadence, min new items | feed poller storing last-seen GUID, dispatching on new items |
+| **Smart Send** | per-recipient delivery window + spread | per-contact best-send-time model from open history; fall back to window midpoint with no history |
+
+Also on the send: **sender name / sender email** (both merge-tag capable, so the
+address can be a `{{custom_value}}`), optional per-campaign **reply-to**,
+**attachments** (names only in mock — real uploads go to object storage and are
+referenced by URL), and **Additional settings**: click tracking, UTM tagging,
+tag-on-open / tag-on-click, and **preference type**.
+
+**Preference type matters for compliance.** Categorising a campaign lets a
+recipient unsubscribe from that category instead of all mail. The backend must
+honour it as a *second* suppression axis alongside `emailOptOut` — a contact
+opted out of "Listing alerts" is still mailable for "Financing".
+
+**Scheduling is not executed client-side.** A queued send is recorded with
+`status: "scheduled"`, `sentAt` = first fire time, and no engagement metrics
+(nothing has been delivered yet); the Sent tab lists these in a Scheduled
+section with a Cancel action (`cancelScheduledSend`). Wire a server scheduler to
+actually dispatch — the browser must never be the thing holding a schedule, and
+`sendEmail` should reject a queued send whose provider was disconnected in the
+interim.
+
+Note the batch-plan preview (`batchPlan`) reports interval time only; weekday and
+daily-window restrictions can only stretch the real completion time, which the UI
+states explicitly rather than implying false precision.
+
 ## Previously stubbed (context)
 
 - **WorkOS AuthKit** — set `VITE_WORKOS_CLIENT_ID` for real sign-in (demo role

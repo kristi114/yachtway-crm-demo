@@ -40,10 +40,11 @@ export const BillingSensitivitySchema = z.enum([
 export type BillingSensitivity = z.infer<typeof BillingSensitivitySchema>;
 
 export const InvoiceStatusSchema = z.enum([
-  "draft", // CRM-only; auto on Won or rep-created. Not yet in Xero.
+  "draft", // CRM-only; rep-created.
   "pending_approval",
-  "queued", // approved → emitted to Make
-  "sent", // Xero created + emailed (callback confirmed)
+  "approved", // human-approved, ready to send
+  "queued", // legacy (was: emitted to Make) — retained for old rows
+  "sent", // PDF + email sent to the payer (with a Stripe pay link when applicable)
   "paid",
   "overdue",
   "voided",
@@ -66,8 +67,14 @@ export const CurrencySchema = z.enum(["EUR", "USD"]);
 export type Currency = z.infer<typeof CurrencySchema>;
 
 /** Billing rail. `xero` = Make→Xero flow; `stripe` = Stripe Checkout. Per-invoice toggle. */
-export const BillingProviderSchema = z.enum(["xero", "stripe"]);
+/** The card rail for an invoice: 'stripe' (hosted pay link) or 'manual' (bank/check,
+ *  recorded by hand). Xero was removed 2026-07-27. */
+export const BillingProviderSchema = z.enum(["stripe", "manual"]);
 export type BillingProvider = z.infer<typeof BillingProviderSchema>;
+
+/** How a received payment arrived. */
+export const PaymentMethodSchema = z.enum(["stripe", "bank_transfer", "check", "wire", "manual"]);
+export type PaymentMethod = z.infer<typeof PaymentMethodSchema>;
 
 /** Bill-to resolution strategy per invoice type (ported from invoice-config.js). */
 export const BillToStrategySchema = z.enum([
@@ -244,9 +251,11 @@ export const InvoiceSchema = z.object({
   amountPaid: z.number().nullable(),
   amountDue: z.number().nullable(),
   dueDate: z.string().nullable(),
-  xeroInvoiceId: z.string().nullable(),
-  xeroInvoiceNumber: z.string().nullable(),
+  billingProvider: z.string(),
+  sentAt: z.string().nullable(),
+  pdfPath: z.string().nullable(),
   onlineInvoiceUrl: z.string().nullable(),
+  stripeInvoiceId: z.string().nullable(),
   sensitivityClass: z.string(),
   approvedById: z.string().nullable(),
   approvedAt: z.string().nullable(),
@@ -257,14 +266,118 @@ export type Invoice = z.infer<typeof InvoiceSchema>;
 
 export const PaymentSchema = z.object({
   id: IdSchema,
-  invoiceId: IdSchema,
-  xeroPaymentId: z.string().nullable(),
+  invoiceId: IdSchema.nullable(),
+  companyId: IdSchema.nullable(),
+  method: z.string().nullable(),
+  billingProvider: z.string(),
+  stripePaymentId: z.string().nullable(),
   amount: z.number().nullable(),
   paidAt: z.string().nullable(),
   reference: z.string().nullable(),
   createdAt: z.string(),
 });
 export type Payment = z.infer<typeof PaymentSchema>;
+
+// --- Dealer credit notes (CRM-native) ---
+export const CreditNoteSchema = z.object({
+  id: IdSchema,
+  companyId: IdSchema.nullable(),
+  contactId: IdSchema.nullable(),
+  appliedToInvoiceId: IdSchema.nullable(),
+  amount: z.number().nullable(),
+  remainingCredit: z.number().nullable(),
+  status: z.string(), // open | applied | void
+  currency: z.string(),
+  reference: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type CreditNote = z.infer<typeof CreditNoteSchema>;
+
+/** Issue a dealer credit (goodwill / adjustment). */
+export const CreditNoteIssueSchema = z.object({
+  amount: z.coerce.number().positive(),
+  currency: CurrencySchema.default("USD"),
+  reference: z.string().max(200).optional(),
+  contactId: IdSchema.optional(),
+});
+export type CreditNoteIssue = z.infer<typeof CreditNoteIssueSchema>;
+
+/** Apply an open credit against an invoice (partial or full). */
+export const CreditNoteApplySchema = z.object({
+  invoiceId: IdSchema,
+  amount: z.coerce.number().positive().optional(), // default: min(remaining, amountDue)
+});
+export type CreditNoteApply = z.infer<typeof CreditNoteApplySchema>;
+
+/** Record a payment received against an invoice (manual or reconciling a Stripe one). */
+export const PaymentRecordSchema = z.object({
+  method: PaymentMethodSchema,
+  amount: z.coerce.number().positive(),
+  paidAt: z.string().optional(),
+  reference: z.string().max(200).optional(),
+});
+export type PaymentRecord = z.infer<typeof PaymentRecordSchema>;
+
+// --- Partner receivables (lender/insurer amounts owed) + dealer payouts (A3) ---
+export const PartnerReceivableSchema = z.object({
+  id: IdSchema,
+  companyId: IdSchema,
+  opportunityId: IdSchema,
+  kind: z.string(), // easyfund | mastercover
+  amount: z.number().nullable(),
+  currency: z.string(),
+  closedAt: z.string().nullable(),
+  expectedSettlementDate: z.string().nullable(),
+  status: z.string(), // accrued | settled | void
+  settlementPaymentId: IdSchema.nullable(),
+  createdAt: z.string(),
+});
+export type PartnerReceivable = z.infer<typeof PartnerReceivableSchema>;
+
+/** Record a partner's monthly lump settlement — clears accrued receivables due on/before paidAt. */
+export const PartnerSettlementSchema = z.object({
+  amount: z.coerce.number().positive(),
+  method: PaymentMethodSchema.default("bank_transfer"),
+  paidAt: z.string().optional(), // defaults to now
+  reference: z.string().max(200).optional(),
+});
+export type PartnerSettlement = z.infer<typeof PartnerSettlementSchema>;
+
+export const PayoutStatusSchema = z.enum(["pending", "approved", "paid", "void"]);
+export type PayoutStatus = z.infer<typeof PayoutStatusSchema>;
+
+export const PayoutSchema = z.object({
+  id: IdSchema,
+  companyId: IdSchema,
+  amount: z.number().nullable(),
+  currency: z.string(),
+  status: z.string(),
+  method: z.string().nullable(),
+  amountSource: z.string(), // referral_field | manual
+  reference: z.string().nullable(),
+  paidAt: z.string().nullable(),
+  relatedOpportunityId: IdSchema.nullable(),
+  createdAt: z.string(),
+});
+export type Payout = z.infer<typeof PayoutSchema>;
+
+/** Create an ad-hoc (manual) dealer payout. Auto-drafts on close use paid_to_referring_dealer. */
+export const PayoutCreateSchema = z.object({
+  amount: z.coerce.number().positive(),
+  currency: CurrencySchema.default("USD"),
+  method: z.enum(["bank_transfer", "check", "wire", "stripe_connect", "manual"]).optional(),
+  reference: z.string().max(200).optional(),
+  relatedOpportunityId: IdSchema.optional(),
+});
+export type PayoutCreate = z.infer<typeof PayoutCreateSchema>;
+
+/** Mark a payout paid (finance sent the money by bank). */
+export const PayoutMarkPaidSchema = z.object({
+  method: z.enum(["bank_transfer", "check", "wire", "stripe_connect", "manual"]).default("bank_transfer"),
+  reference: z.string().max(200).optional(),
+  paidAt: z.string().optional(),
+});
+export type PayoutMarkPaid = z.infer<typeof PayoutMarkPaidSchema>;
 
 export const EstimateLineItemSchema = z.object({
   id: IdSchema,
@@ -306,8 +419,8 @@ export type EstimateDetail = z.infer<typeof EstimateDetailSchema>;
 export const InvoiceCreateSchema = z.object({
   invoiceType: InvoiceTypeSchema,
   invoiceAction: InvoiceActionSchema.optional(),
-  /** Which rail to bill on. Xero (default) → Make; Stripe → Checkout link on approval. */
-  billingProvider: BillingProviderSchema.default("xero"),
+  /** Card rail: 'stripe' (pay link on send) or 'manual' (bank/check, recorded by hand). */
+  billingProvider: BillingProviderSchema.default("stripe"),
   currency: CurrencySchema.default("USD"),
   billToCompanyId: IdSchema.optional(),
   billToContactId: IdSchema.optional(),
@@ -411,12 +524,15 @@ export const SubscriptionCreateSchema = z.object({
 });
 export type SubscriptionCreate = z.infer<typeof SubscriptionCreateSchema>;
 
-/** The four tabs of the ADMIN Accounting object. */
+/** The tabs of the ADMIN Accounting object. */
 export const AccountingTabSchema = z.enum([
-  "collected",
-  "receivable",
-  "payable",
-  "dealer-credits",
+  "collected", // payments received (dealer + partner + stripe)
+  "receivable", // open dealer invoices
+  "partner-owed", // accrued lender/insurer receivables (not invoiced)
+  "payable", // vendor bills
+  "dealer-credits", // dealer credit notes
+  "payouts", // money owed/paid to dealers
+  "shoot-credits", // studio listing-shoot credit ledger
 ]);
 export type AccountingTab = z.infer<typeof AccountingTabSchema>;
 

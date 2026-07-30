@@ -24,7 +24,7 @@ export type Outcome<T> =
 const ok = <T>(value: T): Outcome<T> => ({ ok: true, value });
 const fail = (status: number, error: string): Outcome<never> => ({ ok: false, status, error });
 
-/** A normalized bill-to party for the Make/Xero payload. */
+/** A normalized bill-to party (drives the invoice PDF/email header). */
 export interface BillToParty {
   kind: "company" | "contact";
   recordId: string;
@@ -36,7 +36,6 @@ export interface BillToParty {
   region: string | null;
   postalCode: string | null;
   country: string | null;
-  xeroContactId: string | null;
 }
 
 /** Stable dedupe key so a re-fire for the same opportunity+type never duplicates. */
@@ -66,7 +65,6 @@ function partyFromCompany(c: {
   billingState: string | null;
   billingPostalCode: string | null;
   billingCountry: string | null;
-  xeroContactId: string | null;
 }): BillToParty {
   return {
     kind: "company",
@@ -79,7 +77,6 @@ function partyFromCompany(c: {
     region: c.billingState,
     postalCode: c.billingPostalCode,
     country: c.billingCountry,
-    xeroContactId: c.xeroContactId,
   };
 }
 
@@ -108,7 +105,6 @@ function partyFromContact(c: {
     region: c.mailingState,
     postalCode: c.mailingPostalCode,
     country: c.mailingCountry,
-    xeroContactId: null, // contacts don't cache a xero id column in v1
   };
 }
 
@@ -248,7 +244,7 @@ export async function createInvoiceDraft(
       companyId: r.companyId,
       contactId: r.contactId,
       invoiceType: args.invoiceType,
-      billingProvider: args.billingProvider ?? "xero",
+      billingProvider: args.billingProvider ?? "stripe",
       orgKey: DEFAULT_ORG_KEY,
       currency: args.currency,
       amount: r.amount,
@@ -258,7 +254,6 @@ export async function createInvoiceDraft(
       sensitivityClass: r.sensitivityClass,
       idempotencyKey: key,
       createdById: args.actorId ?? null,
-      xeroContactId: r.party.xeroContactId,
     },
   });
 
@@ -285,74 +280,14 @@ export async function createInvoiceDraft(
   return ok({ invoiceId: invoice.id, reused: false, sensitivityClass: r.sensitivityClass });
 }
 
-/** An itemized line for the emit payload — Xero resolves price/account/tax from
- *  the ItemCode; crm_line_id round-trips so the callback can write amounts back. */
+/** An itemized studio line (product code + resolved quantity) used to render the
+ *  invoice and compute the line total. */
 export interface ItemizedEmitLine {
   crm_line_id: string;
   item_code: string;
   quantity: number;
   description: string | null;
   unit_price: number | null;
-}
-
-/** The Make Scenario A payload — minimal by design (data minimization, §7).
- *  Pass `itemizedLines` for studio (ItemCode lines); otherwise a single lump-sum
- *  line is built from amount/account/tax. */
-export function buildEmitPayload(args: {
-  invoiceId: string;
-  invoiceType: InvoiceType;
-  orgKey: string | null;
-  action: string;
-  currency: string;
-  reference: string;
-  description: string;
-  amount: number;
-  party: BillToParty;
-  idempotencyKey: string | null;
-  itemizedLines?: ItemizedEmitLine[];
-}): Record<string, unknown> {
-  const cfg = INVOICE_TYPE_CONFIG[args.invoiceType];
-  const lines =
-    args.itemizedLines && args.itemizedLines.length > 0
-      ? args.itemizedLines.map((li) => ({
-          crm_line_id: li.crm_line_id,
-          item_code: li.item_code,
-          quantity: li.quantity,
-          ...(li.description ? { description: li.description } : {}),
-          ...(li.unit_price != null ? { unit_price: li.unit_price } : {}),
-        }))
-      : [
-          {
-            description: args.description,
-            amount: args.amount,
-            account_code: cfg.accountCode,
-            tax_type: cfg.taxType,
-          },
-        ];
-  return {
-    crm_invoice_id: args.invoiceId,
-    org_key: args.orgKey,
-    invoice_type: args.invoiceType,
-    action: args.action,
-    currency: args.currency,
-    reference: args.reference,
-    due_days: cfg.dueDays,
-    lines,
-    bill_to: {
-      xero_contact_id: args.party.xeroContactId,
-      name: args.party.name,
-      email: args.party.email,
-      phone: args.party.phone,
-      address: {
-        line1: args.party.addressLine1,
-        city: args.party.city,
-        region: args.party.region,
-        postal_code: args.party.postalCode,
-        country: args.party.country,
-      },
-    },
-    idempotency_key: args.idempotencyKey,
-  };
 }
 
 // ---------------------------------------------------------------------------
@@ -476,7 +411,6 @@ export async function createStudioInvoiceDraft(
   // All opps must resolve to the SAME bill-to company.
   let billToCompanyId: string | null = null;
   let primaryContactId: string | null = null;
-  let party: BillToParty | null = null;
   const references: string[] = [];
   for (const id of ids) {
     const r = await resolveStudioBillTo(tx, id);
@@ -486,7 +420,6 @@ export async function createStudioInvoiceDraft(
     }
     billToCompanyId = r.value.companyId;
     primaryContactId ??= r.value.contactId;
-    party ??= r.value.party;
     references.push(r.value.reference);
   }
 
@@ -517,7 +450,6 @@ export async function createStudioInvoiceDraft(
       sensitivityClass: "general",
       idempotencyKey: key,
       createdById: args.actorId ?? null,
-      xeroContactId: party?.xeroContactId ?? null,
     },
   });
 
@@ -613,19 +545,15 @@ export async function logInvoiceActivity(
   });
 }
 
-/** Rebuild the bill-to party from a stored invoice's company/contact (for emit
- *  at approve time). Prefers the billed company; falls back to the contact. */
+/** Rebuild the bill-to party from a stored invoice's company/contact (for
+ *  approve/send). Prefers the billed company; falls back to the contact. */
 export async function buildPartyForInvoice(
   tx: Prisma.TransactionClient,
-  invoice: { companyId: string | null; contactId: string | null; xeroContactId: string | null },
+  invoice: { companyId: string | null; contactId: string | null },
 ): Promise<BillToParty | null> {
   if (invoice.companyId) {
     const c = await tx.company.findUnique({ where: { id: invoice.companyId } });
-    if (c) {
-      const p = partyFromCompany(c);
-      if (invoice.xeroContactId) p.xeroContactId = invoice.xeroContactId;
-      return p;
-    }
+    if (c) return partyFromCompany(c);
   }
   if (invoice.contactId) {
     const c = await tx.contact.findUnique({ where: { id: invoice.contactId } });

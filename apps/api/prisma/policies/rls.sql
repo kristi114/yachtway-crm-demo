@@ -433,3 +433,27 @@ CREATE POLICY products_read ON products FOR SELECT
 CREATE POLICY products_write ON products FOR ALL
   USING (current_setting('app.current_role', true) IN ('ADMIN', 'INTEGRATION'))
   WITH CHECK (current_setting('app.current_role', true) IN ('ADMIN', 'INTEGRATION'));
+
+-- partner_receivables: lender/insurer amounts owed — all rows are financing, so a
+-- fixed receivable.financing class (FINTECH/ADMIN/INTEGRATION). Reps never see them
+-- (they get the materialized Company rollups instead).
+ALTER TABLE partner_receivables ENABLE ROW LEVEL SECURITY;
+ALTER TABLE partner_receivables FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS partner_receivables_read  ON partner_receivables;
+DROP POLICY IF EXISTS partner_receivables_write ON partner_receivables;
+CREATE POLICY partner_receivables_read  ON partner_receivables FOR SELECT
+  USING (current_role_can('receivable.financing', 'read'));
+CREATE POLICY partner_receivables_write ON partner_receivables FOR ALL
+  USING (current_role_can('receivable.financing', 'write'))
+  WITH CHECK (current_role_can('receivable.financing', 'write'));
+
+-- payouts: money owed/paid to dealers — all rows financing, payout.financing class.
+ALTER TABLE payouts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payouts FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS payouts_read  ON payouts;
+DROP POLICY IF EXISTS payouts_write ON payouts;
+CREATE POLICY payouts_read  ON payouts FOR SELECT
+  USING (current_role_can('payout.financing', 'read'));
+CREATE POLICY payouts_write ON payouts FOR ALL
+  USING (current_role_can('payout.financing', 'write'))
+  WITH CHECK (current_role_can('payout.financing', 'write'));

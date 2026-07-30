@@ -22,6 +22,8 @@ export const ResourceClassSchema = z.enum([
   "bill.general", // payables (studio spend, etc.)
   "bill.financing", // easyfund/mastercover payables
   "estimate.general", // CRM-only client estimates (no financing estimates in v1)
+  "receivable.financing", // partner (lender/insurer) amounts owed — accrued on close
+  "payout.financing", // money owed/paid to dealers (referral payouts)
 ]);
 export type ResourceClass = z.infer<typeof ResourceClassSchema>;
 
@@ -89,6 +91,8 @@ export const DEFAULT_ROLE_GRANTS: Record<Role, PermissionGrant[]> = {
     rw("bill.general"),
     rw("bill.financing"),
     rw("estimate.general"),
+    rw("receivable.financing"),
+    rw("payout.financing"),
   ],
   MARKETING: [
     ro("company.general"),
@@ -130,6 +134,10 @@ export const SYSTEM_ROLE_GRANTS: Record<SystemRole, PermissionGrant[]> = {
     // paid-referral rollup. Read only — it never writes the financing satellites.
     ro("easyfund"),
     ro("mastercover"),
+    // partner receivables + dealer payouts: accrued/settled/paid by the system on
+    // stage close + settlement + payout endpoints (rolls the dealer/partner totals).
+    rw("receivable.financing"),
+    rw("payout.financing"),
   ],
 };
 

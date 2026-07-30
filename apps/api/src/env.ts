@@ -48,22 +48,6 @@ const envSchema = z.object({
   WHATSAPP_BASE_URL: z.string().url().default("https://graph.facebook.com"),
   WHATSAPP_GRAPH_VERSION: z.string().default("v21.0"),
 
-  // Xero-via-Make (Phase X1). The CRM emits a signed invoice payload to a Make
-  // scenario (SCENARIO_A_URL), which talks to Xero and calls back POST
-  // /webhooks/xero. Outbound emits are signed with OUTBOUND_SECRET (Make
-  // verifies); inbound callbacks are verified with INBOUND_SECRET (HMAC-SHA256
-  // over the raw body). All optional so the app boots without Make configured.
-  MAKE_SCENARIO_A_URL: z.string().url().optional(),
-  MAKE_OUTBOUND_SECRET: z.string().optional(),
-  MAKE_INBOUND_SECRET: z.string().optional(),
-
-  // Invoice emit transport (X1 hardening). "inline" (default) emits to Make in
-  // the approve request; "pgboss" routes emits through a durable, retried queue
-  // (needs pg-boss installed + a worker; see queue/emitQueue.ts). PGBOSS_DATABASE_URL
-  // is optional — pg-boss reuses ADMIN_DATABASE_URL/DATABASE_URL when unset.
-  INVOICE_EMIT_QUEUE: z.enum(["inline", "pgboss"]).default("inline"),
-  PGBOSS_DATABASE_URL: z.string().url().optional(),
-
   // Stripe (subscription + one-off billing rail). SECRET_KEY authenticates API
   // calls; WEBHOOK_SECRET verifies inbound event signatures. Checkout redirects
   // to SUCCESS/CANCEL urls. All optional so the app boots without Stripe.

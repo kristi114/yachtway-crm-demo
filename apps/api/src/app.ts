@@ -71,6 +71,7 @@ export function createApp(): Express {
   // request reaching it and 401s when no role is present; a public webhook must
   // therefore be matched first. Each webhook authenticates itself (signature).
   app.use(webhooksRouter);
+
   // Amplitude destination webhooks (Events / User Properties / Cohorts). Public
   // + self-authenticated with a shared secret; mounted alongside the other webhooks.
   app.use(amplitudeRouter);

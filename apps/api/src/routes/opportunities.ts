@@ -14,6 +14,7 @@ import { authContext } from "../auth/context.js";
 import { authorize } from "../permissions/authorize.js";
 import { withRole } from "../permissions/rls.js";
 import { loadEffectivePermissions } from "../permissions/service.js";
+import { accrueOnClose } from "../billing/financingLedger.js";
 
 /**
  * Opportunities + pipelines (Phase 3).
@@ -246,6 +247,19 @@ router.post("/opportunities/:id/stage", authorize("opportunity.general", "write"
     res.status(result.status).json(result.body);
     return;
   }
+
+  // Financing close triggers (A3): accrue the partner receivable + auto-draft the
+  // dealer payout when the deal reaches its close stage. Runs under INTEGRATION
+  // (needs company.general to roll the totals). Best-effort — never blocks the move.
+  const moved = result.row;
+  const sens = moved.pipeline?.sensitivityClass;
+  const stageName = (moved.stageRecord?.name ?? moved.stage ?? "").trim().toLowerCase();
+  if ((sens === "easyfund" && stageName === "loan closed") || (sens === "mastercover" && stageName === "quote accepted")) {
+    await withRole("INTEGRATION", (tx) => accrueOnClose(tx, moved.id, sens as "easyfund" | "mastercover")).catch(
+      () => undefined,
+    );
+  }
+
   res.json(result.row);
 });
 

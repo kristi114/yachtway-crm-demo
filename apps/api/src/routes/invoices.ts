@@ -3,14 +3,16 @@ import { Router } from "express";
 import {
   type BillingSensitivity,
   can,
-  INVOICE_TYPE_CONFIG,
   InvoiceApproveSchema,
+  CreditNoteApplySchema,
+  CreditNoteIssueSchema,
   InvoiceCreateSchema,
   invoiceResourceClass,
-  type InvoiceType,
   LineItemCreateSchema,
   MultiInvoiceCreateSchema,
   PaginationQuerySchema,
+  PaymentRecordSchema,
+  ShootCreditAdjustSchema,
 } from "@yachtway/shared";
 import { authContext } from "../auth/context.js";
 import { authorize, authorizeAny } from "../permissions/authorize.js";
@@ -18,16 +20,17 @@ import { withRole } from "../permissions/rls.js";
 import { loadEffectivePermissions } from "../permissions/service.js";
 import {
   addLineItem,
-  buildEmitPayload,
   buildItemizedEmitLines,
   buildPartyForInvoice,
   createInvoiceDraft,
   createStudioInvoiceDraft,
   logInvoiceActivity,
 } from "../billing/invoiceService.js";
-import { emitToMake, MakeConfigError } from "../integrations/make.js";
-import { createCheckoutSession, StripeConfigError } from "../integrations/stripe.js";
-import { emitQueueEnabled, enqueueInvoiceEmit } from "../queue/emitQueue.js";
+import { StripeConfigError } from "../integrations/stripe.js";
+import { sendInvoiceEmail } from "../billing/invoiceSend.js";
+import { recordPayment } from "../billing/recordPayment.js";
+import { applyCreditNote, issueCreditNote } from "../billing/creditNotes.js";
+import { adjustShootCredit } from "../billing/shootCredits.js";
 import { writeAudit } from "../audit.js";
 
 /**
@@ -179,7 +182,7 @@ router.delete("/line-items/:id", authorize("opportunity.general", "write"), asyn
 // (enforced by the class write-check + RLS).
 // ---------------------------------------------------------------------------
 router.post("/invoices/:id/approve", authorizeAny([...INVOICE_CLASSES], "write"), async (req, res) => {
-  const input = InvoiceApproveSchema.parse(req.body ?? {});
+  InvoiceApproveSchema.parse(req.body ?? {}); // validate shape (no fields needed post-Xero)
   const perms = await loadEffectivePermissions(req.auth!.userId, req.auth!.role);
   const id = String(req.params.id);
 
@@ -217,30 +220,14 @@ router.post("/invoices/:id/approve", authorizeAny([...INVOICE_CLASSES], "write")
       ipAddress: req.ip ?? null,
     });
 
-    // Itemized studio invoices send ItemCode lines (Xero resolves price); lump-sum
-    // types send a single amount line.
-    let itemizedLines;
+    // Itemized studio invoices must have at least one line before approval.
     if (inv.itemized) {
-      itemizedLines = await buildItemizedEmitLines(tx, inv.id);
+      const itemizedLines = await buildItemizedEmitLines(tx, inv.id);
       if (itemizedLines.length === 0) {
         return { ok: false as const, status: 400, error: "no_itemized_lines" };
       }
     }
 
-    const action = input.invoiceAction ?? INVOICE_TYPE_CONFIG[inv.invoiceType as InvoiceType].defaultAction;
-    const payload = buildEmitPayload({
-      invoiceId: inv.id,
-      invoiceType: inv.invoiceType as InvoiceType,
-      orgKey: inv.orgKey,
-      action,
-      currency: inv.currency,
-      reference: inv.reference ?? `Invoice ${inv.id}`,
-      description: inv.reference ?? `Invoice ${inv.id}`,
-      amount: Number(inv.amount ?? 0),
-      party,
-      idempotencyKey: inv.idempotencyKey,
-      itemizedLines,
-    });
     return {
       ok: true as const,
       invoiceId: inv.id,
@@ -249,8 +236,8 @@ router.post("/invoices/:id/approve", authorizeAny([...INVOICE_CLASSES], "write")
       amount: Number(inv.amount ?? 0),
       currency: inv.currency,
       companyId: inv.companyId,
+      contactId: inv.contactId,
       reference: inv.reference ?? `Invoice ${inv.id}`,
-      payload,
     };
   });
 
@@ -259,84 +246,234 @@ router.post("/invoices/:id/approve", authorizeAny([...INVOICE_CLASSES], "write")
     return;
   }
 
-  // Stripe rail: open a hosted Checkout link instead of emitting to Make. The
-  // crm_invoice_id rides in metadata so /webhooks/stripe can settle it on payment.
-  if (prep.billingProvider === "stripe") {
-    try {
-      const company = prep.companyId
-        ? await withRole(req.auth!.role, (tx) =>
-            tx.company.findUnique({ where: { id: prep.companyId! }, select: { stripeCustomerId: true } }),
-          )
-        : null;
-      const session = await createCheckoutSession({
-        mode: "payment",
-        customerId: company?.stripeCustomerId ?? undefined,
-        amountMinor: Math.round(prep.amount * 100),
-        currency: prep.currency,
-        description: prep.reference,
-        clientReferenceId: prep.invoiceId,
-        metadata: { crm_invoice_id: prep.invoiceId },
-      });
-      await withRole(req.auth!.role, (tx) =>
-        tx.invoice.update({
-          where: { id: prep.invoiceId },
-          data: { status: "sent", stripeInvoiceId: session.id, onlineInvoiceUrl: session.url, syncError: null },
-        }),
-      );
-      res.status(200).json({ invoiceId: prep.invoiceId, status: "sent", checkoutUrl: session.url });
-      return;
-    } catch (err) {
-      if (err instanceof StripeConfigError) {
-        await withRole(req.auth!.role, (tx) => tx.invoice.update({ where: { id: prep.invoiceId }, data: { status: "draft" } }));
-        res.status(503).json({ error: "stripe_not_configured", invoiceId: prep.invoiceId });
-        return;
-      }
-      await withRole(req.auth!.role, (tx) =>
-        tx.invoice.update({ where: { id: prep.invoiceId }, data: { status: "failed", syncError: (err as Error).message.slice(0, 500) } }),
-      ).catch(() => undefined);
-      res.status(502).json({ error: "stripe_checkout_failed", invoiceId: prep.invoiceId });
-      return;
-    }
-  }
+  // Approval is CRM-native for every rail: it just finalizes the invoice as
+  // `approved` (ready to send). The pay link (Stripe) + email happen in
+  // POST /invoices/:id/send. No external accounting system is involved.
+  await withRole(req.auth!.role, (tx) =>
+    tx.invoice.update({ where: { id: prep.invoiceId }, data: { status: "approved", syncError: null } }),
+  );
+  res.status(200).json({ invoiceId: prep.invoiceId, status: "approved" });
+});
 
-  // Phase 2: emit to Make. When the durable queue is enabled, hand off and return
-  // immediately (the worker delivers with retries + settles status); the callback
-  // still flips queued → sent. Otherwise emit inline and surface the exact result.
-  if (emitQueueEnabled()) {
-    try {
-      await enqueueInvoiceEmit(prep.invoiceId, prep.payload);
-    } catch (err) {
-      await withRole(req.auth!.role, (tx) =>
-        tx.invoice.update({ where: { id: prep.invoiceId }, data: { status: "failed", syncError: (err as Error).message.slice(0, 500) } }),
-      ).catch(() => undefined);
-      res.status(502).json({ error: "enqueue_failed", invoiceId: prep.invoiceId });
-      return;
+// ---------------------------------------------------------------------------
+// Send an invoice — generate the PDF/HTML + email it to the payer with a Stripe
+// pay link (billingProvider='stripe') or bank-transfer instructions ('manual').
+// Marks the invoice `sent`. Approve first (status must be draft/approved).
+// ---------------------------------------------------------------------------
+router.post("/invoices/:id/send", authorizeAny([...INVOICE_CLASSES], "write"), async (req, res) => {
+  const perms = await loadEffectivePermissions(req.auth!.userId, req.auth!.role);
+  const id = String(req.params.id);
+
+  const prep = await withRole(req.auth!.role, async (tx) => {
+    const inv = await tx.invoice.findUnique({ where: { id } });
+    if (!inv) return { ok: false as const, status: 404, error: "invoice_not_found" };
+    const cls = invoiceResourceClass(inv.sensitivityClass as BillingSensitivity);
+    if (!can(perms, cls, "write")) return { ok: false as const, status: 403, error: "forbidden" };
+    if (inv.status !== "draft" && inv.status !== "approved") {
+      return { ok: false as const, status: 409, error: `not_sendable: status is ${inv.status}` };
     }
-    res.status(202).json({ invoiceId: prep.invoiceId, status: "queued", queued: true });
+    const party = await buildPartyForInvoice(tx, inv);
+    if (!party) return { ok: false as const, status: 400, error: "bill_to_party_unavailable" };
+    if (!party.email) return { ok: false as const, status: 400, error: "bill_to_has_no_email" };
+    const lineItems = inv.itemized ? await tx.opportunityLineItem.findMany({ where: { invoiceId: inv.id } }) : [];
+    const company = inv.companyId
+      ? await tx.company.findUnique({ where: { id: inv.companyId }, select: { stripeCustomerId: true } })
+      : null;
+    return { ok: true as const, inv, party, lineItems, stripeCustomerId: company?.stripeCustomerId ?? null };
+  });
+  if (!prep.ok) {
+    res.status(prep.status).json({ error: prep.error });
     return;
   }
 
   try {
-    await emitToMake(prep.payload);
+    const result = await sendInvoiceEmail({
+      invoice: prep.inv,
+      party: prep.party,
+      lineItems: prep.lineItems,
+      stripeCustomerId: prep.stripeCustomerId,
+    });
+    await withRole("INTEGRATION", async (tx) => {
+      await tx.invoice.update({
+        where: { id: prep.inv.id },
+        data: {
+          status: "sent",
+          sentAt: new Date(),
+          syncError: null,
+          ...(result.payLinkUrl ? { onlineInvoiceUrl: result.payLinkUrl } : {}),
+        },
+      });
+      await logInvoiceActivity(tx, {
+        event: "sent",
+        invoiceId: prep.inv.id,
+        companyId: prep.inv.companyId,
+        contactId: prep.inv.contactId,
+        sensitivityClass: prep.inv.sensitivityClass,
+        detail: result.emailed ? "emailed" : "no email sent",
+      }).catch(() => undefined);
+      await writeAudit(tx, {
+        actorUserId: req.auth!.userId,
+        actorRole: req.auth!.role,
+        action: "send",
+        resourceClass: invoiceResourceClass(prep.inv.sensitivityClass as BillingSensitivity),
+        tableName: "invoices",
+        recordId: prep.inv.id,
+        after: { status: "sent", emailed: result.emailed },
+      }).catch(() => undefined);
+    });
+    res.status(200).json({ invoiceId: prep.inv.id, status: "sent", payLinkUrl: result.payLinkUrl, emailed: result.emailed });
+    return;
   } catch (err) {
-    if (err instanceof MakeConfigError) {
-      await withRole(req.auth!.role, (tx) =>
-        tx.invoice.update({ where: { id: prep.invoiceId }, data: { status: "draft" } }),
-      );
-      res.status(503).json({ error: "make_not_configured", invoiceId: prep.invoiceId });
+    if (err instanceof StripeConfigError) {
+      res.status(503).json({ error: "stripe_not_configured", invoiceId: prep.inv.id });
       return;
     }
-    await withRole(req.auth!.role, (tx) =>
-      tx.invoice.update({
-        where: { id: prep.invoiceId },
-        data: { status: "failed", syncError: (err as Error).message.slice(0, 500) },
-      }),
-    );
-    res.status(502).json({ error: "make_emit_failed", invoiceId: prep.invoiceId });
+    res.status(502).json({ error: "invoice_send_failed", detail: (err as Error).message.slice(0, 300), invoiceId: prep.inv.id });
     return;
   }
+});
 
-  res.status(200).json({ invoiceId: prep.invoiceId, status: "queued" });
+// ---------------------------------------------------------------------------
+// Record a payment received against an invoice (bank/check/wire/manual — Stripe
+// payments arrive via the webhook). Recomputes amountPaid/Due/status + rollups.
+// ---------------------------------------------------------------------------
+router.post("/invoices/:id/payments", authorizeAny([...INVOICE_CLASSES], "write"), async (req, res) => {
+  const input = PaymentRecordSchema.parse(req.body);
+  const perms = await loadEffectivePermissions(req.auth!.userId, req.auth!.role);
+  const id = String(req.params.id);
+
+  const result = await withRole(req.auth!.role, async (tx) => {
+    const inv = await tx.invoice.findUnique({ where: { id } });
+    if (!inv) return { status: 404, error: "invoice_not_found" };
+    const cls = invoiceResourceClass(inv.sensitivityClass as BillingSensitivity);
+    if (!can(perms, cls, "write")) return { status: 403, error: "forbidden" };
+    return recordPayment(tx, {
+      invoiceId: id,
+      amount: input.amount,
+      method: input.method,
+      paidAt: input.paidAt ?? null,
+      reference: input.reference ?? null,
+      recordedById: req.auth!.userId,
+      actorRole: req.auth!.role,
+    });
+  });
+  if (result.status) {
+    res.status(result.status).json({ error: result.error });
+    return;
+  }
+  res.status(201).json({ invoiceId: id, paid: result.paid, amountPaid: result.amountPaid, amountDue: result.amountDue });
+});
+
+// ---------------------------------------------------------------------------
+// Dealer credit notes (CRM-native). Issue a credit, apply it against an invoice,
+// list them. General sensitivity (rep-visible). RLS gates the rows.
+// ---------------------------------------------------------------------------
+router.post("/companies/:id/credit-notes", authorize("invoice.general", "write"), async (req, res) => {
+  const input = CreditNoteIssueSchema.parse(req.body);
+  const companyId = String(req.params.id);
+  const result = await withRole(req.auth!.role, async (tx) => {
+    const company = await tx.company.findUnique({ where: { id: companyId }, select: { id: true } });
+    if (!company) return { status: 404 as const, error: "company_not_found" };
+    return issueCreditNote(tx, {
+      companyId,
+      amount: input.amount,
+      currency: input.currency,
+      reference: input.reference ?? null,
+      contactId: input.contactId ?? null,
+      issuedById: req.auth!.userId,
+      actorRole: req.auth!.role,
+    });
+  });
+  if ("status" in result) {
+    res.status(result.status).json({ error: result.error });
+    return;
+  }
+  res.status(201).json({ creditNoteId: result.id });
+});
+
+router.post("/credit-notes/:id/apply", authorize("invoice.general", "write"), async (req, res) => {
+  const input = CreditNoteApplySchema.parse(req.body);
+  const creditNoteId = String(req.params.id);
+  const result = await withRole(req.auth!.role, (tx) =>
+    applyCreditNote(tx, {
+      creditNoteId,
+      invoiceId: input.invoiceId,
+      amount: input.amount,
+      actorUserId: req.auth!.userId,
+      actorRole: req.auth!.role,
+    }),
+  );
+  if (result.status) {
+    res.status(result.status).json({ error: result.error });
+    return;
+  }
+  res.status(200).json({ creditNoteId, applied: result.applied, invoicePaid: result.invoicePaid, remainingCredit: result.remainingCredit });
+});
+
+router.get("/credit-notes", authorize("invoice.general", "read"), async (req, res) => {
+  const { cursor, limit } = PaginationQuerySchema.parse(req.query);
+  const q = req.query as { companyId?: string; status?: string };
+  const rows = await withRole(req.auth!.role, (tx) =>
+    tx.creditNote.findMany({
+      where: {
+        ...(q.companyId ? { companyId: String(q.companyId) } : {}),
+        ...(q.status ? { status: String(q.status) } : {}),
+      },
+      take: limit + 1,
+      orderBy: { createdAt: "desc" },
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    }),
+  );
+  const hasMore = rows.length > limit;
+  const data = hasMore ? rows.slice(0, limit) : rows;
+  res.json({ data, nextCursor: hasMore ? data[data.length - 1]!.id : null });
+});
+
+// ---------------------------------------------------------------------------
+// Studio listing-shoot credits — balance + ledger; grant/consume. company.general.
+// ---------------------------------------------------------------------------
+router.get("/companies/:id/shoot-credits", authorize("company.general", "read"), async (req, res) => {
+  const companyId = String(req.params.id);
+  const result = await withRole(req.auth!.role, async (tx) => {
+    const company = await tx.company.findUnique({
+      where: { id: companyId },
+      select: { freeListingShootsEarned: true, freeListingShootsRemaining: true },
+    });
+    if (!company) return null;
+    const ledger = await tx.studioShootCredit.findMany({ where: { companyId }, orderBy: { createdAt: "desc" }, take: 200 });
+    return {
+      balance: {
+        earned: Number(company.freeListingShootsEarned ?? 0),
+        remaining: Number(company.freeListingShootsRemaining ?? 0),
+      },
+      ledger,
+    };
+  });
+  if (!result) {
+    res.status(404).json({ error: "company_not_found" });
+    return;
+  }
+  res.json(result);
+});
+
+router.post("/companies/:id/shoot-credits", authorize("company.general", "write"), async (req, res) => {
+  const input = ShootCreditAdjustSchema.parse(req.body);
+  const result = await withRole(req.auth!.role, (tx) =>
+    adjustShootCredit(tx, {
+      companyId: String(req.params.id),
+      delta: input.delta,
+      reason: input.reason,
+      relatedOpportunityId: input.relatedOpportunityId ?? null,
+      note: input.note ?? null,
+      actorUserId: req.auth!.userId,
+      actorRole: req.auth!.role,
+    }),
+  );
+  if (result.status) {
+    res.status(result.status).json({ error: result.error });
+    return;
+  }
+  res.status(201).json({ companyId: req.params.id, remaining: result.remaining });
 });
 
 // ---------------------------------------------------------------------------
