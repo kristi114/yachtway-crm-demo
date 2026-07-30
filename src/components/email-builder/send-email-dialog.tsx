@@ -249,7 +249,9 @@ export function SendEmailDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[94vh] w-[96vw] max-w-6xl overflow-hidden p-0">
-        <DialogHeader className="flex-row items-start justify-between gap-3 border-b border-border px-6 py-4">
+        {/* pr-14 keeps the Attach files button clear of the dialog's close button,
+            which is absolutely positioned in the top-right corner. */}
+        <DialogHeader className="flex-row items-start justify-between gap-3 border-b border-border px-6 py-4 pr-14">
           <div>
             <DialogTitle>Send or schedule</DialogTitle>
             <DialogDescription>

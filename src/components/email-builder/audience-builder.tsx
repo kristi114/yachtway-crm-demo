@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Users2, Tag, Building2, Save, Trash2, ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
+import { Users2, Tag, Building2, Save, Trash2, ChevronDown, ChevronRight, AlertTriangle, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,11 @@ function allTags(inUse: string[]): string[] {
   return [...new Set([...(FIELD_OPTIONS.tags ?? []), ...inUse])].sort();
 }
 
+/**
+ * Collapsible tag list. Collapsed by default so the tag sets don't dominate the
+ * dialog; the header always shows what's selected, so nothing is hidden in a
+ * way that could surprise the sender.
+ */
 function TagPicker({
   label, icon: Icon, options, selected, onToggle,
 }: {
@@ -30,30 +35,72 @@ function TagPicker({
   selected: string[];
   onToggle: (tag: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="space-y-1.5">
-      <Label className="flex items-center gap-1.5 text-xs">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" /> {label}
-      </Label>
-      <div className="flex flex-wrap gap-1.5">
-        {options.map((t) => {
-          const on = selected.includes(t);
-          return (
+    <div className="rounded-md border border-border bg-surface">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-1.5 px-2.5 py-2 text-left text-xs hover:bg-accent/40"
+      >
+        {open ? (
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        )}
+        <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <span className="font-medium">{label}</span>
+        {selected.length > 0 ? (
+          <span className="ml-auto rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand">
+            {selected.length} selected
+          </span>
+        ) : (
+          <span className="ml-auto text-[10px] text-muted-foreground">
+            {options.length} available
+          </span>
+        )}
+      </button>
+
+      {/* Selected tags stay visible while collapsed. */}
+      {!open && selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 border-t border-border px-2.5 py-2">
+          {selected.map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => onToggle(t)}
-              className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
-                on
-                  ? "border-brand bg-brand/10 text-brand"
-                  : "border-border text-muted-foreground hover:bg-accent"
-              }`}
+              title="Remove"
+              className="inline-flex items-center gap-1 rounded-full border border-brand bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand"
             >
               {t}
+              <X className="h-3 w-3" />
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {open && (
+        <div className="flex flex-wrap gap-1.5 border-t border-border px-2.5 py-2">
+          {options.map((t) => {
+            const on = selected.includes(t);
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => onToggle(t)}
+                className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                  on
+                    ? "border-brand bg-brand/10 text-brand"
+                    : "border-border text-muted-foreground hover:bg-accent"
+                }`}
+              >
+                {t}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
