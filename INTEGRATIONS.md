@@ -106,9 +106,22 @@ its company, and duplicate addresses. Saved lists live in `localStorage`
 consent gate and every inclusion path runs through it — filters, contact tags,
 company tags, *and* hand-typed addresses. Typing an address by hand is not
 consent. A contact is dropped when: no email, `emailOptOut === true`, their
-**company** has `emailOptOut === true` (an account-level unsubscribe covers
-everyone there), or the `Do Not Contact` tag is on the contact or the company.
-The audience builder reports the counts so a removal is never silent.
+company has `accountWideEmailOptOut === true`, or the `Do Not Contact` tag is on
+the contact or the company. The audience builder reports the counts so a removal
+is never silent.
+
+**Companies carry two independent email opt-outs.** They are not interchangeable
+and must not be collapsed into one column:
+
+| Field | Scope |
+|---|---|
+| `emailOptOut` | Only the company's own address (`companyEmail`). The people who work there are still contactable. |
+| `accountWideEmailOptOut` | Every contact at the account, plus the company address. |
+
+`suppressionFor()` consults only the account-wide flag when deciding about a
+person; `companyEmailSuppressed()` governs the company address and is satisfied by
+either flag (suppressing the whole account necessarily suppresses its shared
+inbox). Both are surfaced as a badge on the company header.
 
 - Backend: `resolveAudience` becomes a single SQL query; move suppression rules
   into the query **and** re-check them in the send route immediately before

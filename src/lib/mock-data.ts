@@ -90,6 +90,16 @@ export interface Company {
   linkedinUrl?: string;
   /** Marketing/segmentation tags. A company tag expands to all its contacts. */
   tags?: string[];
+  /**
+   * Suppresses only this company's own email address (`companyEmail`).
+   * Contacts at the company are unaffected.
+   */
+  emailOptOut?: boolean;
+  /**
+   * Account-wide unsubscribe: suppresses every contact at this company as well
+   * as the company address. Use when the whole account asks to stop.
+   */
+  accountWideEmailOptOut?: boolean;
 }
 
 export function companyInitials(name: string): string {

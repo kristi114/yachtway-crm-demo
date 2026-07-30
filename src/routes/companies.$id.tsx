@@ -36,7 +36,7 @@ import { ServicesAdoptionPanel } from "@/components/services-adoption-panel";
 import { CreateOpportunityDialog } from "@/components/create-opportunity-dialog";
 import { getCreditBalance, useCreditStore } from "@/lib/dealer-credit";
 import { Button } from "@/components/ui/button";
-import { MessageSquarePlus, Plus, MapPinned, Trash2, GitMerge, MoreHorizontal } from "lucide-react";
+import { MessageSquarePlus, Plus, MapPinned, Trash2, GitMerge, MoreHorizontal, MailX } from "lucide-react";
 import { OfficeDialog } from "@/components/office-dialog";
 import { OfficesDialog } from "@/components/offices-dialog";
 import { MergeRecordDialog } from "@/components/merge-record-dialog";
@@ -188,6 +188,26 @@ function CompanyDetail() {
           <span className="flex flex-wrap items-center gap-2">
             <Badge variant="outline">{company.companyType}</Badge>
             <Badge variant="outline">{company.status}</Badge>
+            {/* Email suppression is consequential enough to show on the header:
+                account-wide blocks every contact, company-only blocks just this
+                record's address. */}
+            {company.accountWideEmailOptOut === true ? (
+              <span
+                className="inline-flex items-center gap-1 rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive"
+                title="Every contact at this company is suppressed from email sends."
+              >
+                <MailX className="h-3 w-3" />
+                Account-wide email opt-out
+              </span>
+            ) : company.emailOptOut === true ? (
+              <span
+                className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-2 py-0.5 text-xs font-semibold text-warning"
+                title="The company address is suppressed. Contacts here can still be emailed."
+              >
+                <MailX className="h-3 w-3" />
+                Company address opted out
+              </span>
+            ) : null}
             {[company.billingCity, company.billingCountry].filter(Boolean).length > 0 && (
               <span className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-xs font-semibold text-brand-deep">
                 <MapPin className="h-3 w-3 text-brand" />

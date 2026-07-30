@@ -109,6 +109,7 @@ function mockValue(field: FieldDef, seedBase: string): unknown {
 const NEVER_FILL = new Set<string>([
   "tags",
   "emailOptOut",
+  "accountWideEmailOptOut",
   "smsOptOut",
 ]);
 

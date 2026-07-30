@@ -21,9 +21,14 @@ import { applyClauses, filterableFields, type FilterClause } from "@/lib/record-
  * Suppressions, always applied last and with no way to opt back in from the UI:
  *   - no email address on the contact
  *   - the contact opted out of email (emailOptOut === true)
- *   - the contact's COMPANY opted out of email (an account-level unsubscribe
- *     covers everyone at that account)
+ *   - the contact's company has an ACCOUNT-WIDE opt-out
+ *     (accountWideEmailOptOut), which covers everyone who works there
  *   - the "Do Not Contact" tag on the contact or its company
+ *
+ * Companies carry two independent opt-outs, and they are not interchangeable:
+ *   • emailOptOut           → the company's own address only; its people are
+ *                             still contactable
+ *   • accountWideEmailOptOut → everyone at the account, address included
  *   - duplicate addresses (first occurrence wins, case-insensitive)
  *
  * Suppression beats every inclusion source, including a hand-typed address:
@@ -119,17 +124,36 @@ export type SuppressionReason = "noEmail" | "optedOut" | "doNotContact";
  */
 export function suppressionFor(
   contact: { email?: unknown; emailOptOut?: unknown; tags?: unknown },
-  company?: { emailOptOut?: unknown; tags?: unknown },
+  company?: { accountWideEmailOptOut?: unknown; tags?: unknown },
 ): SuppressionReason | null {
   const email = typeof contact.email === "string" ? contact.email.trim() : "";
   if (!email) return "noEmail";
   // Contact-level unsubscribe.
   if (contact.emailOptOut === true) return "optedOut";
-  // Account-level unsubscribe covers everyone at that company.
-  if (company?.emailOptOut === true) return "optedOut";
+  // Account-WIDE unsubscribe covers every person at the company. Note this is
+  // deliberately NOT company.emailOptOut — that flag suppresses only the
+  // company's own address (see companyEmailSuppressed) and says nothing about
+  // whether the people who work there may be contacted.
+  if (company?.accountWideEmailOptOut === true) return "optedOut";
   if (tagsOf(contact).includes(DNC_TAG)) return "doNotContact";
   if (company && tagsOf(company).includes(DNC_TAG)) return "doNotContact";
   return null;
+}
+
+/**
+ * Whether the company's *own* email address may be mailed. Either opt-out blocks
+ * it: suppressing the whole account necessarily suppresses its shared inbox.
+ */
+export function companyEmailSuppressed(company: {
+  emailOptOut?: unknown;
+  accountWideEmailOptOut?: unknown;
+  tags?: unknown;
+}): boolean {
+  return (
+    company.emailOptOut === true ||
+    company.accountWideEmailOptOut === true ||
+    tagsOf(company).includes(DNC_TAG)
+  );
 }
 
 /** Convenience for UI badges: can this contact be emailed right now? */
