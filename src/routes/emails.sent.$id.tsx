@@ -401,9 +401,33 @@ function SentReportPage() {
           <div className="space-y-2">
             <h2 className="text-sm font-semibold">Email</h2>
             <div className="overflow-hidden rounded-lg border border-border bg-surface">
-              <div className="border-b border-border px-4 py-2.5">
-                <div className="text-xs text-muted-foreground">Subject</div>
-                <div className="text-sm font-medium">{email.subject || "(no subject)"}</div>
+              <div className="space-y-2 border-b border-border px-4 py-2.5">
+                <div>
+                  <div className="text-xs text-muted-foreground">Subject</div>
+                  <div className="text-sm font-medium">{email.subject || "(no subject)"}</div>
+                </div>
+                {email.preheader && (
+                  <div>
+                    <div className="text-xs text-muted-foreground">Pre-header</div>
+                    <div className="text-sm">{email.preheader}</div>
+                  </div>
+                )}
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  {email.kind && (
+                    <Badge variant="outline" className="text-[10px] capitalize">{email.kind}</Badge>
+                  )}
+                  {email.providerName && (
+                    <span>
+                      via {email.providerName}
+                      {email.providerOverridden && (
+                        <span className="ml-1 text-warning">(override)</span>
+                      )}
+                    </span>
+                  )}
+                  {email.title && email.title !== email.subject && (
+                    <span>· Title: {email.title}</span>
+                  )}
+                </div>
               </div>
               <div className="bg-[#f4f5f7] p-3">
                 {email.html ? (

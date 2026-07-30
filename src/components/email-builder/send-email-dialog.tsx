@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Send, Loader2, FlaskConical, Clock } from "lucide-react";
+import { Send, Loader2, FlaskConical, Clock, AlertTriangle } from "lucide-react";
 
 import {
   Dialog,
@@ -18,6 +18,14 @@ import { useAuth } from "@/lib/auth";
 import { sendEmail } from "@/lib/email-send";
 import { AudienceBuilder } from "@/components/email-builder/audience-builder";
 import { emptyAudience, resolveAudience, type AudienceDef } from "@/lib/audiences";
+import { applyEmailHead } from "@/lib/email-templates";
+import {
+  MergeTagHelper, UnknownTagWarning,
+} from "@/components/email-builder/merge-tag-helper";
+import {
+  providerForKind, providerName, isProviderAllowedForKind, providerCaveat,
+  KIND_ALLOWED_PROVIDERS, type EmailKind, type ProviderId,
+} from "@/lib/email-providers";
 
 const DEFAULT_FROM = "YachtWay <noreply@yachtway.com>";
 
@@ -29,6 +37,10 @@ export function SendEmailDialog({
   templateId,
   templateName,
   campaignId,
+  preheader,
+  title,
+  defaultKind = "marketing",
+  defaultProvider,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -38,12 +50,25 @@ export function SendEmailDialog({
   templateName?: string;
   /** Campaign this send is attributed to (from the email's campaign field). */
   campaignId?: string;
+  /** Inbox preview text from the template. */
+  preheader?: string;
+  /** Document title from the template (blank → subject). */
+  title?: string;
+  /** Email class from the template; can be changed for this send. */
+  defaultKind?: EmailKind;
+  /** Provider from the template; can be changed for this send. */
+  defaultProvider?: ProviderId;
 }) {
   const { user } = useAuth();
   const [audience, setAudience] = useState<AudienceDef>(emptyAudience);
   const [from, setFrom] = useState(DEFAULT_FROM);
   const [subj, setSubj] = useState(subject);
+  const [pre, setPre] = useState(preheader ?? "");
   const [sending, setSending] = useState(false);
+  const [kind, setKind] = useState<EmailKind>(defaultKind);
+  const [provider, setProvider] = useState<ProviderId>(
+    defaultProvider ?? providerForKind(defaultKind),
+  );
 
   // A/B test (subject + body)
   const [abOn, setAbOn] = useState(false);
@@ -61,10 +86,13 @@ export function SendEmailDialog({
   useEffect(() => {
     if (!open) return;
     setSubj(subject);
+    setPre(preheader ?? "");
+    setKind(defaultKind);
+    setProvider(defaultProvider ?? providerForKind(defaultKind));
     setSubjectB(subject ? `${subject} (B)` : "");
     setHtmlB(html);
     setFuSubject(subject ? `Re: ${subject}` : "");
-  }, [open, subject, html]);
+  }, [open, subject, html, preheader, defaultKind, defaultProvider]);
 
   const recipients = useMemo(() => resolveAudience(audience).members.map((m) => m.email), [audience]);
   const canSend = recipients.length > 0 && subj.trim() !== "" && !sending &&
@@ -83,18 +111,22 @@ export function SendEmailDialog({
         to: recipients,
         from,
         subject: subj,
-        html,
+        // Pre-header + <title> are injected into the HTML that actually goes out.
+        html: applyEmailHead(html, { preheader: pre, title, subject: subj }),
+        preheader: pre,
+        title,
         templateId,
         templateName,
         campaignId,
-        // The email builder is the marketing tool → routes through Mailgun.
-        kind: "marketing",
+        kind,
+        provider,
         abTest: abOn
           ? { enabled: true, splitPercentB: splitB, winnerMetric, variantB: { subject: subjectB, html: htmlB } }
           : undefined,
         followUp: fuOn ? { enabled: true, delayDays: fuDays, subject: fuSubject } : undefined,
       });
       const bits = [`${record.to.length} recipient${record.to.length === 1 ? "" : "s"}`];
+      bits.push(`${kind} · ${providerName(provider)}`);
       if (abOn) bits.push(`A/B ${100 - splitB}/${splitB}`);
       if (fuOn) bits.push(`follow-up in ${fuDays}d`);
       toast.success(record.mock ? "Email sent (mock)" : "Email sent", { description: bits.join(" · ") });
@@ -141,14 +173,77 @@ export function SendEmailDialog({
               <AudienceBuilder value={audience} onChange={setAudience} />
             </div>
 
+            {/* Email type → provider routing */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="send-kind">Email type</Label>
+                <select
+                  id="send-kind"
+                  value={kind}
+                  onChange={(e) => {
+                    const k = e.target.value as EmailKind;
+                    setKind(k);
+                    if (!isProviderAllowedForKind(k, provider)) setProvider(providerForKind(k));
+                  }}
+                  className="native-select h-9 w-full rounded-md border border-border bg-surface px-2 text-sm"
+                >
+                  <option value="marketing">Marketing — bulk campaigns</option>
+                  <option value="transactional">Transactional — 1:1 with a contact</option>
+                  <option value="system">System — platform-generated</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="send-provider">Send via</Label>
+                <select
+                  id="send-provider"
+                  value={provider}
+                  onChange={(e) => setProvider(e.target.value as ProviderId)}
+                  className="native-select h-9 w-full rounded-md border border-border bg-surface px-2 text-sm"
+                >
+                  {KIND_ALLOWED_PROVIDERS[kind].map((p) => (
+                    <option key={p} value={p}>
+                      {providerName(p)}{p === providerForKind(kind) ? " (default)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {providerCaveat(kind, provider) && (
+                <p className="flex items-start gap-1.5 text-xs text-warning sm:col-span-2">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  {providerCaveat(kind, provider)}
+                </p>
+              )}
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="send-from">From</Label>
               <Input id="send-from" value={from} onChange={(e) => setFrom(e.target.value)} />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="send-subject">{abOn ? "Subject — variant A" : "Subject"}</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="send-subject">{abOn ? "Subject — variant A" : "Subject"}</Label>
+                <MergeTagHelper onInsert={(t) => setSubj((v) => v + t)} label="Tags" />
+              </div>
               <Input id="send-subject" value={subj} onChange={(e) => setSubj(e.target.value)} />
+              <UnknownTagWarning text={`${subj} ${pre}`} />
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="send-pre">Pre-header</Label>
+                <MergeTagHelper onInsert={(t) => setPre((v) => v + t)} label="Tags" />
+              </div>
+              <Input
+                id="send-pre"
+                value={pre}
+                onChange={(e) => setPre(e.target.value)}
+                placeholder="Inbox preview text (shown after the subject)"
+              />
+              <p className="text-xs text-muted-foreground">
+                Title: {title?.trim() || subj || "—"}
+                {!title?.trim() && " (from subject)"}
+              </p>
             </div>
 
             {/* A/B test */}

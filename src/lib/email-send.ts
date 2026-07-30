@@ -1,5 +1,8 @@
 import { useSyncExternalStore } from "react";
-import { providerForKind, providerName, isKindSendable, type EmailKind, type ProviderId } from "@/lib/email-providers";
+import {
+  providerForKind, providerName, isProviderConnected, isProviderAllowedForKind,
+  KIND_ALLOWED_PROVIDERS, type EmailKind, type ProviderId,
+} from "@/lib/email-providers";
 
 /**
  * Email sending seam for the Emails builder.
@@ -59,6 +62,15 @@ export interface SendEmailInput {
   templateName?: string;
   /** Which class of email this is → decides the provider. Defaults to transactional. */
   kind?: EmailKind;
+  /**
+   * Override the default provider for this kind (e.g. a marketing send routed
+   * through Gmail). Must be in KIND_ALLOWED_PROVIDERS for the kind.
+   */
+  provider?: ProviderId;
+  /** Inbox preview text shown after the subject. */
+  preheader?: string;
+  /** Document <title>. Falls back to the subject when blank. */
+  title?: string;
   /** The audience definition this send resolved from (for auditing / re-sends). */
   audienceName?: string;
   /** Campaign (series of sends) this send belongs to. */
@@ -100,6 +112,11 @@ export interface SentEmail {
   audienceName?: string;
   /** Campaign (series of sends) this send is attributed to. */
   campaignId?: string;
+  /** Inbox preview text and document title used for this send. */
+  preheader?: string;
+  title?: string;
+  /** True when the provider was not the default for this kind. */
+  providerOverridden?: boolean;
   /** Present when this send was an A/B test; holds per-variant results. */
   abTest?: { splitPercentB: number; winnerMetric: "open" | "click"; variants: VariantStats[] };
   /** Follow-up plan for non-openers, and its state. */
@@ -333,9 +350,20 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
   if (bad.length > 0) throw new Error(`Invalid email address: ${bad.join(", ")}`);
   if (!input.subject.trim()) throw new Error("Add a subject line.");
   const sendKind: EmailKind = input.kind ?? "transactional";
-  if (!isKindSendable(sendKind)) {
+
+  // Resolve the provider: the kind's default unless a legal override was given.
+  const defaultProvider = providerForKind(sendKind);
+  const provider = input.provider ?? defaultProvider;
+  if (input.provider && !isProviderAllowedForKind(sendKind, input.provider)) {
     throw new Error(
-      `${providerName(providerForKind(sendKind))} isn't connected. Connect it in Admin → Email providers to send ${sendKind} email.`,
+      `${providerName(input.provider)} can't send ${sendKind} email. Allowed: ${KIND_ALLOWED_PROVIDERS[
+        sendKind
+      ].map(providerName).join(", ")}.`,
+    );
+  }
+  if (!isProviderConnected(provider)) {
+    throw new Error(
+      `${providerName(provider)} isn't connected. Connect it in Admin → Email providers to send ${sendKind} email.`,
     );
   }
 
@@ -344,7 +372,6 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
   const mock = true;
   // ---- END mock transport ----
 
-  const provider = providerForKind(sendKind);
   const sentAt = new Date();
   const total = input.to.length;
 
@@ -401,6 +428,10 @@ export async function sendEmail(input: SendEmailInput): Promise<SendResult> {
     marketing: sendKind === "marketing" || undefined,
     audienceName: input.audienceName,
     campaignId: input.campaignId,
+    preheader: input.preheader?.trim() || undefined,
+    // An empty title falls back to the subject line.
+    title: input.title?.trim() || input.subject,
+    providerOverridden: provider !== defaultProvider || undefined,
     abTest,
     followUp,
   };

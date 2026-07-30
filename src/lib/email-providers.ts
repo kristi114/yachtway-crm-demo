@@ -48,15 +48,50 @@ export const PROVIDERS: ProviderSpec[] = [
   },
 ];
 
-/** Fixed routing: which provider sends each kind of email. */
+/** Default routing: which provider sends each kind of email. */
 export const KIND_PROVIDER: Record<EmailKind, ProviderId> = {
   system: "ses",
   transactional: "gmail",
   marketing: "mailgun",
 };
 
+/**
+ * Providers a given kind is *allowed* to use. The first entry is the default
+ * (KIND_PROVIDER); the rest are permitted overrides for the cases where the
+ * default is wrong — e.g. a small, personal-feeling marketing send that should
+ * come from a rep's Gmail mailbox rather than Mailgun's bulk infrastructure.
+ *
+ * System email stays locked to SES: password resets and automation alerts must
+ * not depend on a person's mailbox.
+ */
+export const KIND_ALLOWED_PROVIDERS: Record<EmailKind, ProviderId[]> = {
+  system: ["ses"],
+  transactional: ["gmail", "ses"],
+  marketing: ["mailgun", "gmail"],
+};
+
 export function providerForKind(kind: EmailKind): ProviderId {
   return KIND_PROVIDER[kind];
+}
+
+/** Is this provider a legal choice for this kind of email? */
+export function isProviderAllowedForKind(kind: EmailKind, provider: ProviderId): boolean {
+  return KIND_ALLOWED_PROVIDERS[kind].includes(provider);
+}
+
+/**
+ * Why an override might be a bad idea — surfaced in the UI so the choice is
+ * informed rather than silent. Returns null when the pairing is unremarkable.
+ */
+export function providerCaveat(kind: EmailKind, provider: ProviderId): string | null {
+  if (provider === KIND_PROVIDER[kind]) return null;
+  if (kind === "marketing" && provider === "gmail") {
+    return "Gmail has low daily send limits and no bulk unsubscribe handling — use only for small, personal sends.";
+  }
+  if (kind === "transactional" && provider === "ses") {
+    return "Sends from the platform address instead of the rep's mailbox, so replies won't reach them.";
+  }
+  return "Non-default provider for this email type — check deliverability before a large send.";
 }
 
 export function providerName(id: ProviderId): string {

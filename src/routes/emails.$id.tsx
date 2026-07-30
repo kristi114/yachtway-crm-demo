@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Save, Code2, LayoutTemplate, Send, Download } from "lucide-react";
+import { Save, Code2, LayoutTemplate, Send, Download, AlertTriangle } from "lucide-react";
 
 import { guarded } from "@/components/require-access";
 import { AppShell } from "@/components/app-shell";
@@ -30,6 +30,13 @@ import {
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  MergeTagHelper, UnknownTagWarning,
+} from "@/components/email-builder/merge-tag-helper";
+import {
+  providerForKind, providerName, isProviderAllowedForKind, providerCaveat,
+  KIND_ALLOWED_PROVIDERS, type EmailKind, type ProviderId,
+} from "@/lib/email-providers";
 
 export const Route = createFileRoute("/emails/$id")({
   component: guarded("emails", "Emails", EmailEditorPage),
@@ -61,6 +68,14 @@ function EmailEditorPage() {
 
   const [name, setName] = useState(existing?.name ?? "Untitled email");
   const [subject, setSubject] = useState(existing?.subject ?? "");
+  const [preheader, setPreheader] = useState(existing?.preheader ?? "");
+  const [title, setTitle] = useState(existing?.title ?? "");
+  const [kind, setKind] = useState<EmailKind>(existing?.kind ?? "marketing");
+  const [provider, setProvider] = useState<ProviderId>(
+    existing?.provider ?? providerForKind(existing?.kind ?? "marketing"),
+  );
+  // Which text field the merge-tag helper should insert into.
+  const [tagTarget, setTagTarget] = useState<"subject" | "preheader" | "title">("subject");
   const [tab, setTab] = useState<EmailMode>(existing?.mode ?? "design");
   const [html, setHtml] = useState(existing?.html ?? BLANK_HTML);
   const [design, setDesign] = useState<unknown | null>(existing?.design ?? null);
@@ -105,6 +120,10 @@ function EmailEditorPage() {
       id,
       name,
       subject,
+      preheader,
+      title,
+      kind,
+      provider,
       mode: tab,
       html: content.html,
       design: tab === "design" ? content.design : null,
@@ -138,9 +157,70 @@ function EmailEditorPage() {
               <Input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="h-8 w-[min(560px,60vw)]"
+                onFocus={() => setTagTarget("subject")}
+                className="h-8 w-[min(420px,50vw)]"
                 placeholder="Subject line — supports {{merge_tags}}"
               />
+              <MergeTagHelper
+                onInsert={(token) => {
+                  if (tagTarget === "preheader") setPreheader((v) => v + token);
+                  else if (tagTarget === "title") setTitle((v) => v + token);
+                  else setSubject((v) => v + token);
+                }}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Pre-header</Label>
+              <Input
+                value={preheader}
+                onChange={(e) => setPreheader(e.target.value)}
+                onFocus={() => setTagTarget("preheader")}
+                className="h-8 w-[min(360px,45vw)]"
+                placeholder="Inbox preview text (shown after the subject)"
+                title="The preview line most mail clients show next to the subject."
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Title</Label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onFocus={() => setTagTarget("title")}
+                className="h-8 w-[min(300px,40vw)]"
+                placeholder={subject || "Defaults to the subject"}
+                title="Document <title>. Left blank, the subject is used."
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Type</Label>
+              <select
+                value={kind}
+                onChange={(e) => {
+                  const k = e.target.value as EmailKind;
+                  setKind(k);
+                  // Snap to the new kind's default provider unless the current
+                  // one is still legal for it.
+                  if (!isProviderAllowedForKind(k, provider)) setProvider(providerForKind(k));
+                }}
+                className="native-select h-8 rounded-md border border-border bg-surface px-2 text-[13px]"
+              >
+                <option value="marketing">Marketing</option>
+                <option value="transactional">Transactional</option>
+                <option value="system">System</option>
+              </select>
+              <select
+                value={provider}
+                onChange={(e) => setProvider(e.target.value as ProviderId)}
+                className="native-select h-8 rounded-md border border-border bg-surface px-2 text-[13px]"
+                title="Sending provider"
+              >
+                {KIND_ALLOWED_PROVIDERS[kind].map((p) => (
+                  <option key={p} value={p}>
+                    {providerName(p)}
+                    {p === providerForKind(kind) ? " (default)" : ""}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="flex items-center gap-2">
               <Label className="text-xs text-muted-foreground">Campaign</Label>
@@ -163,6 +243,13 @@ function EmailEditorPage() {
                 <option value="__new">+ New campaign…</option>
               </select>
             </div>
+            {providerCaveat(kind, provider) && (
+              <p className="flex w-full items-start gap-1.5 text-[11px] text-warning">
+                <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                {providerCaveat(kind, provider)}
+              </p>
+            )}
+            <UnknownTagWarning text={`${subject} ${preheader} ${title}`} />
           </div>
         }
         actions={
@@ -247,6 +334,10 @@ function EmailEditorPage() {
         templateId={id}
         templateName={name}
         campaignId={campaignId || undefined}
+        preheader={preheader}
+        title={title}
+        defaultKind={kind}
+        defaultProvider={provider}
       />
 
       {/* Create a campaign inline from the picker */}

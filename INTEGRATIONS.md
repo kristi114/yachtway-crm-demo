@@ -134,6 +134,40 @@ once). `src/lib/email-followup-runtime.ts` checks on app load and hourly.
 - `nonOpenersFor()` in `email-recipients.ts` is the mock stand-in for that event
   query.
 
+## Email type, provider override, pre-header, title, merge tags (added — mock)
+
+**Type + provider.** Every email declares a kind (`marketing` / `transactional` /
+`system`). `KIND_PROVIDER` is the default route (Mailgun / Gmail / SES), and
+`KIND_ALLOWED_PROVIDERS` defines the legal overrides — notably **marketing via
+Gmail** for small, personal-feeling sends. `system` is deliberately locked to SES
+so password resets and automation alerts never depend on a person's mailbox.
+`sendEmail` rejects an illegal pairing and an unconnected provider;
+`providerCaveat()` surfaces the trade-off in the UI, and overrides are flagged on
+the send report.
+
+- Backend: enforce `KIND_ALLOWED_PROVIDERS` in the send route too (never trust the
+  client). Gmail sends need per-user OAuth (send-as the rep) and are subject to
+  Workspace daily limits — reject or queue oversized marketing sends routed to
+  Gmail rather than failing halfway.
+- Gmail carries no list-unsubscribe handling: inject `{{unsubscribe_url}}` and the
+  `List-Unsubscribe` header ourselves for any marketing send routed there.
+
+**Pre-header + title.** Templates carry `preheader` and `title`; the title falls
+back to the subject when blank (`effectiveTitle`). `applyEmailHead()` injects the
+`<title>` and the hidden pre-header span (first child of `<body>`, padded with
+zero-width characters so clients don't pull body copy into the preview line). It
+is idempotent — re-running replaces the previous injection.
+
+**Merge tags.** `src/lib/merge-tags.ts` is the tag catalogue (contact / company /
+sender / system), each with the CRM field it resolves from, a sample for preview,
+and a **fallback** for blank values so no one receives "Hi ,".
+`renderMergeTags()` does the substitution; unknown tags are left visible rather
+than blanked, and the editor warns about them.
+
+- Backend: move substitution server-side at send time, resolving per recipient
+  from the contact/company row. `{{unsubscribe_url}}` / `{{preferences_url}}` must
+  be generated per recipient with a signed token — never a shared link.
+
 ## Previously stubbed (context)
 
 - **WorkOS AuthKit** — set `VITE_WORKOS_CLIENT_ID` for real sign-in (demo role

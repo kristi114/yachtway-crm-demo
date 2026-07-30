@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 
+import type { EmailKind, ProviderId } from "@/lib/email-providers";
+
 /**
  * Email template store for the Emails builder.
  *
@@ -16,10 +18,72 @@ import { useSyncExternalStore } from "react";
 
 export type EmailMode = "design" | "html";
 
+/** Effective document title: the explicit title, else the subject. */
+export function effectiveTitle(t: { title?: string; subject: string }): string {
+  return t.title?.trim() || t.subject;
+}
+
+/**
+ * Inject the pre-header and <title> into email HTML for sending/preview.
+ *
+ * The pre-header is the hidden span every mail client reads for the inbox
+ * preview line; it must be the first thing inside <body>, visually hidden, and
+ * padded so the client doesn't pull body copy in after it. Re-running this is
+ * safe: an existing injected block is replaced, not duplicated.
+ */
+export function applyEmailHead(
+  html: string,
+  opts: { preheader?: string; title?: string; subject: string },
+): string {
+  const title = effectiveTitle(opts);
+  let out = html;
+
+  // <title> — replace when present, otherwise insert into (or create) <head>.
+  if (/<title[^>]*>[\s\S]*?<\/title>/i.test(out)) {
+    out = out.replace(/<title[^>]*>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)}</title>`);
+  } else if (/<head[^>]*>/i.test(out)) {
+    out = out.replace(/<head[^>]*>/i, (m) => `${m}\n    <title>${escapeHtml(title)}</title>`);
+  } else if (/<html[^>]*>/i.test(out)) {
+    out = out.replace(/<html[^>]*>/i, (m) => `${m}\n  <head><title>${escapeHtml(title)}</title></head>`);
+  }
+
+  // Pre-header — drop any previous injection first.
+  out = out.replace(
+    /<div[^>]*data-yw-preheader[^>]*>[\s\S]*?<\/div>/i,
+    "",
+  );
+  const pre = opts.preheader?.trim();
+  if (pre && /<body[^>]*>/i.test(out)) {
+    const block =
+      `<div data-yw-preheader style="display:none;max-height:0;overflow:hidden;` +
+      `mso-hide:all;font-size:1px;line-height:1px;color:#ffffff;opacity:0;">` +
+      `${escapeHtml(pre)}${"&#847;&zwnj;&nbsp;".repeat(60)}</div>`;
+    out = out.replace(/<body[^>]*>/i, (m) => `${m}\n    ${block}`);
+  }
+
+  return out;
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export interface EmailTemplate {
   id: string;
   name: string;
   subject: string;
+  /** Inbox preview text shown after the subject line. */
+  preheader?: string;
+  /** Document <title>. Blank = fall back to the subject. */
+  title?: string;
+  /** Which class of email this is → default provider routing. */
+  kind?: EmailKind;
+  /** Explicit provider override (e.g. marketing via Gmail). */
+  provider?: ProviderId;
   mode: EmailMode;
   /** Rendered, email-safe HTML (inlined styles). Source of truth for sending + preview. */
   html: string;
@@ -166,6 +230,10 @@ export interface SaveTemplateInput {
   id: string;
   name: string;
   subject: string;
+  preheader?: string;
+  title?: string;
+  kind?: EmailKind;
+  provider?: ProviderId;
   mode: EmailMode;
   html: string;
   design?: unknown | null;
@@ -177,6 +245,10 @@ export function saveEmailTemplate(input: SaveTemplateInput): EmailTemplate {
     id: input.id,
     name: input.name.trim() || "Untitled email",
     subject: input.subject,
+    preheader: input.preheader?.trim() || undefined,
+    title: input.title?.trim() || undefined,
+    kind: input.kind,
+    provider: input.provider,
     mode: input.mode,
     html: input.html,
     design: input.design ?? null,
