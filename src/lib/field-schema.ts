@@ -61,12 +61,12 @@ export const COMPANY_SECTIONS: readonly FieldSection[] = [
   {
     id: "company_social", title: "Social Profiles", sensitivity: "company.general",
     fields: [
-      { key: "facebookUrl", label: "Facebook", type: "url", sensitivity: "company.general", help: "Company Facebook page URL" },
-      { key: "instagramUrl", label: "Instagram", type: "url", sensitivity: "company.general", help: "Company Instagram profile URL" },
-      { key: "whatsappNumber", label: "WhatsApp", type: "phone", sensitivity: "company.general", help: "WhatsApp Business number used for buyer enquiries" },
-      { key: "youtubeUrl", label: "YouTube", type: "url", sensitivity: "company.general", help: "Company YouTube channel URL" },
-      { key: "tiktokUrl", label: "TikTok", type: "url", sensitivity: "company.general", help: "Company TikTok profile URL" },
-      { key: "linkedinUrl", label: "LinkedIn", type: "url", sensitivity: "company.general", help: "Company LinkedIn page URL" },
+      { key: "facebookUrl", label: "Facebook", type: "url", sensitivity: "company.general" },
+      { key: "instagramUrl", label: "Instagram", type: "url", sensitivity: "company.general" },
+      { key: "whatsappNumber", label: "WhatsApp", type: "phone", sensitivity: "company.general" },
+      { key: "youtubeUrl", label: "YouTube", type: "url", sensitivity: "company.general" },
+      { key: "tiktokUrl", label: "TikTok", type: "url", sensitivity: "company.general" },
+      { key: "linkedinUrl", label: "LinkedIn", type: "url", sensitivity: "company.general" },
     ],
   },
   {
