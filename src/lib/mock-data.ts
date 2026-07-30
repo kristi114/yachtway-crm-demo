@@ -81,6 +81,13 @@ export interface Company {
   // ---- Rep workflow (Top-10 audit #1) ----
   nextStep: string;                 // "" = no planned next step
   nextStepDate: string;            // "" = no date scheduled (YYYY-MM-DD)
+  // ---- Social profiles ("" / undefined = not on file) ----
+  facebookUrl?: string;
+  instagramUrl?: string;
+  whatsappNumber?: string;
+  youtubeUrl?: string;
+  tiktokUrl?: string;
+  linkedinUrl?: string;
 }
 
 export function companyInitials(name: string): string {
@@ -388,6 +395,12 @@ export const COMPANIES: Company[] = [
     easyfundReferralsTotal: 32, easyfundReferralsApproved: 21,
     easyfundReferralsFunded: 14, easyfundClosedReferralsAmount: 8_450_000,
     nextStep: "Send SaaS renewal DocuSign", nextStepDate: "2026-07-18",
+    facebookUrl: "https://facebook.com/rivierayachtsmiami",
+    instagramUrl: "https://instagram.com/rivierayachtsmiami",
+    whatsappNumber: "+1 305 555 0142",
+    youtubeUrl: "https://youtube.com/@rivierayachtsmiami",
+    tiktokUrl: "https://tiktok.com/@rivierayachtsmiami",
+    linkedinUrl: "https://linkedin.com/company/riviera-yachts-miami",
   },
   {
     id: "cmp_002", vertical: "Main", name: "Azure Marine Group",
