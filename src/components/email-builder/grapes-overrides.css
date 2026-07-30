@@ -68,13 +68,9 @@
   --gjs-canvas-top: 54px;
 }
 
-/* Belt-and-braces: keep the chrome above canvas selection decorations so a
-   handle can never paint over the toolbar again if its height changes. */
-.gjs-pn-commands,
-.gjs-pn-options,
-.gjs-pn-views {
-  z-index: 11 !important;
-}
+/* NOTE: do not raise z-index on .gjs-pn-commands. It is 85% wide at top:0/left:0
+   and sits over the device-selector panel, so lifting it hides the Device
+   dropdown. The canvas offset above is the fix; leave panel stacking alone. */
 
 /* Top/side toolbar icon buttons */
 .gjs-pn-btn {
