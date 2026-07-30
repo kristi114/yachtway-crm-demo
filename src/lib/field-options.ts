@@ -640,6 +640,21 @@ export const FIELD_OPTIONS: Record<string, string[]> = {
     "Direct",
     "Other",
   ],
+  // Marketing / segmentation tags. Used on both contacts and companies to build
+  // email sending lists. dynamicOptions() also surfaces any ad-hoc tag already
+  // present on a record, so this list is a starting set, not a hard limit.
+  tags: [
+    "Newsletter",
+    "Product Updates",
+    "VIP",
+    "Boat Show Lead",
+    "Studio Customer",
+    "EasyFund Prospect",
+    "MasterCover Prospect",
+    "Webinar Attendee",
+    "Churn Risk",
+    "Do Not Contact",
+  ],
   upsellTargetPriority1: [
     "3D Tour",
     "Photoshoot",

@@ -8,7 +8,7 @@ import { AppShell } from "@/components/app-shell";
 import { PageHeader, PageBody } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { getSentEmail, type SentEmail } from "@/lib/email-send";
+import { getSentEmail, abWinner, type SentEmail } from "@/lib/email-send";
 import { buildRecipientRows, type RecipientStatus } from "@/lib/email-recipients";
 
 function initialsOf(name: string): string {
@@ -288,6 +288,101 @@ function SentReportPage() {
                 <Metric label="Click rate" value={pct(email.clicked, email.delivered)} />
               </div>
             </div>
+
+            {/* A/B test results */}
+            {email.abTest && (
+              <div className="rounded-lg border border-border bg-surface p-5">
+                <h2 className="mb-1 text-sm font-semibold">A/B test</h2>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  {100 - email.abTest.splitPercentB}% / {email.abTest.splitPercentB}% split · winner by{" "}
+                  {email.abTest.winnerMetric === "click" ? "click" : "open"} rate
+                </p>
+                {(() => {
+                  const winner = abWinner(email);
+                  const metric = email.abTest!.winnerMetric;
+                  return (
+                    <div className="space-y-2">
+                      {email.abTest!.variants.map((v) => {
+                        const base = v.delivered || v.recipients;
+                        const hits = metric === "click" ? v.clicked : v.opened;
+                        const rate = base ? (hits / base) * 100 : 0;
+                        const won = winner?.label === v.label;
+                        return (
+                          <div
+                            key={v.label}
+                            className={`rounded-md border px-3 py-2.5 ${
+                              won ? "border-success/40 bg-success/5" : "border-border bg-secondary/30"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-sm bg-brand/10 px-1.5 py-0.5 text-[11px] font-bold text-brand-deep">
+                                {v.label}
+                              </span>
+                              <span className="min-w-0 flex-1 truncate text-sm font-medium">{v.subject}</span>
+                              {won && (
+                                <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-success">
+                                  Winner
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground tabular-nums">
+                              <span>{v.recipients} sent</span>
+                              <span>{v.delivered} delivered</span>
+                              <span>{v.opened} opened</span>
+                              <span>{v.clicked} clicked</span>
+                              <span className="font-semibold text-foreground">
+                                {rate.toFixed(1)}% {metric} rate
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {!winner && (
+                        <p className="text-xs text-muted-foreground">
+                          Too close to call — both variants performed identically on this metric.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* Non-opener follow-up */}
+            {(email.followUp || email.followUpOf) && (
+              <div className="rounded-lg border border-border bg-surface p-5">
+                <h2 className="mb-2 text-sm font-semibold">Non-opener follow-up</h2>
+                {email.followUpOf ? (
+                  <p className="text-xs text-muted-foreground">
+                    This send <span className="font-medium text-foreground">is</span> the follow-up to{" "}
+                    <Link
+                      to="/emails/sent/$id"
+                      params={{ id: email.followUpOf }}
+                      className="font-medium text-brand hover:underline"
+                    >
+                      the original campaign
+                    </Link>
+                    .
+                  </p>
+                ) : email.followUp?.sentId ? (
+                  <p className="text-xs text-muted-foreground">
+                    Sent {email.followUp.delayDays}d later with subject “{email.followUp.subject}”.{" "}
+                    <Link
+                      to="/emails/sent/$id"
+                      params={{ id: email.followUp.sentId }}
+                      className="font-medium text-brand hover:underline"
+                    >
+                      View follow-up
+                    </Link>
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Scheduled for {formatDateTime(email.followUp!.dueAt)} — will go to everyone
+                    delivered but not opened, with subject “{email.followUp!.subject}”.
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Funnel */}
             <div className="rounded-lg border border-border bg-surface p-5">

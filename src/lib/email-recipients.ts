@@ -139,6 +139,16 @@ export function emailsForContact(contactId: string): { send: SentEmail; status: 
   return out; // listSentEmails() is already newest-first
 }
 
+/**
+ * Addresses that were delivered the send but never opened it. This is the
+ * audience for the automatic follow-up. With Mailgun wired, replace this with
+ * the `delivered AND NOT opened` event query.
+ */
+export function nonOpenersFor(s: SentEmail): string[] {
+  const { rows } = buildRecipientRows(s);
+  return rows.filter((r) => r.status === "Delivered").map((r) => r.email);
+}
+
 export interface CompanyEmailRow {
   send: SentEmail;
   status: RecipientStatus;

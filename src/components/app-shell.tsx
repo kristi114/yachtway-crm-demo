@@ -13,6 +13,7 @@ import { EmailSignatureDialog } from "@/components/email-signature-dialog";
 
 import { usePermissions } from "@/lib/permissions";
 import { ensureRenewalTasks } from "@/lib/studio-tours";
+import { startFollowUpRuntime } from "@/lib/email-followup-runtime";
 import { type CurrencyCode } from "@/lib/currency";
 import { Input } from "@/components/ui/input";
 import {
@@ -168,6 +169,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       window.localStorage.setItem("yw:sidebar-collapsed", collapsed ? "1" : "0");
     }
   }, [collapsed]);
+  // Fire any due "re-send to non-openers" follow-ups (server cron once wired).
+  useEffect(() => { startFollowUpRuntime(); }, []);
 
 
   return (

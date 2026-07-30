@@ -88,6 +88,8 @@ export interface Company {
   youtubeUrl?: string;
   tiktokUrl?: string;
   linkedinUrl?: string;
+  /** Marketing/segmentation tags. A company tag expands to all its contacts. */
+  tags?: string[];
 }
 
 export function companyInitials(name: string): string {
@@ -157,6 +159,10 @@ export interface Contact {
   // ---- Rep workflow (Top-10 audit #1) ----
   nextStep: string;                 // "" = no planned next step
   nextStepDate: string;            // "" = no date scheduled (YYYY-MM-DD)
+  /** Marketing/segmentation tags used to build email sending lists. */
+  tags?: string[];
+  /** False = unsubscribed / suppressed; audiences exclude these contacts. */
+  emailOptIn?: boolean;
 }
 
 export const COMPANY_ROLES = [
@@ -395,6 +401,7 @@ export const COMPANIES: Company[] = [
     easyfundReferralsTotal: 32, easyfundReferralsApproved: 21,
     easyfundReferralsFunded: 14, easyfundClosedReferralsAmount: 8_450_000,
     nextStep: "Send SaaS renewal DocuSign", nextStepDate: "2026-07-18",
+    tags: ["VIP", "Studio Customer", "Newsletter"],
     facebookUrl: "https://facebook.com/rivierayachtsmiami",
     instagramUrl: "https://instagram.com/rivierayachtsmiami",
     whatsappNumber: "+1 305 555 0142",
@@ -580,6 +587,7 @@ export const CONTACTS: Contact[] = [
     lastLoginAt: "2026-07-12", avgResponseTimeHours: 1.8, studioSpendYtd: 24_500,
     loanApplicationId: null,
     nextStep: "Send SaaS renewal DocuSign", nextStepDate: "2026-07-18",
+    tags: ["Newsletter", "Product Updates", "VIP"], emailOptIn: true,
   },
   {
     id: "cnt_002", vertical: "Main", companyId: "cmp_002",

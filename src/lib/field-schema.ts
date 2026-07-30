@@ -56,6 +56,7 @@ export const COMPANY_SECTIONS: readonly FieldSection[] = [
       { key: "companyType", label: "Company Type", type: "single_option", sensitivity: "company.general" },
       { key: "phone", label: "Office Phone", type: "phone", sensitivity: "company.general" },
       { key: "website", label: "Website", type: "url", sensitivity: "company.general" },
+      { key: "tags", label: "Tags", type: "multi_option", sensitivity: "company.general" },
     ],
   },
   {
@@ -266,6 +267,7 @@ export const CONTACT_SECTIONS: readonly FieldSection[] = [
       { key: "officeState", label: "State / Province", type: "text", sensitivity: "contact.general", help: "If dealership_office_id is not empty, derive from matching office on the company" },
       { key: "officeCountry", label: "Country", type: "text", sensitivity: "contact.general", help: "If dealership_office_id is not empty, derive from matching office on the company" },
       { key: "officePostalCode", label: "Postal Code", type: "text", sensitivity: "contact.general", help: "If dealership_office_id is not empty, derive from matching office on the company" },
+      { key: "tags", label: "Tags", type: "multi_option", sensitivity: "contact.general" },
       { key: "emailOptIn", label: "Email Opt-In", type: "checkbox", sensitivity: "contact.general" },
       { key: "smsOptIn", label: "SMS Opt-In", type: "checkbox", sensitivity: "contact.general" },
       { key: "platformRole", label: "Platform Role", type: "single_option", sensitivity: "contact.general" },

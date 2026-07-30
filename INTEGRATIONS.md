@@ -93,6 +93,43 @@ monthly + time + recipient emails). "Send now" dispatches immediately via
 client-side — wire a **server scheduler** (cron / queue) to call the same
 delivery path on schedule when the backend lands.
 
+## Email audiences, A/B testing & non-opener follow-up (added — mock)
+
+**Audiences (sending lists).** `src/lib/audiences.ts` resolves a list *definition*
+(contact filter clauses + contact tags + company tags + manual addresses) against
+the CRM at send time, so lists never go stale. Suppressions applied last:
+no email, `emailOptIn === false`, the `Do Not Contact` tag on the contact **or**
+its company, and duplicate addresses. Saved lists live in `localStorage`
+(`yw:email-audiences:v1`).
+
+- Backend: `resolveAudience` becomes a single SQL query; move suppression rules
+  into the query (and enforce them again in the send route so no caller can
+  bypass an unsubscribe). Persist saved lists in Postgres with RLS.
+- Sync the suppression list with **Mailgun**'s own unsubscribes/bounces both ways
+  so an unsubscribe at the provider writes back to `emailOptIn`.
+
+**A/B testing.** Configured per send: variant B carries its own subject *and*
+HTML body, with a configurable split % and winner metric (open or click rate).
+Per-variant stats are stored on the send and rendered in the send report;
+`abWinner()` picks the winner.
+
+- Backend: send each arm as its own Mailgun message with a
+  `v:variant` custom variable, then aggregate delivered/opened/clicked per
+  variant from the **Mailgun event webhooks** instead of the mock derivation in
+  `sendEmail`.
+
+**Non-opener follow-up.** A send can schedule one automatic re-send, N days
+later, with a new subject, to everyone delivered-but-not-opened. State lives on
+the original send (`followUp.dueAt` / `followUp.sentId`, so it can only fire
+once). `src/lib/email-followup-runtime.ts` checks on app load and hourly.
+
+- Backend: replace the client-side check with a **cron/worker**: select sends
+  where `follow_up_due_at <= now()` and `follow_up_sent_id IS NULL`, resolve
+  non-openers from Mailgun events (`delivered AND NOT opened`), send, and stamp
+  the row in the same transaction.
+- `nonOpenersFor()` in `email-recipients.ts` is the mock stand-in for that event
+  query.
+
 ## Previously stubbed (context)
 
 - **WorkOS AuthKit** — set `VITE_WORKOS_CLIENT_ID` for real sign-in (demo role

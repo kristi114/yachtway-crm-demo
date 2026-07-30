@@ -25,6 +25,7 @@ export function RecordFilterBar({
   clauses,
   onClausesChange,
   searchPlaceholder = "Search",
+  hideSearch = false,
 }: {
   fields: FieldDef[];
   query: string;
@@ -32,6 +33,8 @@ export function RecordFilterBar({
   clauses: FilterClause[];
   onClausesChange: (c: FilterClause[]) => void;
   searchPlaceholder?: string;
+  /** Hide the text search box and show only the clause builder. */
+  hideSearch?: boolean;
 }) {
   const byKey = new Map(fields.map((f) => [f.key, f]));
 
@@ -51,15 +54,17 @@ export function RecordFilterBar({
   return (
     <div className="mb-3 space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative w-72">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => onQueryChange(e.target.value)}
-            placeholder={searchPlaceholder}
-            className="pl-9"
-          />
-        </div>
+        {!hideSearch && (
+          <div className="relative w-72">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => onQueryChange(e.target.value)}
+              placeholder={searchPlaceholder}
+              className="pl-9"
+            />
+          </div>
+        )}
         <button
           type="button"
           onClick={addClause}
