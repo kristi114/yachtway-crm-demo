@@ -604,6 +604,8 @@ export const CONTACTS: Contact[] = [
     lastLoginAt: "2026-07-13", avgResponseTimeHours: 3.2, studioSpendYtd: 8_200,
     loanApplicationId: null,
     nextStep: "Share MasterCover binding quote", nextStepDate: "2026-07-22",
+    // Unsubscribed: proves suppression holds even when a filter or tag selects her.
+    tags: ["Product Updates"], emailOptOut: true,
   },
   {
     id: "cnt_004", vertical: "Main", companyId: "cmp_003",

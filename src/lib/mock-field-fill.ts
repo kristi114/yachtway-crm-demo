@@ -96,6 +96,22 @@ function mockValue(field: FieldDef, seedBase: string): unknown {
   }
 }
 
+/**
+ * Fields the backfill must never invent a value for.
+ *
+ * Two reasons a field lands here:
+ *  - It drives a user-facing picker (`tags`): generated words like "Nautica" or
+ *    "Trident" make the tag list read as nonsense and pollute audience building.
+ *  - It is consent state (`emailOptOut`, `smsOptOut`): fabricating an opt-out
+ *    would silently suppress contacts, and fabricating an opt-*in* is worse.
+ *    Consent must always be explicit, never guessed.
+ */
+const NEVER_FILL = new Set<string>([
+  "tags",
+  "emailOptOut",
+  "smsOptOut",
+]);
+
 /** Fill every catalog field the record does not already define. Mutates in place. */
 export function fillCatalogFields<T extends Record<string, unknown>>(
   records: readonly T[],
@@ -106,6 +122,7 @@ export function fillCatalogFields<T extends Record<string, unknown>>(
     for (const section of sections) {
       for (const field of section.fields) {
         if (record[field.key] !== undefined) continue;
+        if (NEVER_FILL.has(field.key)) continue;
         (record as Record<string, unknown>)[field.key] = mockValue(field, seedBase);
       }
     }

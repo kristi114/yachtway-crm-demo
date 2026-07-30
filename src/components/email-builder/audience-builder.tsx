@@ -203,11 +203,16 @@ export function AudienceBuilder({
           <div className="mt-1.5 flex items-start gap-1.5 text-xs text-muted-foreground">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
             <span>
-              {suppressedTotal} excluded
+              <span className="font-medium text-foreground">{suppressedTotal} excluded</span>
               {suppressed.optedOut > 0 && ` · ${suppressed.optedOut} unsubscribed`}
               {suppressed.doNotContact > 0 && ` · ${suppressed.doNotContact} do-not-contact`}
               {suppressed.noEmail > 0 && ` · ${suppressed.noEmail} no email`}
               {suppressed.duplicates > 0 && ` · ${suppressed.duplicates} duplicate`}
+              {(suppressed.optedOut > 0 || suppressed.doNotContact > 0) && (
+                <>
+                  {" — "}opt-outs are always removed, including addresses you type in.
+                </>
+              )}
             </span>
           </div>
         )}

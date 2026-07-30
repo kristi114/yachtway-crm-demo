@@ -102,9 +102,20 @@ no email, `emailOptOut === true`, the `Do Not Contact` tag on the contact **or**
 its company, and duplicate addresses. Saved lists live in `localStorage`
 (`yw:email-audiences:v1`).
 
+**Suppression is absolute.** `suppressionFor(contact, company)` is the single
+consent gate and every inclusion path runs through it — filters, contact tags,
+company tags, *and* hand-typed addresses. Typing an address by hand is not
+consent. A contact is dropped when: no email, `emailOptOut === true`, their
+**company** has `emailOptOut === true` (an account-level unsubscribe covers
+everyone there), or the `Do Not Contact` tag is on the contact or the company.
+The audience builder reports the counts so a removal is never silent.
+
 - Backend: `resolveAudience` becomes a single SQL query; move suppression rules
-  into the query (and enforce them again in the send route so no caller can
-  bypass an unsubscribe). Persist saved lists in Postgres with RLS.
+  into the query **and** re-check them in the send route immediately before
+  dispatch — a client can't be trusted, and a queued campaign may sit for days
+  during which someone unsubscribes. Persist saved lists in Postgres with RLS.
+- Consent fields are excluded from the mock backfill (`NEVER_FILL` in
+  `mock-field-fill.ts`) so opt-out state is always explicit, never invented.
 - Sync the suppression list with **Mailgun**'s own unsubscribes/bounces both ways
   so an unsubscribe at the provider writes back to `emailOptOut`.
 - Schema note: the contact fields are **opt-*out*** (`emailOptOut` / `smsOptOut`,

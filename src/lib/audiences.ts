@@ -18,11 +18,18 @@ import { applyClauses, filterableFields, type FilterClause } from "@/lib/record-
  *   3. companyTags     - every contact at a company carrying ANY of these tags
  *   4. manualEmails    - one-off addresses typed in by hand
  *
- * Suppressions, always applied last:
+ * Suppressions, always applied last and with no way to opt back in from the UI:
  *   - no email address on the contact
- *   - emailOptOut === true (unsubscribed)
+ *   - the contact opted out of email (emailOptOut === true)
+ *   - the contact's COMPANY opted out of email (an account-level unsubscribe
+ *     covers everyone at that account)
  *   - the "Do Not Contact" tag on the contact or its company
  *   - duplicate addresses (first occurrence wins, case-insensitive)
+ *
+ * Suppression beats every inclusion source, including a hand-typed address:
+ * being named explicitly is not consent, and honouring an unsubscribe is a legal
+ * obligation rather than a preference. `resolveAudience` is therefore the single
+ * gate every send passes through.
  *
  * When the backend lands, `resolveAudience` becomes a query and the suppression
  * rules move into SQL; the shape returned here is what the send route needs.
@@ -102,6 +109,37 @@ export interface ResolvedAudience {
   suppressed: { noEmail: number; optedOut: number; doNotContact: number; duplicates: number };
 }
 
+/** Why a contact can't be mailed, or null when they can. */
+export type SuppressionReason = "noEmail" | "optedOut" | "doNotContact";
+
+/**
+ * The single consent gate. Every inclusion path — filters, tags, and hand-typed
+ * addresses — runs through this, so there is no way to construct an audience
+ * that reaches someone who has opted out.
+ */
+export function suppressionFor(
+  contact: { email?: unknown; emailOptOut?: unknown; tags?: unknown },
+  company?: { emailOptOut?: unknown; tags?: unknown },
+): SuppressionReason | null {
+  const email = typeof contact.email === "string" ? contact.email.trim() : "";
+  if (!email) return "noEmail";
+  // Contact-level unsubscribe.
+  if (contact.emailOptOut === true) return "optedOut";
+  // Account-level unsubscribe covers everyone at that company.
+  if (company?.emailOptOut === true) return "optedOut";
+  if (tagsOf(contact).includes(DNC_TAG)) return "doNotContact";
+  if (company && tagsOf(company).includes(DNC_TAG)) return "doNotContact";
+  return null;
+}
+
+/** Convenience for UI badges: can this contact be emailed right now? */
+export function isContactMailable(contactId: string): boolean {
+  const c = CONTACTS.find((x) => x.id === contactId);
+  if (!c) return false;
+  const company = c.companyId ? COMPANIES.find((co) => co.id === c.companyId) : undefined;
+  return suppressionFor(c, company) === null;
+}
+
 /**
  * Resolve a definition to a deduped, suppression-filtered recipient list.
  */
@@ -149,14 +187,10 @@ export function resolveAudience(def: AudienceDef): ResolvedAudience {
   for (const [contactId, via] of picked) {
     const c = CONTACTS.find((x) => x.id === contactId);
     if (!c) continue;
-    const email = typeof c.email === "string" ? c.email.trim() : "";
-    if (!email) { suppressed.noEmail += 1; continue; }
-    if (c.emailOptOut === true) { suppressed.optedOut += 1; continue; }
     const company = c.companyId ? companyById.get(c.companyId) : undefined;
-    if (tagsOf(c).includes(DNC_TAG) || (company && tagsOf(company).includes(DNC_TAG))) {
-      suppressed.doNotContact += 1;
-      continue;
-    }
+    const reason = suppressionFor(c, company);
+    if (reason) { suppressed[reason] += 1; continue; }
+    const email = (c.email as string).trim();
     const key = email.toLowerCase();
     if (seen.has(key)) { suppressed.duplicates += 1; continue; }
     seen.add(key);
@@ -169,15 +203,22 @@ export function resolveAudience(def: AudienceDef): ResolvedAudience {
     });
   }
 
-  // ---- 3. Manual addresses (also deduped, but never suppression-filtered:
-  //         an explicitly typed address is an intentional act) ----
+  // ---- 3. Manual addresses ----
+  // These go through the SAME consent gate. Typing an address by hand is not
+  // consent: if it resolves to a contact who unsubscribed (or whose company
+  // did), it is dropped exactly as if it had come from a filter.
   for (const raw of def.manualEmails) {
     const email = raw.trim();
     if (!email) continue;
     const key = email.toLowerCase();
     if (seen.has(key)) { suppressed.duplicates += 1; continue; }
-    seen.add(key);
     const match = CONTACTS.find((c) => c.email && c.email.toLowerCase() === key);
+    if (match) {
+      const company = match.companyId ? companyById.get(match.companyId) : undefined;
+      const reason = suppressionFor(match, company);
+      if (reason) { suppressed[reason] += 1; continue; }
+    }
+    seen.add(key);
     members.push({
       email,
       contactId: match?.id,
