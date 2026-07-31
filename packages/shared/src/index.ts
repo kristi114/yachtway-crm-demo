@@ -1,7 +1,7 @@
 // @yachtway/shared — the API contract.
 // Zod schemas double as runtime validators (API) and compile-time types (web).
 
-export const SHARED_CONTRACT_VERSION = "0.15.0";
+export const SHARED_CONTRACT_VERSION = "0.17.0";
 
 export * from "./common.js";
 export * from "./auth.js";
@@ -17,3 +17,5 @@ export * from "./brands.js";
 export * from "./easyfund.js";
 export * from "./mastercover.js";
 export * from "./invoices.js";
+export * from "./emails.js";
+export * from "./activities.js";

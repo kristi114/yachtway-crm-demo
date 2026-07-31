@@ -183,6 +183,190 @@ CREATE POLICY analytics_snapshots_write ON analytics_snapshots FOR ALL
   USING (current_role_can('analytics', 'write'))
   WITH CHECK (current_role_can('analytics', 'write'));
 
+-- ============================================================================
+-- Record activity — tasks, notes, appointments, personal calendar.
+--
+-- Notes are the interesting one. `private` and `secure` are per-AUTHOR rules, so
+-- a role check alone cannot express them: the policy compares author_id against
+-- the session variable `app.current_user_id`, which withRole() binds alongside
+-- app.current_role. An unset variable is the empty string, which never equals a
+-- real author id, so the default is deny.
+-- ============================================================================
+CREATE OR REPLACE FUNCTION current_user_id()
+RETURNS text
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT NULLIF(current_setting('app.current_user_id', true), '');
+$$;
+GRANT EXECUTE ON FUNCTION current_user_id() TO crm_app;
+
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tasks FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tasks_read  ON tasks;
+DROP POLICY IF EXISTS tasks_write ON tasks;
+CREATE POLICY tasks_read ON tasks FOR SELECT
+  USING (current_role_can('task.general', 'read'));
+CREATE POLICY tasks_write ON tasks FOR ALL
+  USING (current_role_can('task.general', 'write'))
+  WITH CHECK (current_role_can('task.general', 'write'));
+
+-- notes: the grant gates the table; visibility gates the ROW.
+--   public / team → anyone holding the grant
+--   private       → the author only
+--   secure        → the author, or ADMIN
+ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notes FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS notes_read  ON notes;
+DROP POLICY IF EXISTS notes_write ON notes;
+CREATE POLICY notes_read ON notes FOR SELECT
+  USING (
+    current_role_can('note.general', 'read')
+    AND (
+      visibility IN ('public', 'team')
+      OR (visibility = 'private' AND author_id IS NOT DISTINCT FROM current_user_id())
+      OR (visibility = 'secure'  AND (
+            author_id IS NOT DISTINCT FROM current_user_id()
+            OR current_setting('app.current_role', true) = 'ADMIN'))
+    )
+  );
+CREATE POLICY notes_write ON notes FOR ALL
+  USING (
+    current_role_can('note.general', 'write')
+    AND (
+      visibility IN ('public', 'team')
+      OR (visibility = 'private' AND author_id IS NOT DISTINCT FROM current_user_id())
+      OR (visibility = 'secure'  AND (
+            author_id IS NOT DISTINCT FROM current_user_id()
+            OR current_setting('app.current_role', true) = 'ADMIN'))
+    )
+  )
+  -- A caller may not file a private or secure note under someone else's name:
+  -- the author of a restricted note must be the caller (ADMIN excepted, since it
+  -- can already read them).
+  WITH CHECK (
+    current_role_can('note.general', 'write')
+    AND (
+      visibility IN ('public', 'team')
+      OR author_id IS NOT DISTINCT FROM current_user_id()
+      OR current_setting('app.current_role', true) = 'ADMIN'
+    )
+  );
+
+ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE appointments FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS appointments_read  ON appointments;
+DROP POLICY IF EXISTS appointments_write ON appointments;
+CREATE POLICY appointments_read ON appointments FOR SELECT
+  USING (current_role_can('appointment.general', 'read'));
+CREATE POLICY appointments_write ON appointments FOR ALL
+  USING (current_role_can('appointment.general', 'write'))
+  WITH CHECK (current_role_can('appointment.general', 'write'));
+
+-- personal_calendar_entries: private by construction. Every row is scoped to its
+-- owner, so one rep can never see another's 1:1s, travel or blocked time — not
+-- even an ADMIN, since this is personal rather than business data.
+ALTER TABLE personal_calendar_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE personal_calendar_entries FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS personal_calendar_read  ON personal_calendar_entries;
+DROP POLICY IF EXISTS personal_calendar_write ON personal_calendar_entries;
+CREATE POLICY personal_calendar_read ON personal_calendar_entries FOR SELECT
+  USING (
+    current_role_can('appointment.general', 'read')
+    AND user_id IS NOT DISTINCT FROM current_user_id()
+  );
+CREATE POLICY personal_calendar_write ON personal_calendar_entries FOR ALL
+  USING (
+    current_role_can('appointment.general', 'write')
+    AND user_id IS NOT DISTINCT FROM current_user_id()
+  )
+  WITH CHECK (
+    current_role_can('appointment.general', 'write')
+    AND user_id IS NOT DISTINCT FROM current_user_id()
+  );
+
+-- ============================================================================
+-- Email object. Class decides the gate: a marketing send is email.marketing,
+-- system/transactional mail is email.general. Templates, campaigns and saved
+-- audiences are marketing assets (reps hold email.marketing READ only, so they
+-- can review campaign results without being able to send bulk).
+-- ============================================================================
+CREATE OR REPLACE FUNCTION email_resource(p_kind text)
+RETURNS text
+LANGUAGE sql
+IMMUTABLE
+AS $$
+  SELECT CASE
+    WHEN p_kind = 'marketing' THEN 'email.marketing'
+    ELSE 'email.general'
+  END;
+$$;
+GRANT EXECUTE ON FUNCTION email_resource(text) TO crm_app;
+
+ALTER TABLE email_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE email_templates FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS email_templates_read  ON email_templates;
+DROP POLICY IF EXISTS email_templates_write ON email_templates;
+CREATE POLICY email_templates_read ON email_templates FOR SELECT
+  USING (current_role_can('email.marketing', 'read'));
+CREATE POLICY email_templates_write ON email_templates FOR ALL
+  USING (current_role_can('email.marketing', 'write'))
+  WITH CHECK (current_role_can('email.marketing', 'write'));
+
+ALTER TABLE email_campaigns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE email_campaigns FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS email_campaigns_read  ON email_campaigns;
+DROP POLICY IF EXISTS email_campaigns_write ON email_campaigns;
+CREATE POLICY email_campaigns_read ON email_campaigns FOR SELECT
+  USING (current_role_can('email.marketing', 'read'));
+CREATE POLICY email_campaigns_write ON email_campaigns FOR ALL
+  USING (current_role_can('email.marketing', 'write'))
+  WITH CHECK (current_role_can('email.marketing', 'write'));
+
+ALTER TABLE email_campaign_steps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE email_campaign_steps FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS email_campaign_steps_read  ON email_campaign_steps;
+DROP POLICY IF EXISTS email_campaign_steps_write ON email_campaign_steps;
+CREATE POLICY email_campaign_steps_read ON email_campaign_steps FOR SELECT
+  USING (current_role_can('email.marketing', 'read'));
+CREATE POLICY email_campaign_steps_write ON email_campaign_steps FOR ALL
+  USING (current_role_can('email.marketing', 'write'))
+  WITH CHECK (current_role_can('email.marketing', 'write'));
+
+ALTER TABLE email_audiences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE email_audiences FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS email_audiences_read  ON email_audiences;
+DROP POLICY IF EXISTS email_audiences_write ON email_audiences;
+CREATE POLICY email_audiences_read ON email_audiences FOR SELECT
+  USING (current_role_can('email.marketing', 'read'));
+CREATE POLICY email_audiences_write ON email_audiences FOR ALL
+  USING (current_role_can('email.marketing', 'write'))
+  WITH CHECK (current_role_can('email.marketing', 'write'));
+
+-- Sends + recipients: gated per row by the send's kind. email_recipients carries
+-- its own denormalized `kind` so the check is direct — a subquery into
+-- email_sends would return NULL under RLS for a hidden send and fall through to
+-- the general class, leaking marketing recipients to a rep.
+ALTER TABLE email_sends ENABLE ROW LEVEL SECURITY;
+ALTER TABLE email_sends FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS email_sends_read  ON email_sends;
+DROP POLICY IF EXISTS email_sends_write ON email_sends;
+CREATE POLICY email_sends_read ON email_sends FOR SELECT
+  USING (current_role_can(email_resource(kind), 'read'));
+CREATE POLICY email_sends_write ON email_sends FOR ALL
+  USING (current_role_can(email_resource(kind), 'write'))
+  WITH CHECK (current_role_can(email_resource(kind), 'write'));
+
+ALTER TABLE email_recipients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE email_recipients FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS email_recipients_read  ON email_recipients;
+DROP POLICY IF EXISTS email_recipients_write ON email_recipients;
+CREATE POLICY email_recipients_read ON email_recipients FOR SELECT
+  USING (current_role_can(email_resource(kind), 'read'));
+CREATE POLICY email_recipients_write ON email_recipients FOR ALL
+  USING (current_role_can(email_resource(kind), 'write'))
+  WITH CHECK (current_role_can(email_resource(kind), 'write'));
+
 -- Amplitude destination tables. Behavioural data is tied to contacts, so read
 -- follows the contact.general grant; writes are INTEGRATION/ADMIN only (the
 -- webhook ingests as INTEGRATION). Reps/Fintech can read the activity of

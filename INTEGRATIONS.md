@@ -1,5 +1,28 @@
 # External integrations — wiring TODO
 
+## Record activity is now real (2026-07-31)
+
+`tasks-log.ts`, `notes.ts`, `note-access.ts` and `personal-calendar.ts` have a
+backend: `tasks`, `notes`, `appointments` and `personal_calendar_entries`
+(migration `20260731160000_record_activity`), with routes in
+`apps/api/src/routes/activities.ts` and one combined
+`GET /{contacts|companies|listings|opportunities}/:id/activity` feed.
+
+Two notes for the front end:
+
+- **Note visibility is enforced in Postgres**, not just the UI. `private` is
+  author-only and `secure` is author + ADMIN, compared against the caller's auth
+  subject via the new `app.current_user_id` session variable. A note you may not
+  read is simply absent from the list, and single-record access answers 404 — the
+  existence of a private note is itself information. `canViewNote` is exported
+  from `@yachtway/shared` so the UI applies the identical rule.
+- **Personal calendar entries are owner-only, ADMIN included.** There is no
+  `userId` parameter on the endpoint to tempt anyone; RLS scopes every row.
+
+Still mock: **Google Calendar sync**. `appointments.external_event_id` is the
+column it will key on (OAuth calendar scopes + a webhook channel for changes).
+
+
 This standalone build ships the **front-end seams** for several integrations on
 mock data. The routing, config surfaces and per-user preferences are already
 modelled; the items below are what's left to make them **real** at the API layer
@@ -19,18 +42,51 @@ Front-end today: connection state is a localStorage toggle (Admin → Email
 providers); `sendEmail` routes by `kind` and blocks when the provider is
 "disconnected"; notification emails go through `sendSystemEmail` → SES.
 
-**To make real:**
-- **AWS SES** — verified sending domain + DKIM/SPF/DMARC; IAM creds or role;
-  configuration set for bounce/complaint webhooks; sandbox → production access.
-- **Gmail** — Google Workspace OAuth (domain-wide delegation) so reps send
-  *as* their own mailbox; per-user token storage + refresh; `send-as` scopes.
-- **Mailgun** — API key + sending domain; inbound/event webhooks for
-  delivered/opened/clicked → replace the synthesized metrics in
-  `email-recipients.ts`; suppression/unsubscribe list handling.
-- Replace the mock transport in `sendEmail`/`sendSystemEmail` with a
-  `POST /emails/send` that carries `kind` and dispatches to the routed provider.
-- Move the connection state from localStorage to an admin-managed, SOC 2-audited
-  server config; never store provider secrets client-side.
+**Backend landed 2026-07-31 — the email object is now real in `apps/api`:**
+
+- Models: `EmailTemplate`, `EmailCampaign` (+ `EmailCampaignStep`),
+  `EmailAudience`, `EmailSend`, `EmailRecipient`
+  (migration `20260731120000_email_object`).
+- `POST /emails/send` carries `kind` and dispatches through
+  `integrations/emailRouter.ts`, which enforces the routing table above and
+  rejects an override outside `KIND_ALLOWED_PROVIDERS` with 400.
+- Consent is enforced server-side in `emails/audience.ts`: every inclusion path
+  (saved filters, contact tags, company tags, explicit contacts, hand-typed
+  addresses) passes one gate, and suppressed recipients are **persisted with
+  their reason** rather than dropped silently.
+- Tracking is real: per-recipient `trackingToken` behind `GET /e/o/:token`
+  (open pixel), `GET /e/c/:token` (click redirect) and `GET|POST /e/u/:token`
+  (unsubscribe → sets `contact.emailOptOut`, so the next send excludes them).
+- Scheduling: `now | at | batch | rss | smart`, with the runner in
+  `emails/scheduler.ts` (migration `20260731140000_email_scheduler`). It POLLS
+  the database rather than holding timers, so a restart loses nothing, and it
+  CLAIMS each send with a `locked_at` lease so two API instances can never
+  dispatch the same batch twice. `at` fires at its time; `batch` sends `quantity`
+  per window and only on the configured local weekdays; `smart` gives each
+  recipient its own due time inside the window; `rss` re-checks the feed and
+  spawns a child send per batch of new items. Non-opener follow-ups fire once,
+  `delayDays` after the parent, skipping bounced and failed addresses.
+  **Set `EMAIL_SCHEDULER_INTERVAL_SEC=60` on exactly one deployed instance** —
+  it defaults to 0 (off) so a dev server or test run never sends a real batch.
+- RLS: marketing sends and their recipients are gated on `email.marketing`,
+  system/transactional on `email.general`. Reps hold general rw + marketing ro,
+  so a rep gets 403 on a bulk send and 404 on a marketing send they can't see.
+
+**Still to make real (transport credentials):**
+- **AWS SES** (`SES_REGION`, `SES_ACCESS_KEY_ID`, `SES_SECRET_ACCESS_KEY`,
+  `SES_CONFIGURATION_SET`) — verified sending domain + DKIM/SPF/DMARC, sandbox →
+  production access, configuration set for bounce/complaint webhooks. Until set,
+  a system send answers **503**, deliberately, rather than pretending.
+- **Gmail** (`GMAIL_SERVICE_ACCOUNT_EMAIL`, `GMAIL_PRIVATE_KEY`) — Workspace
+  domain-wide delegation with the `gmail.send` scope so reps send as their own
+  mailbox. Same 503 until set.
+- **Mailgun** — already wired for sending; the per-recipient token rides along as
+  the Mailgun custom variable, so extend `POST /webhooks/mailgun` to resolve
+  delivered/opened/clicked events onto `email_recipients` via
+  `provider_message_id`.
+- Move the front end off the localStorage provider toggle onto an
+  admin-managed, audited server config; never hold provider secrets client-side.
+- `PUBLIC_API_URL` must be set for tracking and unsubscribe links to be absolute.
 
 ## Notification delivery (added — mock)
 

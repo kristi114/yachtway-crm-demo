@@ -67,6 +67,31 @@ const envSchema = z.object({
   // without Amplitude; the endpoints answer 503 until a secret is set.
   AMPLITUDE_WEBHOOK_SECRET: z.string().optional(),
   AMPLITUDE_SIGNING_KEY: z.string().optional(),
+
+  // AWS SES — the SYSTEM email transport (password resets, alerts, receipts).
+  // Needs a verified sending domain with DKIM/SPF/DMARC, production (non-sandbox)
+  // access, and a configuration set for bounce/complaint webhooks. Optional so
+  // the app boots without it; sends answer 503 until all three are set.
+  SES_REGION: z.string().optional(),
+  SES_ACCESS_KEY_ID: z.string().optional(),
+  SES_SECRET_ACCESS_KEY: z.string().optional(),
+  SES_CONFIGURATION_SET: z.string().optional(),
+
+  // Gmail — the TRANSACTIONAL transport, so 1:1 mail leaves the rep's own
+  // mailbox. Needs Google Workspace domain-wide delegation (service account +
+  // gmail.send scope) so the API can impersonate each rep's address.
+  GMAIL_SERVICE_ACCOUNT_EMAIL: z.string().optional(),
+  GMAIL_PRIVATE_KEY: z.string().optional(),
+
+  // Public base URL used to build per-recipient tracking + unsubscribe links.
+  PUBLIC_API_URL: z.string().url().optional(),
+
+  // Email scheduler poll interval, in seconds. 0 (default) = OFF, so no process
+  // sends scheduled mail unless it was told to — a dev server or a test run must
+  // never fire a customer's batch. Set to 60 on exactly one deployed instance;
+  // the runner claims each send with a DB lease, so more than one is safe but
+  // pointless.
+  EMAIL_SCHEDULER_INTERVAL_SEC: z.coerce.number().int().min(0).default(0),
 });
 
 export const env = envSchema.parse(process.env);

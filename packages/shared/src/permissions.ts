@@ -24,6 +24,11 @@ export const ResourceClassSchema = z.enum([
   "estimate.general", // CRM-only client estimates (no financing estimates in v1)
   "receivable.financing", // partner (lender/insurer) amounts owed — accrued on close
   "payout.financing", // money owed/paid to dealers (referral payouts)
+  "email.general", // 1:1 transactional + system email and its per-recipient results
+  "email.marketing", // templates, campaigns, audiences and bulk marketing sends
+  "task.general", // tasks on any record
+  "note.general", // notes on any record (private/secure rows filtered per author)
+  "appointment.general", // meetings on a record + the owner's personal calendar
 ]);
 export type ResourceClass = z.infer<typeof ResourceClassSchema>;
 
@@ -73,6 +78,11 @@ export const DEFAULT_ROLE_GRANTS: Record<Role, PermissionGrant[]> = {
     ro("analytics"),
     rw("invoice.general"), // subscription/studio/other invoices; a rep may approve their own
     rw("estimate.general"),
+    rw("email.general"), // reps send 1:1 mail from their own mailbox
+    ro("email.marketing"), // may read campaign results, may not send bulk
+    rw("task.general"),
+    rw("note.general"),
+    rw("appointment.general"),
     // intentionally NO easyfund / mastercover / contact.sensitive / conversations.financing
     // / invoice.financing / bill.* → EasyFund & MasterCover pipeline opportunities and their
     // referral invoices/payables are filtered out for reps (only the Company rollup shows).
@@ -93,6 +103,9 @@ export const DEFAULT_ROLE_GRANTS: Record<Role, PermissionGrant[]> = {
     rw("estimate.general"),
     rw("receivable.financing"),
     rw("payout.financing"),
+    rw("task.general"),
+    rw("note.general"),
+    rw("appointment.general"),
   ],
   MARKETING: [
     ro("company.general"),
@@ -102,6 +115,11 @@ export const DEFAULT_ROLE_GRANTS: Record<Role, PermissionGrant[]> = {
     rw("analytics"),
     ro("invoice.general"),
     ro("estimate.general"),
+    rw("email.general"),
+    rw("email.marketing"), // marketing owns templates, audiences and campaigns
+    rw("task.general"),
+    rw("note.general"),
+    rw("appointment.general"),
   ],
 };
 

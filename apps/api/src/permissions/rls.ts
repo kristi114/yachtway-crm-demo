@@ -15,9 +15,22 @@ import { prisma } from "../db.js";
 export function withRole<T>(
   role: Role | SystemRole,
   fn: (tx: Prisma.TransactionClient) => Promise<T>,
+  opts?: WithRoleOptions,
 ): Promise<T> {
   return prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT set_config('app.current_role', ${role}, true)`;
+    // Identity, for policies that are per-AUTHOR rather than per-role: a private
+    // note is readable by the person who wrote it and nobody else, which no role
+    // check can express. Empty string when absent, since set_config rejects NULL
+    // — and an empty value can never equal a real author id, so the default is
+    // deny. Callers that don't pass a userId keep their previous behaviour
+    // exactly, because no existing policy reads this variable.
+    await tx.$executeRaw`SELECT set_config('app.current_user_id', ${opts?.userId ?? ""}, true)`;
     return fn(tx);
   });
+}
+
+export interface WithRoleOptions {
+  /** Auth subject (WorkOS sub / dev shim id) of the caller. */
+  userId?: string | null;
 }

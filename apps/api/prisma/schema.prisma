@@ -89,6 +89,8 @@ model User {
   ownedOpportunities Opportunity[]  @relation("OpportunityOwner")
   messages           Message[]      @relation("MessageOwner")
   assignedConversations  Conversation[]          @relation("ConversationAssignee")
+  assignedTasks          Task[]                  @relation("TaskAssignee")
+  ownedAppointments      Appointment[]           @relation("AppointmentOwner")
   roleRef            Role?          @relation("UserRole", fields: [userRole], references: [key])
 
   customFields Json?    @map("custom_fields")
@@ -288,6 +290,9 @@ model Company {
   messages                     Message[]                @relation("MessageCompany")
   conversations                Conversation[]           @relation("ConversationCompany")
   analyticsProfiles            AnalyticsProfile[]       @relation("AnalyticsProfileCompany")
+  tasks                        Task[]                   @relation("TaskCompany")
+  notes                        Note[]                   @relation("NoteCompany")
+  appointments                 Appointment[]            @relation("AppointmentCompany")
   invoices                     Invoice[]                @relation("InvoiceCompany")
   bills                        Bill[]                   @relation("BillCompany")
   creditNotes                  CreditNote[]             @relation("CreditNoteCompany")
@@ -431,6 +436,10 @@ model Contact {
   billsBilled                Bill[]               @relation("BillContact")
   creditNotesReceived        CreditNote[]         @relation("CreditNoteContact")
   estimatesReceived          Estimate[]           @relation("EstimateRecipient")
+  emailRecipients            EmailRecipient[]     @relation("EmailRecipientContact")
+  tasks                      Task[]               @relation("TaskContact")
+  notes                      Note[]               @relation("NoteContact")
+  appointments               Appointment[]        @relation("AppointmentContact")
   amplitudeEvents            AmplitudeEvent[]     @relation("AmplitudeEventContact")
   amplitudeCohorts           AmplitudeCohortMembership[] @relation("AmplitudeCohortMembershipContact")
 
@@ -567,6 +576,9 @@ model Listing {
   messages             Message[]            @relation("MessageListing")
   conversations        Conversation[]       @relation("ConversationListing")
   analyticsProfiles    AnalyticsProfile[]   @relation("AnalyticsProfileListing")
+  tasks                Task[]               @relation("TaskListing")
+  notes                Note[]               @relation("NoteListing")
+  appointments         Appointment[]        @relation("AppointmentListing")
 
   customFields Json?    @map("custom_fields")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -779,6 +791,9 @@ model Opportunity {
   studioShootCredits     StudioShootCredit[]        @relation("ShootCreditOpportunity")
   partnerReceivable      PartnerReceivable?         @relation("PartnerReceivableOpportunity")
   payout                 Payout?                    @relation("PayoutOpportunity")
+  tasks                  Task[]                     @relation("TaskOpportunity")
+  notes                  Note[]                     @relation("NoteOpportunity")
+  appointments           Appointment[]              @relation("AppointmentOpportunity")
 
   customFields Json?    @map("custom_fields")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -1342,6 +1357,397 @@ model AnalyticsSnapshot {
   @@index([profileId])
   @@index([periodStart])
   @@map("analytics_snapshots")
+}
+
+// ============================================================================
+// Record activity — tasks, notes, appointments, personal calendar.
+//
+// Each activity hangs off exactly ONE record. The UI models that as
+// relatedType + relatedId; here it is four nullable FKs plus a CHECK constraint
+// (in the migration) so referential integrity holds and a deleted record takes
+// its activity with it. The API translates between the two shapes.
+//
+// Notes carry a real access model — private (author only) and secure (author +
+// admins) — enforced in Postgres via `app.current_user_id`, not just in the API.
+// ============================================================================
+
+model Task {
+  id    String @id @default(cuid())
+  title String @map("title")
+  /// Free-text assignee as the UI collects it today.
+  assignee     String? @map("assignee")
+  /// Real user, when the assignee resolves to one.
+  assignedToId String? @map("assigned_to_id")
+  dueDate      DateTime? @map("due_date")
+  /// Open | In Progress | Done
+  status       String  @default("Open") @map("status")
+  /// Low | Med | High
+  priority     String  @default("Med") @map("priority")
+  notes        String? @map("notes")
+  completedAt  DateTime? @map("completed_at")
+
+  contactId     String? @map("contact_id")
+  companyId     String? @map("company_id")
+  listingId     String? @map("listing_id")
+  opportunityId String? @map("opportunity_id")
+
+  createdById String? @map("created_by_id")
+
+  assignedTo  User?        @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  contact     Contact?     @relation("TaskContact", fields: [contactId], references: [id], onDelete: Cascade)
+  company     Company?     @relation("TaskCompany", fields: [companyId], references: [id], onDelete: Cascade)
+  listing     Listing?     @relation("TaskListing", fields: [listingId], references: [id], onDelete: Cascade)
+  opportunity Opportunity? @relation("TaskOpportunity", fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([contactId])
+  @@index([companyId])
+  @@index([listingId])
+  @@index([opportunityId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+model Note {
+  id   String @id @default(cuid())
+  body String @map("body")
+  /// Display name shown in the UI.
+  author String? @map("author")
+  /// Auth subject of the author — what the private/secure policies compare
+  /// against. Not a users FK: auth subjects (WorkOS sub / dev shim) are not rows
+  /// in `users`, same convention as Message.createdById.
+  authorId String? @map("author_id")
+  /// private | team | public | secure
+  visibility String @default("team") @map("visibility")
+
+  contactId     String? @map("contact_id")
+  companyId     String? @map("company_id")
+  listingId     String? @map("listing_id")
+  opportunityId String? @map("opportunity_id")
+
+  contact     Contact?     @relation("NoteContact", fields: [contactId], references: [id], onDelete: Cascade)
+  company     Company?     @relation("NoteCompany", fields: [companyId], references: [id], onDelete: Cascade)
+  listing     Listing?     @relation("NoteListing", fields: [listingId], references: [id], onDelete: Cascade)
+  opportunity Opportunity? @relation("NoteOpportunity", fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([contactId])
+  @@index([companyId])
+  @@index([listingId])
+  @@index([opportunityId])
+  @@index([authorId])
+  @@index([visibility])
+  @@map("notes")
+}
+
+model Appointment {
+  id      String    @id @default(cuid())
+  title   String    @map("title")
+  startAt DateTime  @map("start_at")
+  endAt   DateTime? @map("end_at")
+  allDay  Boolean   @default(false) @map("all_day")
+  location String?  @map("location")
+  notes    String?  @map("notes")
+  /// Free-text attendee list, as the UI collects it.
+  attendees String[] @map("attendees")
+  timezone  String?  @map("timezone")
+  /// Google Calendar event id, once two-way sync lands.
+  externalEventId String? @map("external_event_id")
+
+  contactId     String? @map("contact_id")
+  companyId     String? @map("company_id")
+  listingId     String? @map("listing_id")
+  opportunityId String? @map("opportunity_id")
+
+  ownerId     String? @map("owner_id")
+  createdById String? @map("created_by_id")
+
+  owner       User?        @relation("AppointmentOwner", fields: [ownerId], references: [id])
+  contact     Contact?     @relation("AppointmentContact", fields: [contactId], references: [id], onDelete: Cascade)
+  company     Company?     @relation("AppointmentCompany", fields: [companyId], references: [id], onDelete: Cascade)
+  listing     Listing?     @relation("AppointmentListing", fields: [listingId], references: [id], onDelete: Cascade)
+  opportunity Opportunity? @relation("AppointmentOpportunity", fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([contactId])
+  @@index([companyId])
+  @@index([listingId])
+  @@index([opportunityId])
+  @@index([startAt])
+  @@index([externalEventId])
+  @@map("appointments")
+}
+
+model PersonalCalendarEntry {
+  id String @id @default(cuid())
+  /// Auth subject who owns the entry. RLS restricts every row to its owner, so
+  /// one rep can never see another's 1:1s, travel or blocked focus time.
+  userId  String    @map("user_id")
+  title   String    @map("title")
+  startAt DateTime  @map("start_at")
+  endAt   DateTime? @map("end_at")
+  allDay  Boolean   @default(false) @map("all_day")
+  location String?  @map("location")
+  notes    String?  @map("notes")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([startAt])
+  @@map("personal_calendar_entries")
+}
+
+// ============================================================================
+// Email object — templates, campaigns, audiences, sends, per-recipient results.
+//
+// Routing is fixed by email CLASS, not user preference: system → SES,
+// transactional → Gmail (as the rep), marketing → Mailgun. A send may override
+// the provider only within KIND_ALLOWED_PROVIDERS (@yachtway/shared).
+//
+// Consent is enforced at RESOLVE time, not send time: every recipient row is
+// written with a status, and a suppressed row (opted out / do-not-contact / no
+// address) is persisted with its reason and never dispatched. That way the
+// audit trail shows who was deliberately excluded, not just who was mailed.
+// ============================================================================
+
+model EmailTemplate {
+  id        String  @id @default(cuid())
+  name      String  @map("name")
+  subject   String  @map("subject")
+  /// Inbox preview line rendered after the subject.
+  preheader String? @map("preheader")
+  /// <title> element — independent of the subject line.
+  title     String? @map("title")
+  /// system | transactional | marketing
+  kind      String  @default("marketing") @map("kind")
+  /// Optional provider override; must be allowed for the kind.
+  provider  String? @map("provider")
+  /// design (GrapesJS) | html (code editor)
+  mode      String  @map("mode")
+  html      String  @map("html")
+  /// GrapesJS project state when mode = design.
+  design    Json?   @map("design")
+
+  /// Auth subject who last saved it (WorkOS sub / dev shim) — no FK, same
+  /// convention as Message.createdById.
+  createdById String? @map("created_by_id")
+  updatedById String? @map("updated_by_id")
+
+  campaignSteps EmailCampaignStep[] @relation("CampaignStepTemplate")
+  sends         EmailSend[]         @relation("EmailSendTemplate")
+
+  customFields Json?    @map("custom_fields")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([kind])
+  @@index([name])
+  @@map("email_templates")
+}
+
+model EmailCampaign {
+  id          String  @id @default(cuid())
+  name        String  @map("name")
+  description String? @map("description")
+  /// Draft | Active | Paused | Complete
+  status      String  @default("Draft") @map("status")
+
+  createdById String? @map("created_by_id")
+
+  steps EmailCampaignStep[] @relation("CampaignSteps")
+  sends EmailSend[]         @relation("EmailSendCampaign")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("email_campaigns")
+}
+
+model EmailCampaignStep {
+  id         String @id @default(cuid())
+  campaignId String @map("campaign_id")
+  templateId String @map("template_id")
+  /// 1-based position in the series.
+  step       Int    @map("step")
+  /// Days to wait after the previous step.
+  delayDays  Int    @default(0) @map("delay_days")
+
+  campaign EmailCampaign @relation("CampaignSteps", fields: [campaignId], references: [id], onDelete: Cascade)
+  template EmailTemplate @relation("CampaignStepTemplate", fields: [templateId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([campaignId, step])
+  @@index([templateId])
+  @@map("email_campaign_steps")
+}
+
+model EmailAudience {
+  id   String @id @default(cuid())
+  name String @map("name")
+  /// Saved contact filter clauses ({field, op, value}[]).
+  contactClauses Json?    @map("contact_clauses")
+  contactTags    String[] @map("contact_tags")
+  companyTags    String[] @map("company_tags")
+  /// Hand-typed addresses; still pass the consent gate on resolve.
+  manualEmails   String[] @map("manual_emails")
+
+  createdById String? @map("created_by_id")
+
+  sends EmailSend[] @relation("EmailSendAudience")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([name])
+  @@map("email_audiences")
+}
+
+model EmailSend {
+  id      String @id @default(cuid())
+  subject String @map("subject")
+  html    String @map("html")
+  preheader String? @map("preheader")
+  title     String? @map("title")
+
+  /// system | transactional | marketing — decides the provider.
+  kind               String  @map("kind")
+  /// ses | gmail | mailgun — resolved at send time.
+  provider           String  @map("provider")
+  providerOverridden Boolean @default(false) @map("provider_overridden")
+
+  senderName  String? @map("sender_name")
+  senderEmail String? @map("sender_email")
+  replyTo     String? @map("reply_to")
+
+  templateId   String? @map("template_id")
+  templateName String? @map("template_name")
+  campaignId   String? @map("campaign_id")
+  audienceId   String? @map("audience_id")
+  audienceName String? @map("audience_name")
+
+  /// draft | scheduled | sending | sent | failed | cancelled
+  status String @default("draft") @map("status")
+
+  /// now | at | batch | rss | smart
+  scheduleMode     String    @default("now") @map("schedule_mode")
+  scheduleTimezone String?   @map("schedule_timezone")
+  /// Batch / RSS / smart-send parameters for the chosen mode.
+  scheduleConfig   Json?     @map("schedule_config")
+  scheduledFor     DateTime? @map("scheduled_for")
+  sentAt           DateTime? @map("sent_at")
+  cancelledAt      DateTime? @map("cancelled_at")
+
+  /// Tracking + tagging options (trackClicks, utmTracking, tagOnOpen…).
+  options     Json? @map("options")
+  /// A/B config; variantB subject+html live here.
+  abTest      Json? @map("ab_test")
+  /// Automatic re-send to non-openers.
+  followUp    Json? @map("follow_up")
+  attachments String[] @map("attachments")
+
+  /// Rollups maintained as recipient rows change state.
+  recipientCount  Int @default(0) @map("recipient_count")
+  deliveredCount  Int @default(0) @map("delivered_count")
+  openedCount     Int @default(0) @map("opened_count")
+  clickedCount    Int @default(0) @map("clicked_count")
+  bouncedCount    Int @default(0) @map("bounced_count")
+  suppressedCount Int @default(0) @map("suppressed_count")
+
+  /// A follow-up re-send points back at the send it chased.
+  parentSendId String? @map("parent_send_id")
+  syncError    String? @map("sync_error")
+  createdById  String? @map("created_by_id")
+
+  /// Scheduler bookkeeping. nextRunAt is when the runner should next look at
+  /// this send (the next batch window, or the next RSS feed check); lockedAt is
+  /// the claim lease that stops two API instances dispatching the same batch.
+  nextRunAt DateTime? @map("next_run_at")
+  lockedAt  DateTime? @map("locked_at")
+  /// RSS mode: guid of the newest feed item already turned into a send, so a
+  /// re-check only picks up genuinely new items.
+  lastRssItemId String?   @map("last_rss_item_id")
+  lastCheckedAt DateTime? @map("last_checked_at")
+  /// Follow-up bookkeeping: set once the non-opener re-send has been created, so
+  /// it can never fire twice.
+  followUpSentAt DateTime? @map("follow_up_sent_at")
+
+  template   EmailTemplate?   @relation("EmailSendTemplate", fields: [templateId], references: [id])
+  campaign   EmailCampaign?   @relation("EmailSendCampaign", fields: [campaignId], references: [id])
+  audience   EmailAudience?   @relation("EmailSendAudience", fields: [audienceId], references: [id])
+  parentSend EmailSend?       @relation("EmailSendFollowUp", fields: [parentSendId], references: [id])
+  followUps  EmailSend[]      @relation("EmailSendFollowUp")
+  recipients EmailRecipient[] @relation("EmailRecipientSend")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([kind])
+  @@index([campaignId])
+  @@index([templateId])
+  @@index([scheduledFor])
+  @@index([nextRunAt])
+  @@map("email_sends")
+}
+
+model EmailRecipient {
+  id        String  @id @default(cuid())
+  sendId    String  @map("send_id")
+  /// Resolved CRM contact when the address matched one.
+  contactId String? @map("contact_id")
+  email     String  @map("email")
+  name      String? @map("name")
+  /// A | B for a split test.
+  variant   String? @map("variant")
+  /// Denormalized copy of the parent send's kind so RLS can gate this row by a
+  /// DIRECT column check. A subquery into email_sends would return NULL for a
+  /// send the role can't see, fall through to the general class, and leak
+  /// marketing recipients — the same trap ConversationReadState avoids.
+  kind      String  @map("kind")
+
+  /// queued | sent | delivered | opened | clicked | bounced | failed | suppressed | unsubscribed
+  status            String  @default("queued") @map("status")
+  /// noEmail | optedOut | doNotContact | duplicate — set when status = suppressed.
+  suppressionReason String? @map("suppression_reason")
+  /// Provider's message id, for matching delivery webhooks back to this row.
+  providerMessageId String? @map("provider_message_id")
+  /// Per-recipient token backing the open pixel, click redirect and unsubscribe link.
+  trackingToken     String  @unique @map("tracking_token")
+
+  /// Smart-send: the per-recipient time this row is due, spread across the
+  /// configured window. Null means "as soon as the send runs".
+  scheduledFor DateTime? @map("scheduled_for")
+  sentAt      DateTime? @map("sent_at")
+  deliveredAt DateTime? @map("delivered_at")
+  openedAt    DateTime? @map("opened_at")
+  clickedAt   DateTime? @map("clicked_at")
+  bouncedAt   DateTime? @map("bounced_at")
+  failureReason String? @map("failure_reason")
+
+  send    EmailSend @relation("EmailRecipientSend", fields: [sendId], references: [id], onDelete: Cascade)
+  contact Contact?  @relation("EmailRecipientContact", fields: [contactId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([sendId, email])
+  @@index([contactId])
+  @@index([status])
+  @@index([providerMessageId])
+  @@map("email_recipients")
 }
 
 // ============================================================================

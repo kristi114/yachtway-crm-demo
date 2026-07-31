@@ -12,6 +12,9 @@ import conversationsRouter from "./routes/conversations.js";
 import brandsRouter from "./routes/brands.js";
 import webhooksRouter from "./routes/webhooks.js";
 import amplitudeRouter from "./routes/amplitude.js";
+import emailsRouter from "./routes/emails.js";
+import activitiesRouter from "./routes/activities.js";
+import emailTrackingRouter from "./routes/email-tracking.js";
 import reportsRouter from "./routes/reports.js";
 import financingRouter from "./routes/financing.js";
 import mastercoverRouter from "./routes/mastercover.js";
@@ -76,6 +79,12 @@ export function createApp(): Express {
   // + self-authenticated with a shared secret; mounted alongside the other webhooks.
   app.use(amplitudeRouter);
 
+  // PUBLIC email tracking: open pixel, click redirect, unsubscribe. Mounted with
+  // the other public routes (before the authed routers) since the recipient's
+  // mail client calls these with no CRM session — the per-recipient tracking
+  // token is the only credential.
+  app.use(emailTrackingRouter);
+
   // Session + permissions (dev auth shim inside each router until WorkOS lands).
   app.use(meRouter);
   app.use(companiesRouter);
@@ -84,6 +93,8 @@ export function createApp(): Express {
   app.use(invoicesRouter);
   app.use(accountingRouter);
   app.use(conversationsRouter);
+  app.use(emailsRouter);
+  app.use(activitiesRouter);
   app.use(brandsRouter);
   app.use(reportsRouter);
   app.use(financingRouter);
