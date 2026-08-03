@@ -41,6 +41,8 @@ export interface DispatchInput {
   html: string;
   /** Opaque per-recipient id echoed back by delivery webhooks. */
   trackingToken: string;
+  /** Extra MIME headers — RFC 8058 one-click unsubscribe on marketing mail. */
+  headers?: Record<string, string>;
 }
 
 export interface DispatchResult {
@@ -105,6 +107,7 @@ export async function dispatch(
         subject: input.subject,
         html: input.html,
         crmMessageId: input.trackingToken,
+        ...(input.headers ? { headers: input.headers } : {}),
       });
       return { providerMessageId: res.providerMessageId };
     }

@@ -17,6 +17,7 @@ import { authorize, authorizeAny } from "../permissions/authorize.js";
 import { withRole } from "../permissions/rls.js";
 import { loadEffectivePermissions } from "../permissions/service.js";
 import { resolveAudience } from "../emails/audience.js";
+import { EmailComplianceError } from "../emails/footer.js";
 import { createSend } from "../emails/sendService.js";
 import {
   ProviderNotAllowedError,
@@ -357,6 +358,12 @@ router.post("/emails/send", authorizeAny([GENERAL, MARKETING], "write"), async (
     );
     res.status(201).json({ data: out });
   } catch (err) {
+    // Same shape as an unconfigured provider: the deployment is missing config, so
+    // 503 rather than 400. Message is email_compliance_not_configured:<VAR>.
+    if (err instanceof EmailComplianceError) {
+      res.status(503).json({ error: err.message });
+      return;
+    }
     if (err instanceof ProviderNotConfiguredError) {
       res.status(503).json({ error: err.message });
       return;

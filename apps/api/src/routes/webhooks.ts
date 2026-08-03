@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { Router } from "express";
+import { applyRecipientEvent } from "../emails/sendService.js";
 import { withRole } from "../permissions/rls.js";
 import {
   mapMailgunEventToStatus,
@@ -115,9 +116,93 @@ interface MailgunWebhookBody {
     event?: string;
     recipient?: string;
     url?: string;
+    /** `permanent` | `temporary` on a `failed` event — a temporary failure is a retry, not a bounce. */
+    severity?: string;
+    reason?: string;
+    "delivery-status"?: { message?: string; description?: string; code?: number };
     "user-variables"?: Record<string, unknown>;
     message?: { headers?: { "message-id"?: string } };
   };
+}
+
+/**
+ * Apply a Mailgun event to one email_recipients row.
+ *
+ * `v:crm_message_id` carries the recipient's `trackingToken` (see
+ * emailRouter.dispatch), so one unique lookup resolves the row. Returns false
+ * when the token belongs to no recipient, which lets the caller fall through to
+ * the conversation-Message path.
+ *
+ * Idempotency is the webhook_events ledger's job, not this function's — the
+ * caller has already claimed the event id by the time we get here.
+ */
+async function applyMailgunToRecipient(
+  tx: Prisma.TransactionClient,
+  trackingToken: string,
+  data: NonNullable<MailgunWebhookBody["event-data"]>,
+): Promise<boolean> {
+  const r = await tx.emailRecipient.findUnique({ where: { trackingToken } });
+  if (!r) return false;
+
+  const event = data.event ?? "";
+  const reason =
+    data.reason ??
+    data["delivery-status"]?.message ??
+    data["delivery-status"]?.description ??
+    null;
+
+  switch (event) {
+    case "delivered":
+      await applyRecipientEvent(tx, r.id, "delivered");
+      return true;
+    case "opened":
+      await applyRecipientEvent(tx, r.id, "opened");
+      return true;
+    case "clicked":
+      await applyRecipientEvent(tx, r.id, "clicked");
+      return true;
+
+    // Mailgun refused the message outright — treat as a hard bounce.
+    case "rejected":
+      await applyRecipientEvent(tx, r.id, "bounced");
+      return true;
+
+    // `failed` is only a bounce when it's PERMANENT. A temporary failure means
+    // Mailgun will retry, and marking it bounced would both overstate the bounce
+    // rate and permanently exclude an address that may yet deliver.
+    case "failed":
+      if ((data.severity ?? "").toLowerCase() === "permanent") {
+        await applyRecipientEvent(tx, r.id, "bounced");
+        if (reason) {
+          await tx.emailRecipient.update({ where: { id: r.id }, data: { failureReason: reason } });
+        }
+      } else {
+        await tx.emailRecipient.update({
+          where: { id: r.id },
+          data: { status: "failed", failureReason: reason },
+        });
+      }
+      return true;
+
+    // A spam complaint or a provider-side unsubscribe must suppress the CONTACT,
+    // not just annotate the row: contacts.emailOptOut is what audience.ts checks,
+    // so this is what stops the next campaign mailing them. Same flag our own
+    // one-click unsubscribe sets.
+    case "complained":
+    case "unsubscribed":
+      await tx.emailRecipient.update({
+        where: { id: r.id },
+        data: { status: event === "complained" ? "complained" : "unsubscribed" },
+      });
+      if (r.contactId) {
+        await tx.contact.update({ where: { id: r.contactId }, data: { emailOptOut: true } });
+      }
+      return true;
+
+    // accepted / stored / other informational events: the row is already 'sent'.
+    default:
+      return true;
+  }
 }
 
 router.post("/webhooks/mailgun", async (req, res) => {
@@ -174,6 +259,15 @@ router.post("/webhooks/mailgun", async (req, res) => {
       if (typeof crmMessageId !== "string" || crmMessageId.length === 0) {
         return { duplicate: false, matched: false };
       }
+
+      // Two senders share this webhook and both round-trip their correlation id
+      // in v:crm_message_id: conversations pass a Message id, the email object
+      // passes a recipient trackingToken. Try the email object first — its lookup
+      // is on a unique column and cannot collide with a cuid Message id.
+      if (await applyMailgunToRecipient(tx, crmMessageId, data)) {
+        return { duplicate: false, matched: true };
+      }
+
       const msg = await tx.message.findUnique({ where: { id: crmMessageId } });
       if (!msg) return { duplicate: false, matched: false };
 

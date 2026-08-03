@@ -84,7 +84,17 @@ const envSchema = z.object({
   GMAIL_PRIVATE_KEY: z.string().optional(),
 
   // Public base URL used to build per-recipient tracking + unsubscribe links.
+  // REQUIRED for marketing sends: without it there is no absolute unsubscribe URL
+  // to put in the footer or the List-Unsubscribe header, so those sends are
+  // refused rather than mailed non-compliant. Should be the API's public origin,
+  // e.g. https://yachtway-crm-production.up.railway.app
   PUBLIC_API_URL: z.string().url().optional(),
+
+  // Physical postal address rendered in the email footer. CAN-SPAM requires a
+  // valid physical mailing address in commercial email, and the canonical YachtWay
+  // footer carries it as GHL's {{location.address}} tag, which the CRM has to fill
+  // itself. Also REQUIRED for marketing sends.
+  COMPANY_POSTAL_ADDRESS: z.string().optional(),
 
   // Email scheduler poll interval, in seconds. 0 (default) = OFF, so no process
   // sends scheduled mail unless it was told to — a dev server or a test run must

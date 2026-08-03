@@ -8,5 +8,9 @@ export default defineConfig({
     include: ["src/**/*.integration.test.ts"],
     // DB writes must not race across files.
     fileParallelism: false,
+    // Runs BEFORE any suite and aborts unless DATABASE_URL is local. These tests
+    // delete rows; a stale shell variable pointing at Railway must not be able to
+    // turn `pnpm test:integration` into a production write.
+    setupFiles: ["./vitest.integration.setup.ts"],
   },
 });

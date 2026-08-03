@@ -6,6 +6,8 @@ import {
   canViewNote,
   NoteCreateSchema,
   NoteUpdateSchema,
+  type NoteVisibility,
+  NoteVisibilitySchema,
   PersonalEntryCreateSchema,
   PersonalEntryUpdateSchema,
   type RelatedType,
@@ -34,6 +36,20 @@ import { withRole } from "../permissions/rls.js";
  */
 const router: Router = Router();
 router.use(authContext);
+
+/**
+ * `notes.visibility` is a plain String column, so Prisma hands us `string` while
+ * the shared rule (canViewNote, shared with the UI) is typed on the NoteVisibility
+ * union. Narrow at this boundary — the database is the untyped edge — and fail
+ * CLOSED: a value the enum doesn't recognise is treated as `secure` (author +
+ * ADMIN only) rather than falling through canViewNote's permissive default and
+ * exposing a note nobody classified. The column is NOT NULL with default 'team',
+ * so this only fires on genuinely unexpected data.
+ */
+function noteVisibility(value: string): NoteVisibility {
+  const parsed = NoteVisibilitySchema.safeParse(value);
+  return parsed.success ? parsed.data : "secure";
+}
 
 type ParentColumns = {
   contactId?: string | null;
@@ -224,7 +240,8 @@ router.patch("/notes/:id", authorize("note.general", "write"), async (req, res) 
       // Belt and braces: RLS already hides notes the caller can't read, but check
       // the same rule in code so the intent is visible at the call site.
       const viewer = { userId: req.auth!.userId, role: req.auth!.role as Role };
-      if (!canViewNote(existing, viewer)) return null;
+      if (!canViewNote({ ...existing, visibility: noteVisibility(existing.visibility) }, viewer))
+        return null;
       return tx.note.update({
         where: { id: existing.id },
         data: {

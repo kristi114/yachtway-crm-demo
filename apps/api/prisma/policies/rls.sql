@@ -183,6 +183,21 @@ CREATE POLICY analytics_snapshots_write ON analytics_snapshots FOR ALL
   USING (current_role_can('analytics', 'write'))
   WITH CHECK (current_role_can('analytics', 'write'));
 
+-- contact_identities: the identifier ledger behind matching and dedupe. Same
+-- class as the contact it belongs to, so anyone who can see a contact can see
+-- which platform accounts and addresses resolve to it. Note the contacts trigger
+-- writes this table as the INVOKING role, so this policy must permit any role
+-- that writes contacts — contact.general write covers exactly that set.
+ALTER TABLE contact_identities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contact_identities FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS contact_identities_read  ON contact_identities;
+DROP POLICY IF EXISTS contact_identities_write ON contact_identities;
+CREATE POLICY contact_identities_read ON contact_identities FOR SELECT
+  USING (current_role_can('contact.general', 'read'));
+CREATE POLICY contact_identities_write ON contact_identities FOR ALL
+  USING (current_role_can('contact.general', 'write'))
+  WITH CHECK (current_role_can('contact.general', 'write'));
+
 -- ============================================================================
 -- Record activity — tasks, notes, appointments, personal calendar.
 --
@@ -438,6 +453,23 @@ DROP POLICY IF EXISTS brands_write ON brands;
 CREATE POLICY brands_read  ON brands FOR SELECT
   USING (current_setting('app.current_role', true) IS NOT NULL);
 CREATE POLICY brands_write ON brands FOR ALL
+  USING (current_setting('app.current_role', true) = 'ADMIN')
+  WITH CHECK (current_setting('app.current_role', true) = 'ADMIN');
+
+-- users: CRM staff records. Read = any authenticated role (owner/assignee names
+-- must render on every record); write = ADMIN only. Nothing in src/ writes this
+-- table today — user rows are administered out-of-band — so an ADMIN-only write
+-- gate costs nothing now and closes the hole where any role could reassign or
+-- delete staff records. NOTE for later: when WorkOS JIT provisioning lands it
+-- must run inside withRole("ADMIN"), or add INTEGRATION to the write predicate.
+-- (crm_sync is rolbypassrls, so the dual-write is unaffected either way.)
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users FORCE  ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS users_read  ON users;
+DROP POLICY IF EXISTS users_write ON users;
+CREATE POLICY users_read  ON users FOR SELECT
+  USING (current_setting('app.current_role', true) IS NOT NULL);
+CREATE POLICY users_write ON users FOR ALL
   USING (current_setting('app.current_role', true) = 'ADMIN')
   WITH CHECK (current_setting('app.current_role', true) = 'ADMIN');
 

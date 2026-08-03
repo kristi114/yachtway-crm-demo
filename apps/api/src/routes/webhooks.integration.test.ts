@@ -27,7 +27,35 @@ const CONV = "itest_mg_conv";
 const EVT_OPEN = "itest_mg_evt_open";
 let messageId = "";
 
-function webhookBody(eventId: string, event: string, crmMessageId: string, tsSeconds: number) {
+// Email-object fixtures: the same webhook must also resolve v:crm_message_id as
+// an email_recipients.tracking_token and move that row instead of a Message.
+const E_COMPANY = "itest_mgr_company";
+const E_CONTACT = "itest_mgr_contact";
+const E_SEND = "itest_mgr_send";
+const R_DELIVERED = "itest_mgr_r_delivered";
+const R_HARD = "itest_mgr_r_hardbounce";
+const R_SOFT = "itest_mgr_r_softfail";
+const R_SPAM = "itest_mgr_r_complained";
+const TOKEN = {
+  delivered: "itest-mgr-token-delivered",
+  hard: "itest-mgr-token-hard",
+  soft: "itest-mgr-token-soft",
+  spam: "itest-mgr-token-spam",
+};
+const EVT = {
+  delivered: "itest_mgr_evt_delivered",
+  hard: "itest_mgr_evt_hard",
+  soft: "itest_mgr_evt_soft",
+  spam: "itest_mgr_evt_spam",
+};
+
+function webhookBody(
+  eventId: string,
+  event: string,
+  crmMessageId: string,
+  tsSeconds: number,
+  extra: Record<string, unknown> = {},
+) {
   const timestamp = String(tsSeconds);
   const token = `tok-${eventId}`;
   const signature = createHmac("sha256", HOISTED.signingKey).update(timestamp + token).digest("hex");
@@ -38,6 +66,7 @@ function webhookBody(eventId: string, event: string, crmMessageId: string, tsSec
       event,
       url: "https://yachtway.com/listing/42",
       "user-variables": { crm_message_id: crmMessageId },
+      ...extra,
     },
   };
 }
@@ -62,14 +91,89 @@ beforeAll(async () => {
       create: { id: CONV, channel: "email", status: "open", sensitivityClass: "general" },
       update: { messageCount: 0 },
     });
+
+    await tx.company.upsert({
+      where: { id: E_COMPANY },
+      create: { id: E_COMPANY, name: "Itest Mailgun Recipient Dealer" },
+      update: {},
+    });
+    await tx.contact.upsert({
+      where: { id: E_CONTACT },
+      create: {
+        id: E_CONTACT,
+        firstName: "Bounce",
+        lastName: "Tester",
+        email: "itest-mgr-contact@example.com",
+        companyId: E_COMPANY,
+        // Set explicitly on BOTH branches: the column is nullable with no default,
+        // so a fresh database would otherwise start this fixture at null and the
+        // precondition below would be asserting the create path, not the feature.
+        emailOptOut: false,
+      },
+      update: { emailOptOut: false },
+    });
+    await tx.emailSend.upsert({
+      where: { id: E_SEND },
+      create: {
+        id: E_SEND,
+        subject: "[itest] mailgun recipient events",
+        html: "<p>x</p>",
+        kind: "marketing",
+        provider: "mailgun",
+        status: "sent",
+        recipientCount: 4,
+      },
+      update: {
+        status: "sent",
+        deliveredCount: 0,
+        openedCount: 0,
+        clickedCount: 0,
+        bouncedCount: 0,
+      },
+    });
+    const rows: [string, string, string][] = [
+      [R_DELIVERED, TOKEN.delivered, "itest-mgr-delivered@example.com"],
+      [R_HARD, TOKEN.hard, "itest-mgr-hard@example.com"],
+      [R_SOFT, TOKEN.soft, "itest-mgr-soft@example.com"],
+      [R_SPAM, TOKEN.spam, "itest-mgr-contact@example.com"],
+    ];
+    for (const [id, trackingToken, email] of rows) {
+      await tx.emailRecipient.upsert({
+        where: { id },
+        create: {
+          id,
+          sendId: E_SEND,
+          email,
+          kind: "marketing",
+          status: "sent",
+          trackingToken,
+          sentAt: new Date(),
+          // Only the complaint row is linked to a contact, so the opt-out
+          // assertion can't be satisfied accidentally by another row.
+          ...(id === R_SPAM ? { contactId: E_CONTACT } : {}),
+        },
+        update: {
+          status: "sent",
+          deliveredAt: null,
+          bouncedAt: null,
+          openedAt: null,
+          clickedAt: null,
+          failureReason: null,
+        },
+      });
+    }
   });
 });
 
 afterAll(async () => {
   await withRole("ADMIN", async (tx) => {
-    await tx.$executeRaw`DELETE FROM webhook_events WHERE external_id IN (${EVT_OPEN})`;
+    await tx.$executeRaw`DELETE FROM webhook_events WHERE external_id IN (${EVT_OPEN}, ${EVT.delivered}, ${EVT.hard}, ${EVT.soft}, ${EVT.spam})`;
     await tx.$executeRaw`DELETE FROM messages WHERE conversation_id = ${CONV}`;
     await tx.$executeRaw`DELETE FROM conversations WHERE id = ${CONV}`;
+    // email_recipients cascades from email_sends; contacts do not, so go in order.
+    await tx.$executeRaw`DELETE FROM email_sends WHERE id = ${E_SEND}`;
+    await tx.$executeRaw`DELETE FROM contacts WHERE id = ${E_CONTACT}`;
+    await tx.$executeRaw`DELETE FROM companies WHERE id = ${E_COMPANY}`;
   });
   vi.unstubAllGlobals();
   await prisma.$disconnect();
@@ -137,5 +241,80 @@ describe("Mailgun send + tracking webhook (HTTP)", () => {
 
     const msg = await withRole("ADMIN", (tx) => tx.message.findUnique({ where: { id: messageId } }));
     expect(Number(msg?.openCount)).toBe(1);
+  });
+});
+
+/**
+ * The same endpoint, the other sender. emailRouter.dispatch() puts each
+ * recipient's tracking_token in v:crm_message_id, so these events must land on
+ * email_recipients — the path that populates delivered_at and, critically, the
+ * bounce state the non-opener follow-up logic filters on.
+ */
+describe("Mailgun events → email_recipients", () => {
+  const post = (eventId: string, event: string, token: string, extra?: Record<string, unknown>) =>
+    request(app)
+      .post("/webhooks/mailgun")
+      .send(webhookBody(eventId, event, token, Math.floor(Date.now() / 1000), extra))
+      .expect(200);
+
+  const recipient = (id: string) =>
+    withRole("ADMIN", (tx) => tx.emailRecipient.findUnique({ where: { id } }));
+
+  it("stamps a delivered event on the recipient and counts it on the send", async () => {
+    const res = await post(EVT.delivered, "delivered", TOKEN.delivered);
+    expect(res.body.matched).toBe(true);
+
+    const r = await recipient(R_DELIVERED);
+    expect(r?.status).toBe("delivered");
+    expect(r?.deliveredAt).toBeTruthy();
+
+    const send = await withRole("ADMIN", (tx) =>
+      tx.emailSend.findUnique({ where: { id: E_SEND } }),
+    );
+    expect(send?.deliveredCount).toBe(1);
+  });
+
+  it("treats a PERMANENT failure as a bounce, with the reason", async () => {
+    await post(EVT.hard, "failed", TOKEN.hard, {
+      severity: "permanent",
+      reason: "suppress-bounce",
+      "delivery-status": { message: "550 5.1.1 user unknown", code: 550 },
+    });
+
+    const r = await recipient(R_HARD);
+    expect(r?.status).toBe("bounced");
+    expect(r?.bouncedAt).toBeTruthy();
+    expect(r?.failureReason).toBe("suppress-bounce");
+  });
+
+  it("does NOT bounce a TEMPORARY failure — Mailgun will retry", async () => {
+    await post(EVT.soft, "failed", TOKEN.soft, {
+      severity: "temporary",
+      "delivery-status": { message: "451 4.7.1 try again later", code: 451 },
+    });
+
+    const r = await recipient(R_SOFT);
+    expect(r?.status).toBe("failed");
+    expect(r?.bouncedAt).toBeNull(); // the follow-up filter must still consider it
+    expect(r?.failureReason).toBe("451 4.7.1 try again later");
+  });
+
+  it("opts the CONTACT out on a spam complaint, not just the row", async () => {
+    const before = await withRole("ADMIN", (tx) =>
+      tx.contact.findUnique({ where: { id: E_CONTACT } }),
+    );
+    // null and false both mean "not opted out" — that's how audience.ts reads it —
+    // so don't let fixture state masquerade as a behavioural failure.
+    expect(before?.emailOptOut ?? false).toBe(false);
+
+    await post(EVT.spam, "complained", TOKEN.spam);
+
+    const r = await recipient(R_SPAM);
+    expect(r?.status).toBe("complained");
+    const after = await withRole("ADMIN", (tx) =>
+      tx.contact.findUnique({ where: { id: E_CONTACT } }),
+    );
+    // This is the flag audience.ts checks, so the next campaign now skips them.
+    expect(after?.emailOptOut).toBe(true);
   });
 });

@@ -279,8 +279,15 @@ function autoSplit(section: FieldSection): FieldSection[] {
   // Only split when there are enough fields to warrant it.
   if (section.fields.length < 20) return [section];
   const buckets = new Map<string, FieldDef[]>();
+  const sectionTitleLc = section.title.toLowerCase();
   for (const f of section.fields) {
-    const grp = classifyField(f.key);
+    let grp = classifyField(f.key);
+    // A group whose name the parent section already covers isn't a subsection -
+    // it IS the section. Without this, "Engagement & Analytics" spawned a
+    // separate "Analytics" card that could never merge back into its own parent.
+    if (grp !== "Overview" && sectionTitleLc.includes(grp.toLowerCase())) {
+      grp = "Overview";
+    }
     const arr = buckets.get(grp) ?? [];
     arr.push(f);
     buckets.set(grp, arr);

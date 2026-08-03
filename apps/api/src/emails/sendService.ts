@@ -3,6 +3,8 @@ import type { Prisma } from "@prisma/client";
 import type { EmailKind, EmailSendCreate, ResolvedAudience } from "@yachtway/shared";
 import { dispatch, planTransport } from "../integrations/emailRouter.js";
 import { resolveAudience } from "./audience.js";
+import { assertCanSend, complianceHeaders, renderForRecipient } from "./footer.js";
+import { type Personalization, personalizeHtml, personalizeSubject } from "./personalize.js";
 
 /**
  * Send pipeline: resolve → persist → dispatch (or schedule).
@@ -186,8 +188,42 @@ export async function dispatchQueued(
   let dispatched = 0;
   let failed = 0;
 
+  // Merge-tag data for every recipient in ONE query rather than per recipient — a
+  // 5,000-address campaign must not become 5,000 round trips inside the dispatch
+  // transaction.
+  const contactIds = [...new Set(queued.map((r) => r.contactId).filter((id): id is string => Boolean(id)))];
+  const contacts = contactIds.length
+    ? await tx.contact.findMany({
+        where: { id: { in: contactIds } },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          companyRecord: { select: { name: true } },
+        },
+      })
+    : [];
+  const byContactId = new Map(contacts.map((c) => [c.id, c]));
+
+  // Refuse an uncompliant marketing send BEFORE the loop: fail the send whole
+  // rather than part-mail it. Propagates to a 503 at the route. Both variants are
+  // checked — an A/B test must not smuggle a non-compliant B copy past the gate.
+  assertCanSend({ kind: send.kind, html: `${send.html}\n${ab?.variantB?.html ?? ""}` });
+
   for (const r of queued) {
     const variantB = ab?.enabled && r.variant === "B" ? ab.variantB : null;
+    const c = r.contactId ? byContactId.get(r.contactId) : undefined;
+    // A hand-typed address has no contact row, so fall back to the display name
+    // captured on the recipient. First word as the given name is a heuristic, but
+    // it beats an empty greeting and only applies to addresses typed by a human.
+    const [firstFromName, ...restFromName] = (r.name ?? "").trim().split(/\s+/);
+    const person: Personalization = {
+      firstName: c?.firstName ?? firstFromName ?? null,
+      lastName: c?.lastName ?? (restFromName.length ? restFromName.join(" ") : null),
+      email: c?.email ?? r.email,
+      companyName: c?.companyRecord?.name ?? null,
+    };
     try {
       const res = await dispatch(send.provider as Parameters<typeof dispatch>[0], {
         to: r.email,
@@ -195,9 +231,21 @@ export async function dispatchQueued(
         from,
         fromName: send.senderName,
         replyTo: send.replyTo,
-        subject: variantB?.subject ?? send.subject,
-        html: variantB?.html ?? send.html,
+        subject: personalizeSubject(variantB?.subject ?? send.subject, person),
+        // Per-recipient: resolves {{email.unsubscribe_link}} and
+        // {{location.address}}, guarantees an opt-out on marketing mail, and adds
+        // the open pixel. The token is unique per recipient, so this cannot be
+        // hoisted out of the loop.
+        // Personalize FIRST, then apply compliance: the footer and pixel we append
+        // contain no contact tokens, and the two namespaces do not overlap
+        // (contact./company. here, email./location. there).
+        html: renderForRecipient({
+          html: personalizeHtml(variantB?.html ?? send.html, person),
+          trackingToken: r.trackingToken,
+          kind: send.kind,
+        }),
         trackingToken: r.trackingToken,
+        headers: complianceHeaders({ trackingToken: r.trackingToken, kind: send.kind }),
       });
       await tx.emailRecipient.update({
         where: { id: r.id },

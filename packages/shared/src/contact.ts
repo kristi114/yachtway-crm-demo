@@ -16,7 +16,18 @@ export const ContactSchema = z.object({
   title: z.string().nullish(),
   platformRole: z.string().nullish(),
   tags: z.array(z.string()).nullish(),
-  email: z.string().email().nullish(),
+  /**
+   * Unique across contacts, and stored lower-cased/trimmed. Normalising here
+   * rather than at each call site means every write path — create, update, and
+   * anything else parsing this schema — lands the same canonical form, so
+   * `Konner@x.com` and `konner@x.com` can never become two contacts. It is also
+   * the join key Amplitude arrives on (its user_id is the user's email).
+   */
+  email: z
+    .string()
+    .email()
+    .nullish()
+    .transform((v) => (typeof v === "string" ? v.trim().toLowerCase() : v)),
   phone: z.string().nullish(),
   officePhone: z.string().nullish(),
   mobilePhone: z.string().nullish(),

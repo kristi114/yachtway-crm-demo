@@ -387,7 +387,16 @@ export async function createDueFollowUps(now: Date = new Date()): Promise<number
     "INTEGRATION",
     (tx) =>
       tx.emailSend.findMany({
-        where: { status: "sent", followUpSentAt: null, NOT: { followUp: { equals: null } } },
+        // `followUp` is a nullable Json column, so "has a follow-up" can't be
+        // expressed as `not: null` — Prisma requires its DbNull/JsonNull
+        // sentinels there. Filter on the flag we actually care about instead:
+        // this matches the `!cfg?.enabled → continue` guard below exactly, and
+        // narrows the query so disabled and unset configs never leave Postgres.
+        where: {
+          status: "sent",
+          followUpSentAt: null,
+          followUp: { path: ["enabled"], equals: true },
+        },
         take: MAX_SENDS_PER_TICK,
         select: { id: true, followUp: true, sentAt: true },
       }),

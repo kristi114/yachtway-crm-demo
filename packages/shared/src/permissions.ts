@@ -103,6 +103,7 @@ export const DEFAULT_ROLE_GRANTS: Record<Role, PermissionGrant[]> = {
     rw("estimate.general"),
     rw("receivable.financing"),
     rw("payout.financing"),
+    rw("email.general"), // 1:1 mail to applicants/co-applicants; NOT bulk marketing
     rw("task.general"),
     rw("note.general"),
     rw("appointment.general"),
@@ -156,6 +157,19 @@ export const SYSTEM_ROLE_GRANTS: Record<SystemRole, PermissionGrant[]> = {
     // stage close + settlement + payout endpoints (rolls the dealer/partner totals).
     rw("receivable.financing"),
     rw("payout.financing"),
+    // BOTH email classes, because two system paths run as INTEGRATION and RLS gates
+    // email_sends/email_recipients by kind (email_resource(): marketing ->
+    // email.marketing, else email.general):
+    //   • the scheduler — claims and dispatches `at`/`batch`/`rss` sends and
+    //     non-opener follow-ups. Without these grants the claiming updateMany
+    //     matches zero rows and every scheduled send silently stays "scheduled".
+    //   • routes/email-tracking.ts — the public open pixel, click redirect and
+    //     one-click unsubscribe. That route always answers 200 so tokens can't be
+    //     probed, so a denial here is INVISIBLE: opens/clicks vanish and, worse,
+    //     unsubscribe fails to set contact.emailOptOut. Caught by the scheduler
+    //     integration suite, 2026-08-01.
+    rw("email.general"),
+    rw("email.marketing"),
   ],
 };
 

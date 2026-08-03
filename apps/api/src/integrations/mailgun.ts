@@ -33,6 +33,8 @@ export interface SendMailgunInput {
   text?: string;
   /** our messages.id — round-trips back on every event as a custom variable */
   crmMessageId: string;
+  /** Extra MIME headers, sent as Mailgun `h:` params (e.g. List-Unsubscribe). */
+  headers?: Record<string, string>;
 }
 
 export interface SendMailgunResult {
@@ -64,6 +66,13 @@ export async function sendMailgunMessage(input: SendMailgunInput): Promise<SendM
   form.set("o:tracking-clicks", "yes");
   // Custom variable echoed back on every tracking event for correlation.
   form.set("v:crm_message_id", input.crmMessageId);
+  // Arbitrary MIME headers (Mailgun's h: prefix). Used for RFC 8058 one-click
+  // unsubscribe: List-Unsubscribe + List-Unsubscribe-Post. Headers are NOT
+  // rewritten by Mailgun's click tracking, so the mailbox provider POSTs our URL
+  // directly.
+  for (const [name, value] of Object.entries(input.headers ?? {})) {
+    form.set(`h:${name}`, value);
+  }
 
   const url = `${env.MAILGUN_BASE_URL}/v3/${env.MAILGUN_DOMAIN}/messages`;
   const auth = Buffer.from(`api:${env.MAILGUN_API_KEY}`).toString("base64");

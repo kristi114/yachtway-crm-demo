@@ -1,7 +1,18 @@
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+// env.ts parses process.env at import time, so this must run before the app loads.
+// A marketing send is REFUSED without an unsubscribe URL and a postal address
+// (see emails/footer.ts), which is exactly what we want in production and exactly
+// what would make this suite 503 if left unset.
+vi.hoisted(() => {
+  process.env.PUBLIC_API_URL = "https://itest.crm.yachtway.test";
+  process.env.COMPANY_POSTAL_ADDRESS = "1 Itest Way, Fort Lauderdale, FL 33301";
+});
+
 import { SYSTEM_ROLE_GRANTS } from "@yachtway/shared";
 import { createApp } from "../app.js";
+import { prisma } from "../db.js";
 import { withRole } from "../permissions/rls.js";
 
 /**
@@ -45,17 +56,31 @@ vi.mock("../integrations/mailgun.js", async (importOriginal) => {
 });
 
 beforeAll(async () => {
-  await withRole("ADMIN", async (tx) => {
-    // Grants for the roles the suite drives (self-seeding, like the other suites).
-    for (const [role, grants] of Object.entries(SYSTEM_ROLE_GRANTS)) {
-      for (const g of grants) {
-        await tx.$executeRaw`
-          INSERT INTO permission_grants (id, role_key, resource_class, can_read, can_write)
-          VALUES (gen_random_uuid()::text, ${role}, ${g.resource}, ${g.read}, ${g.write})
-          ON CONFLICT DO NOTHING`;
-      }
+  // Grants for the system roles the suite drives (self-seeding, like the other
+  // suites). permission_grants keys on role_id -> roles.id, so the Role row has to
+  // exist first and the write has to go through the delegate: the raw INSERT this
+  // replaced named a `role_key` column that has never existed on the table.
+  for (const [role, grants] of Object.entries(SYSTEM_ROLE_GRANTS)) {
+    const roleRow = await prisma.role.upsert({
+      where: { key: role },
+      update: { isActive: true },
+      create: { key: role, name: role },
+    });
+    for (const g of grants) {
+      await prisma.permissionGrant.upsert({
+        where: { roleId_resourceClass: { roleId: roleRow.id, resourceClass: g.resource } },
+        update: { canRead: g.read, canWrite: g.write },
+        create: {
+          roleId: roleRow.id,
+          resourceClass: g.resource,
+          canRead: g.read,
+          canWrite: g.write,
+        },
+      });
     }
+  }
 
+  await withRole("ADMIN", async (tx) => {
     await tx.tag.upsert({
       where: { id: DNC_TAG },
       create: { id: DNC_TAG, name: "Do Not Contact", nameKey: "do not contact" },
@@ -210,12 +235,18 @@ describe("sending", () => {
     expect(detail.body.data.recipients[0].providerMessageId).toBeTruthy();
   });
 
-  it("hides a marketing send from a rep (RLS): 404 on fetch, absent from the list", async () => {
+  // A rep holds email.marketing READ-ONLY (permissions.ts: "may read campaign
+  // results, may not send bulk"), so a marketing send is deliberately VISIBLE to
+  // them — same as Salesforce/HubSpot, where the rep needs to know whether their
+  // contact opened the campaign. The boundary being proven here is read vs write,
+  // not existence: reading is allowed, sending is 403. An earlier version of this
+  // test asserted 404 and contradicted the grant matrix.
+  it("lets a rep READ a marketing send but never send one", async () => {
     const created = await request(app)
       .post("/emails/send")
       .set("x-crm-role", "MARKETING")
       .send({
-        subject: "[itest] hidden from reps",
+        subject: "[itest] readable by reps",
         html: "<p>x</p>",
         kind: "marketing",
         contactIds: [C_OK],
@@ -225,7 +256,27 @@ describe("sending", () => {
     const asRep = await request(app)
       .get(`/emails/sends/${created.body.data.sendId}`)
       .set("x-crm-role", "SALES_REP");
-    expect(asRep.status).toBe(404);
+    expect(asRep.status).toBe(200);
+    expect(asRep.body.data.kind).toBe("marketing");
+
+    // ...and it shows up in the rep's list rather than being filtered out.
+    const list = await request(app).get("/emails/sends").set("x-crm-role", "SALES_REP");
+    expect(list.status).toBe(200);
+    expect(
+      (list.body.data as { id: string }[]).some((s) => s.id === created.body.data.sendId),
+    ).toBe(true);
+
+    // The write side stays closed: read-only means read-only.
+    const repSend = await request(app)
+      .post("/emails/send")
+      .set("x-crm-role", "SALES_REP")
+      .send({
+        subject: "[itest] rep bulk attempt",
+        html: "<p>x</p>",
+        kind: "marketing",
+        contactIds: [C_OK],
+      });
+    expect(repSend.status).toBe(403);
   });
 });
 
@@ -280,6 +331,85 @@ describe("tracking + unsubscribe (public, no session)", () => {
     const res = await request(app).get("/e/o/not-a-real-token");
     expect(res.status).toBe(200);
     expect(res.headers["content-type"]).toContain("image/gif");
+  });
+
+  /**
+   * One unsubscribe link, two behaviours, split by method:
+   *   POST  = RFC 8058 one-click, immediate, no questions (mailbox providers)
+   *   GET   = the footer link a person clicks, offering the choice, NO side effect
+   */
+  it("GET on the unsubscribe link offers the choice and changes nothing", async () => {
+    const created = await request(app)
+      .post("/emails/send")
+      .set("x-crm-role", "MARKETING")
+      .send({
+        subject: "[itest] pref centre",
+        html: "<p>x</p>",
+        kind: "marketing",
+        // A hand-typed address, so this case needs no contact and cannot be
+        // perturbed by another test's opt-out state.
+        to: ["itest.pref@example.com"],
+      });
+    expect(created.status).toBe(201);
+    const token = await withRole("ADMIN", async (tx) => {
+      const r = await tx.emailRecipient.findFirst({
+        where: { sendId: created.body.data.sendId },
+      });
+      return r!.trackingToken;
+    });
+
+    const page = await request(app).get(`/e/u/${token}`).expect(200);
+    expect(page.headers["content-type"]).toContain("text/html");
+    // Both choices are offered...
+    expect(page.text).toContain(`/e/u/${token}/all`);
+    expect(page.text).toContain(`/e/u/${token}/resume`);
+    // ...and brand rules hold on a recipient-facing page.
+    expect(page.text).not.toMatch(/#(4b0ea3|8729fa|8334da|4409d7)/i);
+
+    // A GET must not mutate: link prefetchers follow these URLs unprompted.
+    const row = await withRole("ADMIN", (tx) =>
+      tx.emailRecipient.findFirst({ where: { trackingToken: token } }),
+    );
+    expect(row?.status).not.toBe("unsubscribed");
+  });
+
+  it("POST .../all unsubscribes and .../resume puts it back", async () => {
+    // An earlier case in this file opts C_OK out, so reset first: a suppressed
+    // recipient is a different path and would not exercise the toggle.
+    await withRole("ADMIN", (tx) =>
+      tx.contact.update({ where: { id: C_OK }, data: { emailOptOut: false } }),
+    );
+    const created = await request(app)
+      .post("/emails/send")
+      .set("x-crm-role", "MARKETING")
+      .send({
+        subject: "[itest] pref toggle",
+        html: "<p>x</p>",
+        kind: "marketing",
+        contactIds: [C_OK],
+      });
+    const token = await withRole("ADMIN", async (tx) => {
+      const r = await tx.emailRecipient.findFirst({
+        where: { sendId: created.body.data.sendId },
+      });
+      return r!.trackingToken;
+    });
+    const optOutOf = async () =>
+      withRole("ADMIN", async (tx) => {
+        const c = await tx.contact.findUnique({ where: { id: C_OK } });
+        return c!.emailOptOut;
+      });
+
+    await request(app).post(`/e/u/${token}/all`).expect(200);
+    expect(await optOutOf()).toBe(true);
+
+    await request(app).post(`/e/u/${token}/resume`).expect(200);
+    expect(await optOutOf()).toBe(false);
+  });
+
+  it("shows the same page for an unknown token — no validity oracle", async () => {
+    const real = await request(app).get("/e/u/00000000-0000-4000-8000-000000000000").expect(200);
+    expect(real.text).toContain("Email preferences");
   });
 });
 

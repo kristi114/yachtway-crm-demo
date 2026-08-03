@@ -44,17 +44,80 @@ function authenticate(req: {
   }
 }
 
-/** Resolve a CRM contact id from Amplitude ids. Prefers the identity contract
- *  (yachtwayDbId === user_id), then previously-linked amplitude ids. */
+/** Normalised form used by the identity ledger's (kind, value_key) unique index. */
+function identityKey(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+/**
+ * Resolve a CRM contact from Amplitude's ids, via the identity ledger.
+ *
+ * A person may hold SEVERAL platform accounts — they signed up more than once
+ * with different email addresses — and once those contacts are merged, every one
+ * of those identifiers must keep resolving to the surviving contact. That's why
+ * matching goes through `contact_identities` rather than the contact's own
+ * columns: those hold only the PRIMARY email and db id, so a merged-away
+ * identifier would silently stop matching and the events would look like a
+ * tracking bug.
+ *
+ * Amplitude's `user_id` is whatever the platform passes to setUserId(). As of
+ * 2026-07-31 that is the user's email, so `user_id` is checked as BOTH a
+ * yachtway_db_id and an email — no need to guess which convention is in force,
+ * and the platform can switch to the db id later with no code change.
+ *
+ * Ledger first, then the contact columns as a fallback (harmless belt-and-braces
+ * while the ledger backfills, and it keeps the resolver working if the trigger is
+ * ever disabled).
+ */
 async function resolveContactId(
   tx: Prisma.TransactionClient,
   ids: { userId: string | null; deviceId: string | null; amplitudeId: string | null },
 ): Promise<string | null> {
+  // One indexed lookup covering every identifier we were handed, in one round
+  // trip. `kind` is included so an email can never match a db id that happens to
+  // hold the same string.
+  const candidates: { kind: string; valueKey: string }[] = [];
+  if (ids.userId) {
+    const key = identityKey(ids.userId);
+    candidates.push(
+      { kind: "yachtway_db_id", valueKey: key },
+      { kind: "amplitude_user_id", valueKey: key },
+    );
+    if (ids.userId.includes("@")) candidates.push({ kind: "email", valueKey: key });
+  }
+  if (ids.amplitudeId) {
+    candidates.push({ kind: "amplitude_id", valueKey: identityKey(ids.amplitudeId) });
+  }
+  if (ids.deviceId) {
+    candidates.push({ kind: "device_id", valueKey: identityKey(ids.deviceId) });
+  }
+
+  if (candidates.length > 0) {
+    const hits = await tx.contactIdentity.findMany({
+      where: { OR: candidates },
+      select: { contactId: true, kind: true },
+    });
+    if (hits.length > 0) {
+      // Prefer the strongest identifier when several match: an account id beats a
+      // device, which is shared and gets recycled.
+      const rank = ["yachtway_db_id", "email", "amplitude_user_id", "amplitude_id", "device_id"];
+      hits.sort((a, b) => rank.indexOf(a.kind) - rank.indexOf(b.kind));
+      return hits[0]!.contactId;
+    }
+  }
+
+  // Fallback: the contact row's own primary columns.
   if (ids.userId) {
     const byDbId = await tx.contact.findUnique({ where: { yachtwayDbId: ids.userId } });
     if (byDbId) return byDbId.id;
     const byAmpUser = await tx.contact.findFirst({ where: { amplitudeUserId: ids.userId } });
     if (byAmpUser) return byAmpUser.id;
+    if (ids.userId.includes("@")) {
+      const byEmail = await tx.contact.findUnique({
+        where: { email: identityKey(ids.userId) },
+      });
+      if (byEmail) return byEmail.id;
+    }
   }
   if (ids.amplitudeId) {
     const byAmpId = await tx.contact.findFirst({ where: { amplitudeId: ids.amplitudeId } });
@@ -65,6 +128,38 @@ async function resolveContactId(
     if (byDevice) return byDevice.id;
   }
   return null;
+}
+
+/**
+ * Record an identifier we've just seen against a contact, so a value that only
+ * ever arrives from Amplitude (a device id, or a second signup email) becomes
+ * matchable later. Never steals an identifier already claimed by another contact —
+ * that's a merge decision, not something ingestion should decide.
+ */
+async function noteIdentity(
+  tx: Prisma.TransactionClient,
+  contactId: string,
+  kind: string,
+  value: string | null,
+): Promise<void> {
+  if (!value || !value.trim()) return;
+  const valueKey = identityKey(value);
+  const existing = await tx.contactIdentity.findUnique({
+    where: { kind_valueKey: { kind, valueKey } },
+    select: { id: true, contactId: true },
+  });
+  if (existing) {
+    if (existing.contactId === contactId) {
+      await tx.contactIdentity.update({
+        where: { id: existing.id },
+        data: { lastSeenAt: new Date() },
+      });
+    }
+    return;
+  }
+  await tx.contactIdentity.create({
+    data: { contactId, kind, value, valueKey, isPrimary: false, source: "amplitude" },
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -124,6 +219,16 @@ router.post("/webhooks/amplitude/events", async (req, res) => {
               ...(ev.amplitudeId ? { amplitudeId: ev.amplitudeId } : {}),
             },
           });
+          // Learn the identifiers this event arrived on, so a second signup email
+          // or a new browser resolves to the same contact next time. The contacts
+          // trigger covers the primaries; these are the extras.
+          await noteIdentity(tx, contactId, "device_id", ev.deviceId);
+          await noteIdentity(tx, contactId, "amplitude_id", ev.amplitudeId);
+          if (ev.userId?.includes("@")) {
+            await noteIdentity(tx, contactId, "email", ev.userId);
+          } else {
+            await noteIdentity(tx, contactId, "yachtway_db_id", ev.userId);
+          }
         }
         return { duplicate: false, linked: Boolean(contactId) };
       });

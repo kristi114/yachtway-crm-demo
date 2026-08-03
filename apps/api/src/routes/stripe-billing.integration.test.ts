@@ -71,7 +71,11 @@ afterAll(async () => {
     await tx.$executeRaw`DELETE FROM invoices WHERE opportunity_id = ${OPP}`;
     await tx.$executeRaw`DELETE FROM subscriptions WHERE stripe_subscription_id = 'sub_1'`;
     await tx.$executeRaw`DELETE FROM messages WHERE message_type = 'invoice' AND company_id = ${CO}`;
-    await tx.$executeRaw`DELETE FROM webhook_events WHERE provider = 'stripe'`;
+    // Scoped to THIS suite's event ids. An unqualified
+    // `DELETE ... WHERE provider = 'stripe'` would wipe the whole Stripe
+    // idempotency ledger — harmless locally, but it destroyed the live one on
+    // 2026-08-01 when the suite was pointed at prod by a stale DATABASE_URL.
+    await tx.$executeRaw`DELETE FROM webhook_events WHERE provider = 'stripe' AND external_id IN ('evt_pay_1', 'evt_sub_1')`;
     await tx.$executeRaw`DELETE FROM opportunities WHERE id = ${OPP}`;
     await tx.$executeRaw`DELETE FROM contacts WHERE id = ${CT}`;
     await tx.$executeRaw`DELETE FROM companies WHERE id = ${CO}`;

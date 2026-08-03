@@ -1,5 +1,13 @@
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+// Must precede the app import: env.ts parses process.env once, and the batch/at
+// sends below are `marketing`, which footer.ts refuses without these two set.
+vi.hoisted(() => {
+  process.env.PUBLIC_API_URL = "https://itest.crm.yachtway.test";
+  process.env.COMPANY_POSTAL_ADDRESS = "1 Itest Way, Fort Lauderdale, FL 33301";
+});
+
 import { createApp } from "../app.js";
 import { withRole } from "../permissions/rls.js";
 import { createDueFollowUps, parseFeedItems, runDueSends } from "./scheduler.js";

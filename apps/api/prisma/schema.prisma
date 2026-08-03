@@ -327,7 +327,11 @@ model Contact {
   firstName                String?   @map("first_name")
   lastName                 String?   @map("last_name")
   title                    String?   @map("title")
-  email                    String?   @map("email")
+  /// UNIQUE. Stored lower-cased/trimmed (normalised in @yachtway/shared's
+  /// ContactSchema) and additionally protected by a unique index on lower(email)
+  /// so a writer that skips the API — the GHL dual-write, or raw SQL — still
+  /// cannot create a case-variant duplicate. This is the key Amplitude joins on.
+  email                    String?   @unique @map("email")
   officePhone              String?   @map("office_phone")
   mobilePhone              String?   @map("mobile_phone")
   officeStreet             String?   @map("office_street")
@@ -335,6 +339,9 @@ model Contact {
   officeState              String?   @map("office_state")
   officeCountry            String?   @map("office_country")
   officePostalCode         String?   @map("office_postal_code")
+  /// PRIMARY platform account id. A contact may own SEVERAL (one per signup
+  /// email); the full set lives in `contact_identities` (kind='yachtway_db_id')
+  /// and is what matching/dedupe checks against. This column is the display one.
   yachtwayDbId             String?   @unique @map("yachtway_db_id")
   brokerPageUrl            String?   @map("broker_page_url")
   amplitudeId              String?   @map("amplitude_id")
@@ -437,6 +444,7 @@ model Contact {
   creditNotesReceived        CreditNote[]         @relation("CreditNoteContact")
   estimatesReceived          Estimate[]           @relation("EstimateRecipient")
   emailRecipients            EmailRecipient[]     @relation("EmailRecipientContact")
+  identities                 ContactIdentity[]    @relation("ContactIdentityContact")
   tasks                      Task[]               @relation("TaskContact")
   notes                      Note[]               @relation("NoteContact")
   appointments               Appointment[]        @relation("AppointmentContact")
@@ -1360,6 +1368,55 @@ model AnalyticsSnapshot {
 }
 
 // ============================================================================
+// Contact identity ledger — every identifier that resolves to one contact.
+//
+// One person can hold SEVERAL platform accounts (they signed up twice with
+// different email addresses), so a contact has many yachtway_db_ids and many
+// email addresses. When two contacts are merged, ALL of the loser's identifiers
+// must survive on the keeper, or events and syncs arriving under the old account
+// stop resolving.
+//
+// So `contacts.email` and `contacts.yachtway_db_id` hold the PRIMARY (display)
+// values only, while this table holds every identifier — primaries included — with
+// a global unique constraint per (kind, normalised value). That single constraint
+// is what makes an identifier unambiguous: one email, one db id, one Amplitude
+// user id can each point at exactly one contact.
+//
+// A database trigger mirrors the contact row's primaries in here on every write
+// (see the migration), so the ledger stays complete even for writers that bypass
+// the API — the GHL dual-write, or raw SQL.
+// ============================================================================
+
+model ContactIdentity {
+  id        String @id @default(cuid())
+  contactId String @map("contact_id")
+  /// yachtway_db_id | email | amplitude_user_id | amplitude_id | device_id | sf_contact_id
+  kind      String @map("kind")
+  /// The value as received, for display.
+  value     String @map("value")
+  /// lower(trim(value)) — what matching and the unique constraint use.
+  valueKey  String @map("value_key")
+  /// True for the value currently mirrored on the contact row.
+  isPrimary Boolean @default(false) @map("is_primary")
+  /// signup | sync | merge | amplitude | manual — provenance, for the audit trail.
+  source    String? @map("source")
+
+  firstSeenAt DateTime  @default(now()) @map("first_seen_at")
+  lastSeenAt  DateTime  @default(now()) @map("last_seen_at")
+
+  contact Contact @relation("ContactIdentityContact", fields: [contactId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([kind, valueKey])
+  @@index([contactId])
+  @@index([kind])
+  @@index([valueKey])
+  @@map("contact_identities")
+}
+
+// ============================================================================
 // Record activity — tasks, notes, appointments, personal calendar.
 //
 // Each activity hangs off exactly ONE record. The UI models that as
@@ -1718,7 +1775,7 @@ model EmailRecipient {
   /// marketing recipients — the same trap ConversationReadState avoids.
   kind      String  @map("kind")
 
-  /// queued | sent | delivered | opened | clicked | bounced | failed | suppressed | unsubscribed
+  /// queued | sent | delivered | opened | clicked | bounced | failed | suppressed | unsubscribed | complained
   status            String  @default("queued") @map("status")
   /// noEmail | optedOut | doNotContact | duplicate — set when status = suppressed.
   suppressionReason String? @map("suppression_reason")

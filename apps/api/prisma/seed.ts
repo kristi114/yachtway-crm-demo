@@ -14,8 +14,19 @@ import {
  * @yachtway/shared (DEFAULT_ROLE_GRANTS). Idempotent: upserts, and prunes any
  * grant no longer in the matrix so the DB never drifts from the contract.
  * Run with `pnpm --filter @yachtway/api prisma:seed` (or `prisma db seed`).
+ *
+ * CONNECTION: prefers ADMIN_DATABASE_URL (owner/superuser) over DATABASE_URL.
+ * Seeding is an administrative operation, not a runtime one — on the live DB the
+ * app role `crm_app` is deliberately REVOKEd from writing `permission_grants`
+ * and `roles`, because it is the role those tables constrain (otherwise anything
+ * executing as crm_app could grant itself every resource class and the RLS layer
+ * becomes decorative). Local dev/test DBs where crm_app retains write still work
+ * via the DATABASE_URL fallback, so the integration-test harness is unaffected.
  */
-const prisma = new PrismaClient();
+const seedUrl = process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL;
+const prisma = new PrismaClient(
+  seedUrl ? { datasources: { db: { url: seedUrl } } } : undefined,
+);
 
 const ROLE_META: Record<string, { name: string; description: string }> = {
   SALES_REP: { name: "Sales Rep", description: "Sales team — companies, contacts, general conversations. No financing data." },
